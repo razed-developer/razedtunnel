@@ -14,7 +14,6 @@ use tokio::sync::watch;
 use crate::{
     ai_workspace, connection, direct_https, gateway,
     models::{ChatConnectionStatus, PublicTunnelStatus},
-    phone,
     public_tunnel::{self, PublicTunnelProvider},
 };
 
@@ -39,7 +38,6 @@ struct PublicTunnelState {
 #[derive(Default)]
 pub(crate) struct AppState {
     pub(crate) ai_workspace: ai_workspace::AiWorkspaceState,
-    pub(crate) phone: phone::PhoneRuntimeState,
     gateway: Mutex<Option<GatewayRuntime>>,
     tunnel: Mutex<TunnelState>,
     public_tunnel: Mutex<PublicTunnelState>,

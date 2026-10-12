@@ -16,7 +16,6 @@ import HelpPanel from "./components/HelpPanel";
 import HttpsSetupGuide from "./components/HttpsSetupGuide";
 import HomeWorkspace from "./components/HomeWorkspace";
 import ModelHub from "./components/ModelHub";
-import PhonePanel from "./components/PhonePanel";
 import HomeFeatureDialog from "./components/HomeFeatureDialog";
 import NewProjectDialog from "./components/NewProjectDialog";
 import ProjectSetupPanel from "./components/ProjectSetupPanel";
@@ -1675,7 +1674,6 @@ function App() {
       );
     }
 
-    if (activeView === "phone") return <PhonePanel />;
 
     if (activeView === "httpsSetup") {
       return (
@@ -1751,14 +1749,14 @@ function App() {
   return (
     <div className="desktop-app">
       <WindowChrome />
-      <div className={`desktop-shell ${focusMode ? "focus-mode" : ""} ${activeView === "video" ? "video-view" : ""} ${activeView === "phone" ? "phone-view" : ""} ${activeView === "httpsSetup" ? "https-setup-view" : ""}`}>
+      <div className={`desktop-shell ${focusMode ? "focus-mode" : ""} ${activeView === "video" ? "video-view" : ""} ${activeView === "httpsSetup" ? "https-setup-view" : ""}`}>
         <AppSidebar
           activeView={activeView}
           pendingCount={pendingCount}
           onNavigate={setActiveView}
         />
 
-        {activeView !== "video" && activeView !== "phone" && activeView !== "httpsSetup" ? (
+        {activeView !== "video" && activeView !== "httpsSetup" ? (
           <ProjectRail
             workspaces={workspaces}
             selectedWorkspaceId={selectedWorkspaceId}
@@ -1778,7 +1776,7 @@ function App() {
           />
         ) : null}
 
-        <main className={`main-view ${activeView === "overview" ? "home-main-view" : ""} ${activeView === "editor" ? "editor-main-view" : ""} ${activeView === "video" ? "video-main-view" : ""} ${activeView === "phone" ? "phone-main-view" : ""} ${activeView === "httpsSetup" ? "https-setup-main-view" : ""}`}>
+        <main className={`main-view ${activeView === "overview" ? "home-main-view" : ""} ${activeView === "editor" ? "editor-main-view" : ""} ${activeView === "video" ? "video-main-view" : ""} ${activeView === "httpsSetup" ? "https-setup-main-view" : ""}`}>
           <AppHeader
             view={activeView}
             gatewayRunning={gatewayStatus.running}
