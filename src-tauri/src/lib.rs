@@ -61,6 +61,7 @@ mod team;
 mod temp_workspace;
 mod temp_workspace_commands;
 mod terminal;
+mod terminal_commands;
 mod updates;
 mod versioning;
 #[cfg(feature = "legacy_video")]
@@ -267,20 +268,20 @@ pub fn run() {
                 execution_commands::list_command_history,
                 execution_commands::approve_command,
                 execution_commands::reject_command,
-                commands::run_terminal_command,
-                commands::run_local_terminal_command,
-                commands::list_terminal_history,
-                commands::approve_terminal_command,
-                commands::reject_terminal_command,
-                commands::start_managed_process,
-                commands::start_local_managed_process,
-                commands::list_managed_processes,
-                commands::read_managed_process_output,
-                commands::wait_managed_process,
-                commands::approve_managed_process,
-                commands::reject_managed_process,
-                commands::stop_managed_process,
-                commands::restart_managed_process,
+                terminal_commands::run_terminal_command,
+                terminal_commands::run_local_terminal_command,
+                terminal_commands::list_terminal_history,
+                terminal_commands::approve_terminal_command,
+                terminal_commands::reject_terminal_command,
+                terminal_commands::start_managed_process,
+                terminal_commands::start_local_managed_process,
+                terminal_commands::list_managed_processes,
+                terminal_commands::read_managed_process_output,
+                terminal_commands::wait_managed_process,
+                terminal_commands::approve_managed_process,
+                terminal_commands::reject_managed_process,
+                terminal_commands::stop_managed_process,
+                terminal_commands::restart_managed_process,
                 commands::list_launchable_applications,
                 github_commands::get_github_connection_status,
                 github_commands::connect_github,
