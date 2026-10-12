@@ -509,8 +509,7 @@ function App() {
     refresh()
       .catch((error) => setNotice(`RepoTunnel could not initialize: ${errorMessage(error)}`))
       .finally(() => setLoading(false));
-    void refreshModelHub(true);
-  }, [refresh, refreshModelHub]);
+  }, [refresh]);
 
   useEffect(() => {
     let active = true;
@@ -530,17 +529,6 @@ function App() {
       window.clearInterval(timer);
     };
   }, []);
-
-  useEffect(() => {
-    if (activeView !== "overview") return;
-    const refreshDetectedModels = () => void refreshModelHub(false);
-    const timer = window.setInterval(refreshDetectedModels, 10_000);
-    window.addEventListener("focus", refreshDetectedModels);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("focus", refreshDetectedModels);
-    };
-  }, [activeView, refreshModelHub]);
 
   useEffect(() => {
     if (!notice) return;
@@ -597,115 +585,6 @@ function App() {
     });
     if (!loading) setStartupProjectRestored(true);
   }, [workspaces]);
-
-  useEffect(() => {
-    if (loading || editorSessionRestoredRef.current) return;
-
-    let session: PersistedEditorSession | null = null;
-    try {
-      const raw = window.localStorage.getItem(EDITOR_SESSION_KEY);
-      if (raw) session = JSON.parse(raw) as PersistedEditorSession;
-    } catch {
-      window.localStorage.removeItem(EDITOR_SESSION_KEY);
-    }
-    if (!session || !Array.isArray(session.tabs) || session.tabs.length === 0) {
-      editorSessionRestoredRef.current = true;
-      return;
-    }
-
-    let cancelled = false;
-    async function restoreSession() {
-      const restored: EditorDocument[] = [];
-      for (const saved of session!.tabs.slice(0, MAX_RESTORED_TABS)) {
-        const workspace = workspaces.find((item) => item.id === saved.workspaceId);
-        if (!workspace || typeof saved.path !== "string" || !saved.path) continue;
-        try {
-          const info = await getFileInfo(workspace.id, saved.path);
-          if (info.kind !== "file") continue;
-          const entry: DirectoryEntry = {
-            name: saved.path.split("/").pop() ?? saved.path,
-            path: saved.path,
-            kind: "file",
-            size: info.size,
-            modifiedAt: info.modifiedAt,
-          };
-          let document = await loadEditorDocument(workspace, entry);
-          if (document.kind === "text" && saved.dirty && typeof saved.draftContent === "string" && typeof saved.savedContent === "string") {
-            if (saved.savedContent === document.savedContent) {
-              document = { ...document, content: saved.draftContent, dirty: saved.draftContent !== document.savedContent };
-            } else if (saved.draftContent === document.content) {
-              document = { ...document, dirty: false };
-            } else {
-              document = {
-                ...document,
-                content: saved.draftContent,
-                savedContent: saved.savedContent,
-                dirty: true,
-                externalContent: document.content,
-                externalModifiedAt: document.modifiedAt,
-                conflict: true,
-              };
-            }
-          }
-          restored.push(document);
-        } catch {
-          // A removed/protected file is skipped; session restore must never block app startup.
-        }
-      }
-      if (cancelled) return;
-      editorSessionRestoredRef.current = true;
-      if (restored.length === 0) {
-        window.localStorage.removeItem(EDITOR_SESSION_KEY);
-        return;
-      }
-      const keys = new Set(restored.map((tab) => tab.key));
-      const activeKey = session!.activeKey && keys.has(session!.activeKey) ? session!.activeKey : restored[restored.length - 1].key;
-      const secondaryKey = session!.secondaryKey && keys.has(session!.secondaryKey) && session!.secondaryKey !== activeKey ? session!.secondaryKey : null;
-      setEditorTabs(restored);
-      setActiveEditorKey(activeKey);
-      setSecondaryEditorKey(secondaryKey);
-      const activeTab = restored.find((tab) => tab.key === activeKey) ?? restored[0];
-      setSelectedWorkspaceId(activeTab.workspaceId);
-      setActiveView("editor");
-    }
-    void restoreSession();
-    return () => { cancelled = true; };
-  }, [loading, workspaces]);
-
-  useEffect(() => {
-    if (!editorSessionRestoredRef.current) return;
-    // Persist drafts after a short idle window instead of serializing large files
-    // synchronously on every keystroke. This keeps typing independent from storage I/O.
-    const timer = window.setTimeout(() => {
-      const persisted: PersistedEditorSession = {
-        tabs: editorTabs.slice(0, MAX_RESTORED_TABS).map((tab) => {
-          const keepDraft = tab.kind === "text" && tab.dirty && new Blob([tab.content]).size <= MAX_DRAFT_BYTES;
-          return {
-            workspaceId: tab.workspaceId,
-            path: tab.path,
-            dirty: keepDraft,
-            draftContent: keepDraft ? tab.content : undefined,
-            savedContent: keepDraft ? tab.savedContent : undefined,
-          };
-        }),
-        activeKey: activeEditorKey,
-        secondaryKey: secondaryEditorKey,
-      };
-      try {
-        if (persisted.tabs.length === 0) window.localStorage.removeItem(EDITOR_SESSION_KEY);
-        else window.localStorage.setItem(EDITOR_SESSION_KEY, JSON.stringify(persisted));
-      } catch {
-        // Storage quotas should not interfere with editing; fall back to restoring file paths next time.
-        try {
-          const lightweight = { ...persisted, tabs: persisted.tabs.map((tab) => ({ workspaceId: tab.workspaceId, path: tab.path, dirty: false })) };
-          window.localStorage.setItem(EDITOR_SESSION_KEY, JSON.stringify(lightweight));
-        } catch {
-          // Ignore unavailable local storage.
-        }
-      }
-    }, 320);
-    return () => window.clearTimeout(timer);
-  }, [editorTabs, activeEditorKey, secondaryEditorKey]);
 
   useEffect(() => {
     if (activeView !== "changes") return;
@@ -869,14 +748,6 @@ function App() {
 
     return () => window.clearInterval(timer);
   }, [gatewayStatus.running, refreshPendingChanges]);
-
-  useEffect(() => {
-    if (editorTabs.length === 0) return;
-    const timer = window.setInterval(() => {
-      syncEditorFiles().catch(() => undefined);
-    }, 3500);
-    return () => window.clearInterval(timer);
-  }, [editorTabs.length, syncEditorFiles]);
 
   async function handleAddWorkspace() {
     setNotice(null);
