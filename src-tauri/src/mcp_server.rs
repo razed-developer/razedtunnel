@@ -675,10 +675,13 @@ pub(crate) fn approved_workspace(app: &AppHandle, workspace_id: &str) -> Result<
 }
 
 fn serialize_success_payload<T: Serialize>(value: T) -> Result<String, serde_json::Error> {
-    serde_json::to_string(&serde_json::json!({
-        "ok": true,
-        "result": value,
-    }))
+    #[derive(Serialize)]
+    struct SuccessEnvelope<T> {
+        ok: bool,
+        result: T,
+    }
+
+    serde_json::to_string(&SuccessEnvelope { ok: true, result: value })
 }
 
 fn success_result<T: Serialize>(value: T) -> CallToolResult {
