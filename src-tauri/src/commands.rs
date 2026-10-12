@@ -2919,11 +2919,13 @@ pub async fn validate_media_decode(
     .map_err(|error| format!("Media decode-validation worker could not complete: {error}"))?
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_tools_status(app: AppHandle) -> Result<video::VideoToolsStatus, String> {
     video::tools_status(&app)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn install_video_tools(app: AppHandle) -> Result<video::VideoToolsStatus, String> {
     tauri::async_runtime::spawn_blocking(move || video::install_missing_tools(&app))
@@ -2931,6 +2933,7 @@ pub async fn install_video_tools(app: AppHandle) -> Result<video::VideoToolsStat
         .map_err(|error| format!("Video helper installation task could not complete: {error}"))?
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn start_video_analysis(
     app: AppHandle,
@@ -2953,11 +2956,13 @@ pub fn start_video_analysis(
     )
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_analysis_job(job_id: String) -> Result<video::VideoAnalysisJob, String> {
     video::get_job(&job_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn list_video_analysis_jobs(
     workspace_id: Option<String>,
@@ -2966,6 +2971,7 @@ pub fn list_video_analysis_jobs(
     video::list_jobs(workspace_id.as_deref(), limit.unwrap_or(20))
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_analysis_result(
     app: AppHandle,
@@ -2974,16 +2980,19 @@ pub fn get_video_analysis_result(
     video::get_result(&app, &job_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn cancel_video_analysis(job_id: String) -> Result<video::VideoAnalysisJob, String> {
     video::cancel_analysis(&job_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn clear_video_cache(app: AppHandle) -> Result<video::VideoToolsStatus, String> {
     video::clear_cache(&app)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
 pub fn create_video_project(
@@ -3008,6 +3017,7 @@ pub fn create_video_project(
     )
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn list_video_projects(
     app: AppHandle,
@@ -3017,6 +3027,7 @@ pub fn list_video_projects(
     video_production::list_projects(&workspace)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn import_video_project_folder(
     app: AppHandle,
@@ -3027,6 +3038,7 @@ pub fn import_video_project_folder(
     video_production::import_folder(&workspace, &folder_path)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn set_video_project_pinned(
     app: AppHandle,
@@ -3038,6 +3050,7 @@ pub fn set_video_project_pinned(
     video_production::set_project_pinned(&workspace, &project_id, pinned)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn set_video_project_resource_policy(
     app: AppHandle,
@@ -3049,6 +3062,7 @@ pub fn set_video_project_resource_policy(
     video_production::set_resource_policy(&workspace, &project_id, policy)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn upsert_video_project_scene(
     app: AppHandle,
@@ -3060,6 +3074,7 @@ pub fn upsert_video_project_scene(
     video_production::upsert_scene(&workspace, &project_id, scene)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_project_scene(
     app: AppHandle,
@@ -3071,6 +3086,7 @@ pub fn get_video_project_scene(
     video_production::get_scene(&workspace, &project_id, &scene_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn list_video_project_scenes(
     app: AppHandle,
@@ -3081,6 +3097,7 @@ pub fn list_video_project_scenes(
     video_production::list_scenes(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn list_video_project_files(
     app: AppHandle,
@@ -3091,6 +3108,7 @@ pub fn list_video_project_files(
     video_production::list_project_files(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn read_video_project_text_file(
     app: AppHandle,
@@ -3102,6 +3120,7 @@ pub fn read_video_project_text_file(
     video_production::read_project_text_file(&workspace, &project_id, &relative_path)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn delete_video_project(
     app: AppHandle,
@@ -3114,6 +3133,7 @@ pub fn delete_video_project(
     Ok(())
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_project(
     app: AppHandle,
@@ -3124,11 +3144,13 @@ pub fn get_video_project(
     video_production::get_project(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_story_capabilities() -> video_director::StoryProductionCapabilities {
     video_director::production_capabilities()
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn compile_video_story_plan(
     app: AppHandle,
@@ -3140,6 +3162,7 @@ pub fn compile_video_story_plan(
     video_director::compile_plan(&workspace, &project_id, input)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_story_plan(
     app: AppHandle,
@@ -3150,6 +3173,7 @@ pub fn get_video_story_plan(
     video_director::get_plan(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_story_animatic_plan(
     app: AppHandle,
@@ -3160,6 +3184,7 @@ pub fn get_video_story_animatic_plan(
     video_director::get_animatic_plan(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn render_video_story_animatic(
     app: AppHandle,
@@ -3170,6 +3195,7 @@ pub fn render_video_story_animatic(
     video_story_render::render_animatic(&app, &workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_story_qa(
     app: AppHandle,
@@ -3180,6 +3206,7 @@ pub fn get_video_story_qa(
     video_director::get_narrative_qa(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_story_render_queue(
     app: AppHandle,
@@ -3190,6 +3217,7 @@ pub fn get_video_story_render_queue(
     video_director::get_render_queue(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn record_video_story_shot_render(
     app: AppHandle,
@@ -3201,6 +3229,7 @@ pub fn record_video_story_shot_render(
     video_director::record_shot_render(&workspace, &project_id, input)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn start_video_story_shot_render(
     app: AppHandle,
@@ -3219,6 +3248,7 @@ pub fn start_video_story_shot_render(
     )
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_story_shot_render(
     app: AppHandle,
@@ -3230,6 +3260,7 @@ pub fn get_video_story_shot_render(
     video_story_render::get_shot_render(&workspace, &project_id, &job_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn cancel_video_story_shot_render(
     app: AppHandle,
@@ -3241,6 +3272,7 @@ pub fn cancel_video_story_shot_render(
     video_story_render::cancel_shot_render(&workspace, &project_id, &job_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn update_video_project_status(
     app: AppHandle,
@@ -3253,6 +3285,7 @@ pub fn update_video_project_status(
     video_production::update_project_status(&workspace, &project_id, &status, detail.as_deref())
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn write_video_project_document(
     app: AppHandle,
@@ -3265,6 +3298,7 @@ pub fn write_video_project_document(
     video_production::write_document(&workspace, &project_id, &document, &content)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn read_video_project_document(
     app: AppHandle,
@@ -3276,6 +3310,7 @@ pub fn read_video_project_document(
     video_production::read_document(&workspace, &project_id, &document)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn start_video_project_recording(
     app: AppHandle,
@@ -3307,6 +3342,7 @@ pub fn start_video_project_recording(
     )
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_project_recording(
     workspace_id: String,
@@ -3315,6 +3351,7 @@ pub fn get_video_project_recording(
     video_production::get_recording_status(&workspace_id, project_id.as_deref())
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn stop_video_project_recording(
     workspace_id: String,
@@ -3323,6 +3360,7 @@ pub fn stop_video_project_recording(
     video_production::stop_recording(&workspace_id, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn validate_video_project_scene(
     app: AppHandle,
@@ -3334,6 +3372,7 @@ pub fn validate_video_project_scene(
     video_scene::validate_scene_layout(&workspace, &project_id, &scene)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn render_video_project_scene(
     app: AppHandle,
@@ -3350,6 +3389,7 @@ pub async fn render_video_project_scene(
     .map_err(|error| format!("Generated-scene render task could not complete: {error}"))?
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn render_video_project_diagram(
     app: AppHandle,
@@ -3366,6 +3406,7 @@ pub async fn render_video_project_diagram(
     .map_err(|error| format!("Semantic diagram render task could not complete: {error}"))?
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn start_video_project_render(
     app: AppHandle,
@@ -3377,6 +3418,7 @@ pub fn start_video_project_render(
     video_render::start_render_job(&app, &workspace, &project_id, request)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_project_render(
     app: AppHandle,
@@ -3388,6 +3430,7 @@ pub fn get_video_project_render(
     video_render::get_render_job(&workspace, &project_id, &job_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn list_video_project_renders(
     app: AppHandle,
@@ -3398,6 +3441,7 @@ pub fn list_video_project_renders(
     video_render::list_render_jobs(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn cancel_video_project_render(
     app: AppHandle,
@@ -3409,6 +3453,7 @@ pub fn cancel_video_project_render(
     video_render::cancel_render_job(&workspace, &project_id, &job_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_project_pipeline_status(
     app: AppHandle,
@@ -3419,6 +3464,7 @@ pub fn get_video_project_pipeline_status(
     video_render::pipeline_status(&workspace, &project_id)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn clean_video_project(
     app: AppHandle,
@@ -3430,6 +3476,7 @@ pub fn clean_video_project(
     video_render::clean_project(&workspace, &project_id, request)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn qa_video_project(
     app: AppHandle,
@@ -3441,6 +3488,7 @@ pub fn qa_video_project(
     video_qa::qa_project(&app, &workspace, &project_id, asset_path.as_deref())
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn render_video_project_timeline(
     app: AppHandle,
@@ -3457,6 +3505,7 @@ pub async fn render_video_project_timeline(
     .map_err(|error| format!("Video timeline render task could not complete: {error}"))?
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn prepare_video_project_preview(
     app: AppHandle,
@@ -3472,6 +3521,7 @@ pub async fn prepare_video_project_preview(
     .map_err(|error| format!("Video preview preparation could not complete: {error}"))?
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn prepare_video_project_file_preview(
     app: AppHandle,
@@ -3488,6 +3538,7 @@ pub async fn prepare_video_project_file_preview(
     .map_err(|error| format!("Video file preview preparation could not complete: {error}"))?
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn read_video_preview_chunk(
     app: AppHandle,
@@ -3504,11 +3555,13 @@ pub async fn read_video_preview_chunk(
     Ok(tauri::ipc::Response::new(bytes))
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn list_video_asset_sources() -> Vec<video_assets::VideoAssetSource> {
     video_assets::registry()
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn record_video_asset_license(
     app: AppHandle,
@@ -3520,6 +3573,7 @@ pub fn record_video_asset_license(
     video_assets::record_license(&workspace, &project_id, input)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn get_video_narration_providers(
     app: AppHandle,
@@ -3527,6 +3581,7 @@ pub fn get_video_narration_providers(
     video_narration::provider_status(&app)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub fn create_video_project_subtitles(
     app: AppHandle,
@@ -3540,6 +3595,7 @@ pub fn create_video_project_subtitles(
     video_narration::create_subtitles(&workspace, &project_id, &language, &text, duration_seconds)
 }
 
+#[cfg(feature = "legacy_video")]
 #[tauri::command]
 pub async fn synthesize_video_project_narration(
     app: AppHandle,
