@@ -1637,7 +1637,7 @@ function App() {
   return (
     <div className="desktop-app">
       <WindowChrome />
-      <div className={`desktop-shell ${focusMode ? "focus-mode" : ""} ${activeView === "httpsSetup" ? "https-setup-view" : ""}`}>
+      <div className={`desktop-shell ${focusMode ? "focus-mode" : ""}`}>
         <AppSidebar
           activeView={activeView}
           pendingCount={pendingCount}
@@ -1645,7 +1645,7 @@ function App() {
         />
 
 
-        <main className={`main-view ${activeView === "overview" ? "home-main-view" : ""} ${activeView === "editor" ? "editor-main-view" : ""} ${activeView === "httpsSetup" ? "https-setup-main-view" : ""}`}>
+        <main className="main-view">
           <AppHeader
             view={activeView}
             gatewayRunning={gatewayStatus.running}
@@ -1664,7 +1664,7 @@ function App() {
 
           <AppErrorBoundary
             resetKey={`${activeView}:${selectedWorkspaceId ?? "none"}`}
-            onGoHome={() => setActiveView("overview")}
+            onGoHome={() => setActiveView("projects")}
           >
           {loading ? (
             <section className="loading-state" aria-live="polite">
