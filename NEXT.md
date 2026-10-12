@@ -23,7 +23,12 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - `ProductionPanel` is actually system/runtime settings, update controls and history retention; do not mistake it for removed Video Production.
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
 
-## Current stage: background system tray (awaiting local validation)
+## Validated milestone: Windows tray (2026-10-12)
+- User confirmed `npm run tauri dev` launches and window close-to-tray and explicit Quit both work correctly. Tray milestone complete.
+- Previous link error CVT1100/LNK1123 was caused by duplicate Windows manifest while `REPOTUNNEL_WINDOWS_TEST_MANIFEST` remained set; clearing that session variable allowed launch. Keep the variable unset for normal app builds.
+- Next stage: remove legacy frontend routes/components and their imports rather than only hiding navigation; preserve Projects, Connections, MCP transport, permission enforcement, persistence, and tray. Audit reachability before deletion and validate incrementally.
+
+## Current stage: background system tray (validated)
 - User confirmed `npm run check` and `npm run build` passed, but Rust compilation failed with E0432/E0433: `tauri::tray` gated by `tray-icon` feature. Fixed `src-tauri/Cargo.toml` in commit `0eefd78`. Re-run Rust check and tray runtime test. Cargo.lock is locally modified; do not overwrite it.
 - Commits `6095ed0`, `57725ef`: new `src-tauri/src/system_tray.rs` with Open RazedTunnel / Quit RazedTunnel menu and double-click-to-open; close of main window is intercepted and hides it, preserving gateway runtime. Explicit Quit invokes app exit and existing shutdown path.
 - No `Cargo.toml` or lockfile changes; existing default Tauri tray API used. User must validate Rust compilation and manually verify close-to-tray, reopening, Quit, and connection persistence.
