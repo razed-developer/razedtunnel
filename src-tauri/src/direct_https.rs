@@ -12,6 +12,16 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
+fn background_openssl_command() -> Command {
+    let mut command = Command::new("openssl");
+    #[cfg(windows)]
+    command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    command
+}
+
 use axum::{
     body::Body,
     extract::{Path as AxumPath, State},
@@ -162,7 +172,7 @@ fn self_signed_certificate_paths(app: &AppHandle, host: &str) -> Result<Certific
 }
 
 pub(crate) fn openssl_available() -> bool {
-    Command::new("openssl")
+    background_openssl_command()
         .arg("version")
         .output()
         .map(|output| output.status.success())
@@ -192,7 +202,7 @@ fn ensure_self_signed_certificate(
         Err(_) => format!("subjectAltName=DNS:{host}"),
     };
     let subject = format!("/CN={host}");
-    let status = Command::new("openssl")
+    let status = background_openssl_command()
         .args([
             "req", "-x509", "-newkey", "rsa:2048", "-sha256", "-days", "7", "-nodes",
         ])
