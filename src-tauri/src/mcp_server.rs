@@ -15,7 +15,7 @@ use rmcp::{
 #[cfg(feature = "legacy_video")]
 use rmcp::model::AudioContent;
 use crate::mcp_git_helpers::compact_git_action_for_ai;
-use crate::mcp_request_identity::{request_edit_group_id, openai_conversation_session, request_mcp_session_key, continuation_identity_keys_from, continuation_identity_keys};
+use crate::mcp_request_identity::{request_edit_group_id, openai_conversation_session, continuation_identity_keys_from, continuation_identity_keys, request_client_key, request_resource_owner_key};
 use crate::mcp_phone_helpers::{parse_phone_key, parse_phone_settings_namespace};
 use crate::mcp_phone_transactions::{PhoneTransactionAliasTarget, phone_transaction_find_unique, phone_transaction_condition_met, validate_phone_transaction_steps};
 use crate::mcp_browser_params::{BrowserActionParam, BrowserActionParams, BrowserContextParams, BrowserSemanticActionParam, BrowserSemanticActionParams, BrowserSemanticSequenceOperationParam, BrowserSemanticSequenceParams, BrowserSemanticSequenceCancelParams, BrowserInspectParams, BrowserDownloadConfigureParams, BrowserDownloadCancelParams, BrowserUploadParams, BrowserSemanticSnapshotParams, BrowserSemanticFindParams, BrowserScreenshotParams, BrowserDiagnosticsParams};
@@ -1000,24 +1000,6 @@ fn ensure_chatgpt_work_fallback(
 ) {
     let identity_keys = continuation_identity_keys_from(conversation_session);
     ensure_chatgpt_work_fallback_with_identities(app, workspace_id, &identity_keys);
-}
-
-fn request_client_key(parts: &Parts) -> Option<String> {
-    if let Some(session_key) = request_mcp_session_key(parts) {
-        return Some(session_key);
-    }
-    request_edit_group_id(parts).map(|trace| format!("request:{trace}"))
-}
-
-fn request_resource_owner_key(
-    parts: &Parts,
-    context: &RequestContext<RoleServer>,
-) -> Option<String> {
-    if let Some(conversation_session) = openai_conversation_session(context) {
-        let bounded = conversation_session.chars().take(220).collect::<String>();
-        return Some(format!("openai-session:{bounded}"));
-    }
-    request_client_key(parts)
 }
 
 fn browser_scope_for_request(
