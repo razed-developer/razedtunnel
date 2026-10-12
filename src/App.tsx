@@ -1671,12 +1671,6 @@ function App() {
       );
     }
 
-    // Legacy video production is intentionally absent from the lean gateway UI.
-    // Keep the view identifier for compatibility with older persisted navigation state.
-    if (activeView === "video") {
-      return <div className="empty-state">Video production is not part of RazedTunnel.</div>;
-    }
-
     if (activeView === "git") {
       return (
         <GitPanel
@@ -1737,14 +1731,14 @@ function App() {
   return (
     <div className="desktop-app">
       <WindowChrome />
-      <div className={`desktop-shell ${focusMode ? "focus-mode" : ""} ${activeView === "video" ? "video-view" : ""} ${activeView === "httpsSetup" ? "https-setup-view" : ""}`}>
+      <div className={`desktop-shell ${focusMode ? "focus-mode" : ""} ${activeView === "httpsSetup" ? "https-setup-view" : ""}`}>
         <AppSidebar
           activeView={activeView}
           pendingCount={pendingCount}
           onNavigate={setActiveView}
         />
 
-        {activeView !== "video" && activeView !== "httpsSetup" ? (
+        {activeView !== "httpsSetup" ? (
           <ProjectRail
             workspaces={workspaces}
             selectedWorkspaceId={selectedWorkspaceId}
