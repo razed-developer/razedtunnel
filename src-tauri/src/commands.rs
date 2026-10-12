@@ -39,7 +39,7 @@ use crate::{
         WorkflowReadiness, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy,
         WorkspaceEnvironmentDiagnostics, WorkspaceHealth,
     },
-    monitoring, phone, projects::{canonical_workspace_path, workspace_name, new_workspace_id}, project_context, project_index, project_memory, project_setup,
+    monitoring, phone, projects::{canonical_workspace_path, workspace_name, approved_workspace, register_workspace_path, register_workspace_path_with_policy}, project_context, project_index, project_memory, project_setup,
     public_tunnel::PublicTunnelProvider,
     repository, semantic,
     storage::{
@@ -55,13 +55,6 @@ use crate::{
     video, video_assets, video_director, video_narration, video_preview, video_production,
     video_qa, video_render, video_scene, video_story_render,
 };
-
-fn approved_workspace(app: &AppHandle, id: &str) -> Result<Workspace, String> {
-    load_workspaces(app)?
-        .into_iter()
-        .find(|workspace| workspace.id == id)
-        .ok_or_else(|| "That project is not approved in RepoTunnel.".to_string())
-}
 
 fn status(app: &AppHandle, state: &AppState) -> Result<GatewayStatus, String> {
     let (running, port) = state.gateway_status()?;
@@ -152,51 +145,6 @@ pub fn relocate_workspace(
         &format!("workspace_id={} name={}", updated.id, updated.name),
     );
     Ok(updated)
-}
-
-pub(crate) fn register_workspace_path(app: &AppHandle, path: String) -> Result<Workspace, String> {
-    register_workspace_path_with_policy(app, path, false)
-}
-
-fn register_workspace_path_with_policy(
-    app: &AppHandle,
-    path: String,
-    restricted: bool,
-) -> Result<Workspace, String> {
-    let canonical_path = canonical_workspace_path(&path)?;
-    let canonical_string = canonical_path.to_string_lossy().into_owned();
-    let canonical_name = workspace_name(&canonical_path);
-    let workspace = mutate_workspaces(app, |workspaces| {
-        if workspaces
-            .iter()
-            .any(|workspace| workspace.path == canonical_string)
-        {
-            return Err("That project is already added to RepoTunnel.".to_string());
-        }
-
-        let (id, added_at) = new_workspace_id(workspaces)?;
-        let workspace = Workspace {
-            id,
-            name: canonical_name,
-            path: canonical_string,
-            added_at,
-            access_mode: if restricted { WorkspaceAccessMode::ReadOnly } else { WorkspaceAccessMode::ReadWrite },
-            change_policy: if restricted { WorkspaceChangePolicy::Review } else { WorkspaceChangePolicy::Automatic },
-            command_policy: if restricted { CommandPolicy::Disabled } else { CommandPolicy::Automatic },
-        };
-
-        workspaces.push(workspace.clone());
-        workspaces.sort_by_key(|left| left.name.to_lowercase());
-        Ok(workspace)
-    })?;
-    hardening::log_event(
-        app,
-        "INFO",
-        "workspace.add",
-        &format!("workspace_id={} name={}", workspace.id, workspace.name),
-    );
-
-    Ok(workspace)
 }
 
 #[tauri::command]
