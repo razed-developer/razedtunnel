@@ -9242,6 +9242,922 @@ impl RepoTunnelMcp {
     }
 
     #[tool(
+        description = "Get project monitoring status for an approved workspace. Monitoring tracks filtered project-file changes and feeds the unified process/terminal/port/browser observation snapshot.",
+        annotations(read_only_hint = true)
+    )]
+    async fn get_monitoring_status(
+        &self,
+        Parameters(params): Parameters<WorkspaceIdParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let status = monitoring::status(&app, &workspace);
+            record_observation(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Monitoring,
+                "status",
+                format!(
+                    "Checked project monitor · {}",
+                    if status.running { "running" } else { "stopped" }
+                ),
+                None,
+            );
+            Ok(status)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Persistently enable or disable read-only project monitoring for an approved workspace. Monitoring never edits project files and does not require a separate Review approval."
+    )]
+    async fn set_workspace_monitoring(
+        &self,
+        Parameters(params): Parameters<WorkspaceMonitoringParams>,
+        Extension(parts): Extension<Parts>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let status = if params.enabled {
+                monitoring::start_monitoring(&app, &workspace)?
+            } else {
+                monitoring::stop_monitoring(&app, &workspace)?
+            };
+            let _ = activity::record(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Monitoring,
+                "setMonitoring",
+                if params.enabled {
+                    "Enabled project monitoring"
+                } else {
+                    "Disabled project monitoring"
+                },
+                None,
+                ActivityStatus::Succeeded,
+                None,
+            );
+            Ok(status)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Get one combined observation snapshot for an approved workspace: monitoring state, running managed processes with output tails, listening ports/dev-server correlation, recent terminal results, browser tabs/console/network diagnostics, and recent project file changes.",
+        annotations(read_only_hint = true)
+    )]
+    async fn get_monitoring_snapshot(
+        &self,
+        Parameters(params): Parameters<WorkspaceIdParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let snapshot = monitoring::snapshot(&app, &workspace)?;
+            record_observation(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Monitoring,
+                "snapshot",
+                format!(
+                    "Observed {} processes · {} ports · {} file events",
+                    snapshot.processes.len(),
+                    snapshot.ports.len(),
+                    snapshot.file_events.len()
+                ),
+                Some(format!(
+                    "Browser console: {} · network failures: {}",
+                    snapshot.browser.console_entries.len(),
+                    snapshot.browser.network_failures.len()
+                )),
+            );
+            if !snapshot.file_events.is_empty() {
+                record_observation(
+                    &app,
+                    &workspace,
+                    trace_group_id.as_deref(),
+                    ActivityKind::Files,
+                    "monitoredFileChanges",
+                    format!(
+                        "Observed {} project file changes",
+                        snapshot.file_events.len()
+                    ),
+                    monitoring_file_detail(&snapshot.file_events),
+                );
+            }
+            Ok(snapshot)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "List recent project-file monitoring events (created, modified, deleted). Events are filtered through RepoTunnel's existing project-index/protected-path rules and are observational only.",
+        annotations(read_only_hint = true)
+    )]
+    async fn list_monitoring_file_events(
+        &self,
+        Parameters(params): Parameters<MonitoringFileEventsParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            ensure_ai_access(&app)?;
+            let workspace = if let Some(workspace_id) = params.workspace_id.as_deref() {
+                Some(approved_workspace(&app, workspace_id)?)
+            } else {
+                None
+            };
+            let events = monitoring::list_file_events(
+                &app,
+                params.workspace_id.as_deref(),
+                params.limit.unwrap_or(50),
+            )?;
+            if let Some(workspace) = workspace.as_ref() {
+                record_observation(
+                    &app,
+                    workspace,
+                    trace_group_id.as_deref(),
+                    ActivityKind::Monitoring,
+                    "fileEvents",
+                    format!("Inspected project changes · {} events", events.len()),
+                    None,
+                );
+                if !events.is_empty() {
+                    record_observation(
+                        &app,
+                        workspace,
+                        trace_group_id.as_deref(),
+                        ActivityKind::Files,
+                        "monitoredFileChanges",
+                        format!("Observed {} project file changes", events.len()),
+                        monitoring_file_detail(&events),
+                    );
+                }
+            }
+            Ok(events)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Read the shared RepoTunnel Team Mode state for two-AI collaboration. Supply session_id to inspect a known team, or workspace_id to get the latest team session for that approved project. The snapshot includes assigned agent IDs/roles, goal and success criteria, task ownership/dependencies/review state, discussion messages, expiring file/folder claims, progress, and a recommended next action. Call this before team project work and after the other agent may have changed shared state. An active agent can pass after_revision plus wait_seconds to wait up to 30 seconds for the other AI to change the shared state instead of ending its turn immediately.",
+        annotations(read_only_hint = true)
+    )]
+    async fn team_status(
+        &self,
+        Parameters(params): Parameters<TeamStatusParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        let client_key = request_client_key(&parts);
+        run_filesystem_task(move || {
+            ensure_ai_access(&app)?;
+            if let Some(session_id) = params.session_id.as_deref() {
+                let snapshot = if let Some(after_revision) = params.after_revision {
+                    team::wait_for_snapshot(
+                        &app,
+                        session_id,
+                        params.agent_id.as_deref(),
+                        after_revision,
+                        params.wait_seconds.unwrap_or(0),
+                    )?
+                } else {
+                    team::get_snapshot(&app, session_id, params.agent_id.as_deref())?
+                };
+                let workspace = approved_workspace(&app, &snapshot.session.workspace_id)?;
+                let mut snapshot = snapshot;
+                if let (Some(client_key), Some(agent_id)) =
+                    (client_key.as_deref(), params.agent_id.as_deref())
+                {
+                    team::bind_client(&app, client_key, session_id, agent_id)?;
+                    if snapshot
+                        .session
+                        .agents
+                        .iter()
+                        .any(|agent| agent.id == agent_id && agent.joined_at.is_some())
+                    {
+                        snapshot = team::heartbeat(&app, session_id, agent_id)?;
+                    }
+                }
+                if params.after_revision.is_none() || params.wait_seconds.unwrap_or(0) == 0 {
+                    record_observation(
+                        &app,
+                        &workspace,
+                        trace_group_id.as_deref(),
+                        ActivityKind::Team,
+                        "teamStatus",
+                        format!(
+                            "Checked AI team · {:?} · {:?}",
+                            snapshot.session.status, snapshot.session.phase
+                        ),
+                        Some(format!(
+                            "{} open · {} done · {} blocked",
+                            snapshot.progress.open_task_count,
+                            snapshot.progress.done_task_count,
+                            snapshot.progress.blocked_task_count
+                        )),
+                    );
+                }
+                return Ok(Some(snapshot));
+            }
+
+            let workspace_id = params.workspace_id.as_deref().ok_or_else(|| {
+                "team_status requires either session_id or workspace_id.".to_string()
+            })?;
+            let workspace = approved_workspace(&app, workspace_id)?;
+            let mut snapshot = team::latest_snapshot_for_workspace(
+                &app,
+                workspace_id,
+                params.agent_id.as_deref(),
+            )?;
+            if let (Some(current), Some(client_key), Some(agent_id)) = (
+                snapshot.as_ref(),
+                client_key.as_deref(),
+                params.agent_id.as_deref(),
+            ) {
+                let session_id = current.session.id.clone();
+                let joined = current
+                    .session
+                    .agents
+                    .iter()
+                    .any(|agent| agent.id == agent_id && agent.joined_at.is_some());
+                team::bind_client(&app, client_key, &session_id, agent_id)?;
+                if joined {
+                    snapshot = Some(team::heartbeat(&app, &session_id, agent_id)?);
+                }
+            }
+            record_observation(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Team,
+                "teamStatus",
+                if snapshot.is_some() {
+                    "Checked latest AI team session"
+                } else {
+                    "Checked AI team status · no session yet"
+                },
+                None,
+            );
+            Ok(snapshot)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Coordinate two AIs through one persistent RepoTunnel Team attached to a project until the user explicitly ends it. create_session creates the A/B Team once; join/heartbeat keep stable agent identities. BOTH engineers must join before planning starts. During Planning each engineer posts one Plan message, each creates one distinct initial implementation task, then each posts a Decision confirming the split; RepoTunnel unlocks parallel implementation only after both confirmations. create_task/claim_task divide distinct work: one primary owner per implementation task, one active implementation task per agent, and duplicate open task titles are rejected. Both engineers must finish their own meaningful implementation contribution; review/testing alone cannot satisfy the two-engineer contribution requirement. handoff_task transfers ownership instead of allowing duplicate implementation. update_task enforces cross-review and requires concrete feedback when a reviewer sends work back for bugs/errors. verify_criterion records evidence. task-scoped path claims protect file edits; the reserved `@browser` claim serializes interactive managed-browser mutations so two AIs never type/click in the same shared browser simultaneously. After a completed work cycle, a new human request posted as `USER REQUEST:` reuses the SAME Team. complete closes only the CURRENT request; the Team stays active. MCP agents cannot end the Team itself; pause/end remain user-controlled in the desktop app."
+    )]
+    async fn team_action(
+        &self,
+        Parameters(params): Parameters<TeamActionParams>,
+        Extension(parts): Extension<Parts>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        if let Some(workspace_id) = params.workspace_id.as_deref() {
+            ensure_chatgpt_work_fallback(&app, workspace_id, conversation_session.as_deref());
+        }
+        let trace_group_id = request_edit_group_id(&parts);
+        let client_key = request_client_key(&parts);
+        run_filesystem_task(move || {
+            ensure_ai_access(&app)?;
+
+            if matches!(params.action, TeamActionParam::CreateSession) {
+                let workspace_id = params.workspace_id.as_deref().ok_or_else(|| "workspace_id is required for create_session.".to_string())?;
+                let workspace = approved_workspace(&app, workspace_id)?;
+                let snapshot = team::create_session(
+                    &app,
+                    &workspace,
+                    params.goal.unwrap_or_default(),
+                    params.success_criteria.unwrap_or_default(),
+                    params.agent_a_name.unwrap_or_else(|| "Engineer A".to_string()),
+                    params.agent_a_role.unwrap_or_else(|| "Plan, implement, test, debug, and review distinct product work as Engineer A. Avoid duplicate implementation, coordinate explicit handoffs, and verify the other agent's work.".to_string()),
+                    params.agent_b_name.unwrap_or_else(|| "Engineer B".to_string()),
+                    params.agent_b_role.unwrap_or_else(|| "Plan, implement, test, debug, and review distinct product work as Engineer B. Avoid duplicate implementation, coordinate explicit handoffs, and verify the other agent's work.".to_string()),
+                )?;
+                let _ = activity::record(
+                    &app,
+                    &workspace,
+                    trace_group_id.as_deref(),
+                    ActivityKind::Team,
+                    "teamCreate",
+                    "Created a two-agent Team Mode session",
+                    Some(snapshot.session.goal.clone()),
+                    ActivityStatus::Succeeded,
+                    Some(snapshot.session.id.clone()),
+                );
+                return Ok(snapshot);
+            }
+
+            let session_id = params.session_id.as_deref().ok_or_else(|| "session_id is required for this Team Mode action.".to_string())?;
+            let before = team::get_snapshot(&app, session_id, params.agent_id.as_deref())?;
+            let workspace = approved_workspace(&app, &before.session.workspace_id)?;
+            if let (Some(client_key), Some(agent_id)) = (client_key.as_deref(), params.agent_id.as_deref()) {
+                team::bind_client(&app, client_key, session_id, agent_id)?;
+            }
+
+            let (snapshot, action_name, summary, status) = match params.action {
+                TeamActionParam::CreateSession => unreachable!(),
+                TeamActionParam::Join => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for join.".to_string())?;
+                    let snapshot = team::join_agent(&app, session_id, agent_id, params.client_label)?;
+                    let name = snapshot.session.agents.iter().find(|agent| agent.id == agent_id).map(|agent| agent.name.clone()).unwrap_or_else(|| "Agent".to_string());
+                    (snapshot, "teamJoin", format!("{name} joined the AI team"), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::Heartbeat => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for heartbeat.".to_string())?;
+                    let snapshot = team::heartbeat(&app, session_id, agent_id)?;
+                    return Ok(snapshot);
+                }
+                TeamActionParam::PostMessage => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for post_message.".to_string())?;
+                    let kind = match params.message_kind.ok_or_else(|| "message_kind is required for post_message.".to_string())? {
+                        TeamMessageKindParam::Plan => TeamMessageKind::Plan,
+                        TeamMessageKindParam::Progress => TeamMessageKind::Progress,
+                        TeamMessageKindParam::Question => TeamMessageKind::Question,
+                        TeamMessageKindParam::Review => TeamMessageKind::Review,
+                        TeamMessageKindParam::Decision => TeamMessageKind::Decision,
+                        TeamMessageKindParam::Handoff => TeamMessageKind::Handoff,
+                    };
+                    let message = params.message.ok_or_else(|| "message is required for post_message.".to_string())?;
+                    let snapshot = team::post_message(&app, session_id, agent_id, kind, message, params.task_id)?;
+                    (snapshot, "teamMessage", "Posted AI-to-AI team message".to_string(), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::CreateTask => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for create_task.".to_string())?;
+                    let title = params.title.ok_or_else(|| "title is required for create_task.".to_string())?;
+                    let snapshot = team::create_task(
+                        &app,
+                        session_id,
+                        agent_id,
+                        title,
+                        params.description.unwrap_or_default(),
+                        params.priority,
+                        params.depends_on.unwrap_or_default(),
+                    )?;
+                    (snapshot, "teamCreateTask", "Created AI team task".to_string(), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::ClaimTask => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for claim_task.".to_string())?;
+                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for claim_task.".to_string())?;
+                    let snapshot = team::claim_task(
+                        &app,
+                        session_id,
+                        agent_id,
+                        task_id,
+                        params.paths.unwrap_or_default(),
+                        params.lock_ttl_seconds,
+                    )?;
+                    (snapshot, "teamClaimTask", "Claimed distinct AI team implementation task".to_string(), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::HandoffTask => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for handoff_task.".to_string())?;
+                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for handoff_task.".to_string())?;
+                    let target_agent_id = params.target_agent_id.as_deref().ok_or_else(|| "target_agent_id is required for handoff_task.".to_string())?;
+                    let snapshot = team::handoff_task(
+                        &app,
+                        session_id,
+                        agent_id,
+                        task_id,
+                        target_agent_id,
+                        params.message,
+                    )?;
+                    (snapshot, "teamHandoffTask", "Transferred AI team task ownership".to_string(), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::UpdateTask => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for update_task.".to_string())?;
+                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for update_task.".to_string())?;
+                    let task_status = match params.task_status.ok_or_else(|| "task_status is required for update_task.".to_string())? {
+                        TeamTaskStatusParam::Todo => TeamTaskStatus::Todo,
+                        TeamTaskStatusParam::InProgress => TeamTaskStatus::InProgress,
+                        TeamTaskStatusParam::Review => TeamTaskStatus::Review,
+                        TeamTaskStatusParam::Blocked => TeamTaskStatus::Blocked,
+                        TeamTaskStatusParam::Done => TeamTaskStatus::Done,
+                        TeamTaskStatusParam::Cancelled => TeamTaskStatus::Cancelled,
+                    };
+                    let snapshot = team::update_task(
+                        &app,
+                        session_id,
+                        agent_id,
+                        task_id,
+                        task_status,
+                        params.result,
+                        params.blocked_reason,
+                        params.reviewer_agent_id,
+                    )?;
+                    let activity_status = ActivityStatus::Succeeded;
+                    (snapshot, "teamUpdateTask", format!("Updated AI team task · {:?}", task_status), activity_status)
+                }
+                TeamActionParam::VerifyCriterion => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for verify_criterion.".to_string())?;
+                    let criterion_index = params.criterion_index.ok_or_else(|| "criterion_index is required for verify_criterion.".to_string())?;
+                    let evidence = params.evidence.ok_or_else(|| "evidence is required for verify_criterion.".to_string())?;
+                    let snapshot = team::verify_criterion(&app, session_id, agent_id, criterion_index, evidence)?;
+                    (snapshot, "teamVerifyCriterion", format!("Verified AI team success criterion {}", criterion_index + 1), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::LockPaths => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for lock_paths.".to_string())?;
+                    let snapshot = team::lock_paths(
+                        &app,
+                        session_id,
+                        agent_id,
+                        params.task_id,
+                        params.paths.unwrap_or_default(),
+                        params.lock_ttl_seconds,
+                    )?;
+                    (snapshot, "teamLockPaths", "Claimed project paths for AI team work".to_string(), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::ReleasePaths => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for release_paths.".to_string())?;
+                    let snapshot = team::release_paths(&app, session_id, agent_id, params.paths.unwrap_or_default())?;
+                    (snapshot, "teamReleasePaths", "Released AI team path claims".to_string(), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::SetPhase => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for set_phase.".to_string())?;
+                    let phase = match params.phase.ok_or_else(|| "phase is required for set_phase.".to_string())? {
+                        TeamPhaseParam::Planning => TeamPhase::Planning,
+                        TeamPhaseParam::Executing => TeamPhase::Executing,
+                        TeamPhaseParam::Reviewing => TeamPhase::Reviewing,
+                        TeamPhaseParam::Verifying => TeamPhase::Verifying,
+                    };
+                    let snapshot = team::set_phase(&app, session_id, agent_id, phase)?;
+                    (snapshot, "teamPhase", format!("Moved AI team to {:?}", phase), ActivityStatus::Succeeded)
+                }
+                TeamActionParam::Complete => {
+                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for complete.".to_string())?;
+                    let summary_text = params.completion_summary.ok_or_else(|| "completion_summary is required for complete.".to_string())?;
+                    let snapshot = team::complete_work_cycle(&app, session_id, agent_id, summary_text)?;
+                    (snapshot, "teamComplete", "Completed current AI Team work request · persistent Team remains active".to_string(), ActivityStatus::Succeeded)
+                }
+            };
+
+            let detail = snapshot.recommended_action.clone();
+            let _ = activity::record(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Team,
+                action_name,
+                summary,
+                detail,
+                status,
+                Some(snapshot.session.id.clone()),
+            );
+            Ok(snapshot)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Inspect Git status for an approved workspace whose .git directory is inside the workspace root. Returns branch/HEAD, ahead/behind counts, and staged/unstaged/untracked/conflicted paths. This does not modify Git.",
+        annotations(read_only_hint = true)
+    )]
+    async fn git_status(
+        &self,
+        Parameters(params): Parameters<WorkspaceIdParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let status = git::repository_status(&workspace);
+            record_observation(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Git,
+                "status",
+                format!(
+                    "Checked Git status · {} changed paths",
+                    status.changes.len()
+                ),
+                status
+                    .branch
+                    .as_ref()
+                    .map(|branch| format!("Branch: {branch}")),
+            );
+            Ok(status)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Inspect a Git diff without unnecessary huge responses. Set staged=true for the index or false for working-tree changes. mode defaults to summary: compact returns counts only, summary returns counts plus up to 100 changed paths, and full additionally returns the bounded patch text. External diff and textconv execution are disabled.",
+        annotations(read_only_hint = true)
+    )]
+    async fn git_diff(
+        &self,
+        Parameters(params): Parameters<GitDiffParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let mode = params.mode.unwrap_or(GitDiffOutputModeParam::Summary);
+            let mut stats = git::diff_stats(&workspace, params.staged)?;
+            let (content, content_truncated) = if matches!(mode, GitDiffOutputModeParam::Full) {
+                let diff = git::diff(&workspace, params.staged)?;
+                (Some(diff.content), diff.truncated)
+            } else {
+                (None, false)
+            };
+            if matches!(mode, GitDiffOutputModeParam::Compact) {
+                stats.paths.clear();
+                stats.paths_truncated = stats.changed_path_count > 0;
+            }
+
+            record_observation(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Git,
+                "diff",
+                if params.staged {
+                    "Inspected staged Git diff"
+                } else {
+                    "Inspected working-tree Git diff"
+                },
+                Some(format!(
+                    "{} path(s) · +{} -{} · {:?}{}",
+                    stats.changed_path_count,
+                    stats.insertions,
+                    stats.deletions,
+                    mode,
+                    if content_truncated {
+                        " · content truncated"
+                    } else {
+                        ""
+                    }
+                )),
+            );
+            Ok(GitDiffView {
+                mode,
+                stats,
+                content,
+                content_truncated,
+            })
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Run Git's native diff whitespace/conflict-marker check through RepoTunnel's trusted Git subsystem, so verification does not depend on shell access to .git. Set staged=true for the index or false for unstaged working-tree changes. Returns passed plus structured file/line issues.",
+        annotations(read_only_hint = true)
+    )]
+    async fn git_diff_check(
+        &self,
+        Parameters(params): Parameters<GitDiffParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let check = git::diff_check(&workspace, params.staged)?;
+            record_observation(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Git,
+                "diffCheck",
+                if check.passed {
+                    if params.staged {
+                        "Staged Git diff check passed"
+                    } else {
+                        "Working-tree Git diff check passed"
+                    }
+                } else if params.staged {
+                    "Staged Git diff check found issues"
+                } else {
+                    "Working-tree Git diff check found issues"
+                },
+                Some(format!(
+                    "{} issue(s){}",
+                    check.issue_count,
+                    if check.truncated { " · truncated" } else { "" }
+                )),
+            );
+            Ok(check)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "List recent local Git commits for an approved repository without exposing author email addresses.",
+        annotations(read_only_hint = true)
+    )]
+    async fn git_log(
+        &self,
+        Parameters(params): Parameters<GitLogParams>,
+        Extension(parts): Extension<Parts>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let commits = git::recent_commits(&workspace, params.limit.unwrap_or(12))?;
+            record_observation(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                ActivityKind::Git,
+                "log",
+                format!("Inspected Git log · {} commits", commits.len()),
+                None,
+            );
+            Ok(commits)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Stage 1 to 100 explicit workspace-relative files. RepoTunnel blocks protected paths, symlinks, directories, and files that use Git clean filters because filters may execute external programs. In AI Auto the validated staging action applies immediately. In AI Review it is queued for local Accept/Reject and MCP cannot approve it."
+    )]
+    async fn request_git_stage(
+        &self,
+        Parameters(params): Parameters<GitStageParams>,
+        Extension(parts): Extension<Parts>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
+            let action = git::request_stage(&app, &workspace, params.paths)?;
+            let _ =
+                activity::record_git_record(&app, &workspace, trace_group_id.as_deref(), &action);
+            Ok(action)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Commit the repository's currently staged changes. RepoTunnel records the exact staged diff and HEAD first. In AI Auto the validated commit applies immediately. In AI Review it is queued for local Accept/Reject and MCP cannot approve it. This tool never stages files automatically."
+    )]
+    async fn request_git_commit(
+        &self,
+        Parameters(params): Parameters<GitCommitParams>,
+        Extension(parts): Extension<Parts>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
+            let action = git::request_commit(&app, &workspace, params.message)?;
+            let _ =
+                activity::record_git_record(&app, &workspace, trace_group_id.as_deref(), &action);
+            Ok(compact_git_action_for_ai(action))
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Read RepoTunnel's actual connected GitHub account status through the trusted host-side GitHub broker. Use this instead of inferring GitHub access from a sandboxed shell or AI Workspace environment, which intentionally does not receive the GitHub credential. This tool is read-only and never returns tokens, device codes, verification URLs, or other credentials.",
+        annotations(read_only_hint = true)
+    )]
+    async fn github_connection_status(&self) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        run_filesystem_task(move || {
+            ensure_ai_access(&app)?;
+            let status = github::status();
+            Ok(serde_json::json!({
+                "available": status.available,
+                "connected": status.connected,
+                "connecting": status.connecting,
+                "username": status.username,
+                "message": status.message,
+                "credentialExposed": false,
+                "source": "repotunnelTrustedGithubBroker",
+                "guidance": if status.connected {
+                    "GitHub is connected in RepoTunnel. Use RepoTunnel GitHub/Git tools or a direct approved gh command; do not treat missing sandbox credentials as a disconnected account."
+                } else {
+                    "GitHub is not currently connected in RepoTunnel."
+                }
+            }))
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Push the current or specified branch to a configured Git remote using RepoTunnel's connected GitHub credential without exposing the token. RepoTunnel runs its committed-file secret preflight before publishing. Defaults to remote=origin, current branch, set_upstream=true. force_with_lease is available for deliberate history replacement."
+    )]
+    async fn git_push(
+        &self,
+        Parameters(params): Parameters<GitPushParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let github_status = github::status();
+            if !github_status.connected {
+                return Err(github_status.message.unwrap_or_else(|| {
+                    "GitHub is not connected in RepoTunnel. Connect GitHub and try again."
+                        .to_string()
+                }));
+            }
+            git::push(
+                &workspace,
+                params.remote,
+                params.branch,
+                params.set_upstream.unwrap_or(true),
+                params.force_with_lease.unwrap_or(false),
+            )
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Create a GitHub pull request for an approved RepoTunnel workspace using the connected GitHub account. The credential stays private; title/body/base/head/draft are passed as structured GitHub CLI arguments."
+    )]
+    async fn github_create_pr(
+        &self,
+        Parameters(params): Parameters<GithubCreatePrParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            github::create_pull_request(
+                Path::new(&workspace.path),
+                params.title,
+                params.body,
+                params.base,
+                params.head,
+                params.draft.unwrap_or(false),
+            )
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Merge a GitHub pull request for an approved RepoTunnel workspace using the connected GitHub account. Supports merge, squash, or rebase plus optional branch deletion, auto-merge, and maintainer/admin merge."
+    )]
+    async fn github_merge_pr(
+        &self,
+        Parameters(params): Parameters<GithubMergePrParams>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            let method = match params.method.unwrap_or(GithubMergeMethodParam::Merge) {
+                GithubMergeMethodParam::Merge => "merge",
+                GithubMergeMethodParam::Squash => "squash",
+                GithubMergeMethodParam::Rebase => "rebase",
+            };
+            github::merge_pull_request(
+                Path::new(&workspace.path),
+                params.number,
+                method,
+                params.delete_branch.unwrap_or(false),
+                params.auto.unwrap_or(false),
+                params.admin.unwrap_or(false),
+            )
+        })
+        .await
+    }
+
+    #[tool(
+        description = "Request restoration of one tracked UTF-8 text file to its HEAD version through RepoTunnel's normal safe-editing/history layer. In AI Auto the validated restore applies immediately; in AI Review it waits for local Accept/Reject. Staged or conflicted changes are not silently discarded."
+    )]
+    async fn request_git_restore_file(
+        &self,
+        Parameters(params): Parameters<GitRestoreParams>,
+        Extension(parts): Extension<Parts>,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        let trace_group_id = request_edit_group_id(&parts);
+        let conversation_session = openai_conversation_session(&context).map(str::to_string);
+        run_filesystem_task(move || {
+            let workspace = approved_workspace(&app, &params.workspace_id)?;
+            ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
+            let outcome = git::request_restore_file(
+                &app,
+                &workspace,
+                params.relative_path,
+                trace_group_id.as_deref(),
+            )?;
+            let _ = activity::record_change_outcome(
+                &app,
+                &workspace,
+                trace_group_id.as_deref(),
+                &outcome,
+            );
+            Ok(outcome)
+        })
+        .await
+    }
+
+    #[tool(
+        description = "List recent Git commit requests and their pending/applied/rejected/failed status. This tool cannot approve or reject pending Git actions.",
+        annotations(read_only_hint = true)
+    )]
+    async fn list_git_history(
+        &self,
+        Parameters(params): Parameters<ListGitActionsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        run_filesystem_task(move || {
+            ensure_ai_access(&app)?;
+            git::list_actions(
+                &app,
+                params.workspace_id.as_deref(),
+                params.limit.unwrap_or(30),
+            )
+            .map(|actions| {
+                actions
+                    .into_iter()
+                    .map(compact_git_action_for_ai)
+                    .collect::<Vec<_>>()
+            })
+        })
+        .await
+    }
+
+    #[tool(
+        description = "List recent RepoTunnel change records and their pending/applied/rejected/undone/failed status. This is read-only and does not approve, reject, or undo changes.",
+        annotations(read_only_hint = true)
+    )]
+    async fn list_change_history(
+        &self,
+        Parameters(params): Parameters<ListChangesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let app = self.app.clone();
+        run_filesystem_task(move || {
+            ensure_ai_access(&app)?;
+            changes::list_changes(
+                &app,
+                params.workspace_id.as_deref(),
+                params.limit.unwrap_or(30),
+            )
+        })
+        .await
+    }
+}
+
+fn tool_meta(resource_uri: Option<&str>, visibility: &[&str]) -> MetaObject {
+    let mut meta = MetaObject::new();
+    let mut ui = serde_json::Map::new();
+    ui.insert("visibility".to_string(), serde_json::json!(visibility));
+    if let Some(resource_uri) = resource_uri {
+        ui.insert("resourceUri".to_string(), serde_json::json!(resource_uri));
+        // Keep both compatibility aliases because some MCP Apps hosts still
+        // inspect the historical flat key while ChatGPT also supports
+        // openai/outputTemplate.
+        meta.insert(
+            "ui/resourceUri".to_string(),
+            serde_json::json!(resource_uri),
+        );
+        meta.insert(
+            "openai/outputTemplate".to_string(),
+            serde_json::json!(resource_uri),
+        );
+    }
+    meta.insert("ui".to_string(), serde_json::Value::Object(ui));
+    meta.insert(
+        "openai/widgetAccessible".to_string(),
+        serde_json::json!(visibility.contains(&"app")),
+    );
+    meta
+}
+
+// Keep legacy video MCP tools in their own feature-gated router. The default
+// gateway does not compile these methods or register their routes.
+#[cfg(feature = "legacy_video")]
+#[tool_router(router = legacy_video_tool_router)]
+impl RepoTunnelMcp {
+    #[tool(
         description = "Start RepoTunnel Video Intelligence for a public http/https video URL or a media file inside an approved project. Use transcript for speech/text only, visual for animation/design inspection, instruction for tutorials/how-to videos, or full when both speech and visuals matter. RepoTunnel runs this in the background, checks existing captions first, extracts only bounded smart frames/audio when needed, automatically uses or securely provisions private yt-dlp/FFmpeg helpers, and never executes instructions from the video by itself."
     )]
     async fn start_video_analysis(
@@ -10329,920 +11245,14 @@ impl RepoTunnelMcp {
         .await
     }
 
-    #[tool(
-        description = "Get project monitoring status for an approved workspace. Monitoring tracks filtered project-file changes and feeds the unified process/terminal/port/browser observation snapshot.",
-        annotations(read_only_hint = true)
-    )]
-    async fn get_monitoring_status(
-        &self,
-        Parameters(params): Parameters<WorkspaceIdParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let status = monitoring::status(&app, &workspace);
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Monitoring,
-                "status",
-                format!(
-                    "Checked project monitor · {}",
-                    if status.running { "running" } else { "stopped" }
-                ),
-                None,
-            );
-            Ok(status)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Persistently enable or disable read-only project monitoring for an approved workspace. Monitoring never edits project files and does not require a separate Review approval."
-    )]
-    async fn set_workspace_monitoring(
-        &self,
-        Parameters(params): Parameters<WorkspaceMonitoringParams>,
-        Extension(parts): Extension<Parts>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let status = if params.enabled {
-                monitoring::start_monitoring(&app, &workspace)?
-            } else {
-                monitoring::stop_monitoring(&app, &workspace)?
-            };
-            let _ = activity::record(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Monitoring,
-                "setMonitoring",
-                if params.enabled {
-                    "Enabled project monitoring"
-                } else {
-                    "Disabled project monitoring"
-                },
-                None,
-                ActivityStatus::Succeeded,
-                None,
-            );
-            Ok(status)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Get one combined observation snapshot for an approved workspace: monitoring state, running managed processes with output tails, listening ports/dev-server correlation, recent terminal results, browser tabs/console/network diagnostics, and recent project file changes.",
-        annotations(read_only_hint = true)
-    )]
-    async fn get_monitoring_snapshot(
-        &self,
-        Parameters(params): Parameters<WorkspaceIdParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let snapshot = monitoring::snapshot(&app, &workspace)?;
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Monitoring,
-                "snapshot",
-                format!(
-                    "Observed {} processes · {} ports · {} file events",
-                    snapshot.processes.len(),
-                    snapshot.ports.len(),
-                    snapshot.file_events.len()
-                ),
-                Some(format!(
-                    "Browser console: {} · network failures: {}",
-                    snapshot.browser.console_entries.len(),
-                    snapshot.browser.network_failures.len()
-                )),
-            );
-            if !snapshot.file_events.is_empty() {
-                record_observation(
-                    &app,
-                    &workspace,
-                    trace_group_id.as_deref(),
-                    ActivityKind::Files,
-                    "monitoredFileChanges",
-                    format!(
-                        "Observed {} project file changes",
-                        snapshot.file_events.len()
-                    ),
-                    monitoring_file_detail(&snapshot.file_events),
-                );
-            }
-            Ok(snapshot)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "List recent project-file monitoring events (created, modified, deleted). Events are filtered through RepoTunnel's existing project-index/protected-path rules and are observational only.",
-        annotations(read_only_hint = true)
-    )]
-    async fn list_monitoring_file_events(
-        &self,
-        Parameters(params): Parameters<MonitoringFileEventsParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-            let workspace = if let Some(workspace_id) = params.workspace_id.as_deref() {
-                Some(approved_workspace(&app, workspace_id)?)
-            } else {
-                None
-            };
-            let events = monitoring::list_file_events(
-                &app,
-                params.workspace_id.as_deref(),
-                params.limit.unwrap_or(50),
-            )?;
-            if let Some(workspace) = workspace.as_ref() {
-                record_observation(
-                    &app,
-                    workspace,
-                    trace_group_id.as_deref(),
-                    ActivityKind::Monitoring,
-                    "fileEvents",
-                    format!("Inspected project changes · {} events", events.len()),
-                    None,
-                );
-                if !events.is_empty() {
-                    record_observation(
-                        &app,
-                        workspace,
-                        trace_group_id.as_deref(),
-                        ActivityKind::Files,
-                        "monitoredFileChanges",
-                        format!("Observed {} project file changes", events.len()),
-                        monitoring_file_detail(&events),
-                    );
-                }
-            }
-            Ok(events)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Read the shared RepoTunnel Team Mode state for two-AI collaboration. Supply session_id to inspect a known team, or workspace_id to get the latest team session for that approved project. The snapshot includes assigned agent IDs/roles, goal and success criteria, task ownership/dependencies/review state, discussion messages, expiring file/folder claims, progress, and a recommended next action. Call this before team project work and after the other agent may have changed shared state. An active agent can pass after_revision plus wait_seconds to wait up to 30 seconds for the other AI to change the shared state instead of ending its turn immediately.",
-        annotations(read_only_hint = true)
-    )]
-    async fn team_status(
-        &self,
-        Parameters(params): Parameters<TeamStatusParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-            if let Some(session_id) = params.session_id.as_deref() {
-                let snapshot = if let Some(after_revision) = params.after_revision {
-                    team::wait_for_snapshot(
-                        &app,
-                        session_id,
-                        params.agent_id.as_deref(),
-                        after_revision,
-                        params.wait_seconds.unwrap_or(0),
-                    )?
-                } else {
-                    team::get_snapshot(&app, session_id, params.agent_id.as_deref())?
-                };
-                let workspace = approved_workspace(&app, &snapshot.session.workspace_id)?;
-                let mut snapshot = snapshot;
-                if let (Some(client_key), Some(agent_id)) =
-                    (client_key.as_deref(), params.agent_id.as_deref())
-                {
-                    team::bind_client(&app, client_key, session_id, agent_id)?;
-                    if snapshot
-                        .session
-                        .agents
-                        .iter()
-                        .any(|agent| agent.id == agent_id && agent.joined_at.is_some())
-                    {
-                        snapshot = team::heartbeat(&app, session_id, agent_id)?;
-                    }
-                }
-                if params.after_revision.is_none() || params.wait_seconds.unwrap_or(0) == 0 {
-                    record_observation(
-                        &app,
-                        &workspace,
-                        trace_group_id.as_deref(),
-                        ActivityKind::Team,
-                        "teamStatus",
-                        format!(
-                            "Checked AI team · {:?} · {:?}",
-                            snapshot.session.status, snapshot.session.phase
-                        ),
-                        Some(format!(
-                            "{} open · {} done · {} blocked",
-                            snapshot.progress.open_task_count,
-                            snapshot.progress.done_task_count,
-                            snapshot.progress.blocked_task_count
-                        )),
-                    );
-                }
-                return Ok(Some(snapshot));
-            }
-
-            let workspace_id = params.workspace_id.as_deref().ok_or_else(|| {
-                "team_status requires either session_id or workspace_id.".to_string()
-            })?;
-            let workspace = approved_workspace(&app, workspace_id)?;
-            let mut snapshot = team::latest_snapshot_for_workspace(
-                &app,
-                workspace_id,
-                params.agent_id.as_deref(),
-            )?;
-            if let (Some(current), Some(client_key), Some(agent_id)) = (
-                snapshot.as_ref(),
-                client_key.as_deref(),
-                params.agent_id.as_deref(),
-            ) {
-                let session_id = current.session.id.clone();
-                let joined = current
-                    .session
-                    .agents
-                    .iter()
-                    .any(|agent| agent.id == agent_id && agent.joined_at.is_some());
-                team::bind_client(&app, client_key, &session_id, agent_id)?;
-                if joined {
-                    snapshot = Some(team::heartbeat(&app, &session_id, agent_id)?);
-                }
-            }
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Team,
-                "teamStatus",
-                if snapshot.is_some() {
-                    "Checked latest AI team session"
-                } else {
-                    "Checked AI team status · no session yet"
-                },
-                None,
-            );
-            Ok(snapshot)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Coordinate two AIs through one persistent RepoTunnel Team attached to a project until the user explicitly ends it. create_session creates the A/B Team once; join/heartbeat keep stable agent identities. BOTH engineers must join before planning starts. During Planning each engineer posts one Plan message, each creates one distinct initial implementation task, then each posts a Decision confirming the split; RepoTunnel unlocks parallel implementation only after both confirmations. create_task/claim_task divide distinct work: one primary owner per implementation task, one active implementation task per agent, and duplicate open task titles are rejected. Both engineers must finish their own meaningful implementation contribution; review/testing alone cannot satisfy the two-engineer contribution requirement. handoff_task transfers ownership instead of allowing duplicate implementation. update_task enforces cross-review and requires concrete feedback when a reviewer sends work back for bugs/errors. verify_criterion records evidence. task-scoped path claims protect file edits; the reserved `@browser` claim serializes interactive managed-browser mutations so two AIs never type/click in the same shared browser simultaneously. After a completed work cycle, a new human request posted as `USER REQUEST:` reuses the SAME Team. complete closes only the CURRENT request; the Team stays active. MCP agents cannot end the Team itself; pause/end remain user-controlled in the desktop app."
-    )]
-    async fn team_action(
-        &self,
-        Parameters(params): Parameters<TeamActionParams>,
-        Extension(parts): Extension<Parts>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        if let Some(workspace_id) = params.workspace_id.as_deref() {
-            ensure_chatgpt_work_fallback(&app, workspace_id, conversation_session.as_deref());
-        }
-        let trace_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-
-            if matches!(params.action, TeamActionParam::CreateSession) {
-                let workspace_id = params.workspace_id.as_deref().ok_or_else(|| "workspace_id is required for create_session.".to_string())?;
-                let workspace = approved_workspace(&app, workspace_id)?;
-                let snapshot = team::create_session(
-                    &app,
-                    &workspace,
-                    params.goal.unwrap_or_default(),
-                    params.success_criteria.unwrap_or_default(),
-                    params.agent_a_name.unwrap_or_else(|| "Engineer A".to_string()),
-                    params.agent_a_role.unwrap_or_else(|| "Plan, implement, test, debug, and review distinct product work as Engineer A. Avoid duplicate implementation, coordinate explicit handoffs, and verify the other agent's work.".to_string()),
-                    params.agent_b_name.unwrap_or_else(|| "Engineer B".to_string()),
-                    params.agent_b_role.unwrap_or_else(|| "Plan, implement, test, debug, and review distinct product work as Engineer B. Avoid duplicate implementation, coordinate explicit handoffs, and verify the other agent's work.".to_string()),
-                )?;
-                let _ = activity::record(
-                    &app,
-                    &workspace,
-                    trace_group_id.as_deref(),
-                    ActivityKind::Team,
-                    "teamCreate",
-                    "Created a two-agent Team Mode session",
-                    Some(snapshot.session.goal.clone()),
-                    ActivityStatus::Succeeded,
-                    Some(snapshot.session.id.clone()),
-                );
-                return Ok(snapshot);
-            }
-
-            let session_id = params.session_id.as_deref().ok_or_else(|| "session_id is required for this Team Mode action.".to_string())?;
-            let before = team::get_snapshot(&app, session_id, params.agent_id.as_deref())?;
-            let workspace = approved_workspace(&app, &before.session.workspace_id)?;
-            if let (Some(client_key), Some(agent_id)) = (client_key.as_deref(), params.agent_id.as_deref()) {
-                team::bind_client(&app, client_key, session_id, agent_id)?;
-            }
-
-            let (snapshot, action_name, summary, status) = match params.action {
-                TeamActionParam::CreateSession => unreachable!(),
-                TeamActionParam::Join => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for join.".to_string())?;
-                    let snapshot = team::join_agent(&app, session_id, agent_id, params.client_label)?;
-                    let name = snapshot.session.agents.iter().find(|agent| agent.id == agent_id).map(|agent| agent.name.clone()).unwrap_or_else(|| "Agent".to_string());
-                    (snapshot, "teamJoin", format!("{name} joined the AI team"), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::Heartbeat => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for heartbeat.".to_string())?;
-                    let snapshot = team::heartbeat(&app, session_id, agent_id)?;
-                    return Ok(snapshot);
-                }
-                TeamActionParam::PostMessage => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for post_message.".to_string())?;
-                    let kind = match params.message_kind.ok_or_else(|| "message_kind is required for post_message.".to_string())? {
-                        TeamMessageKindParam::Plan => TeamMessageKind::Plan,
-                        TeamMessageKindParam::Progress => TeamMessageKind::Progress,
-                        TeamMessageKindParam::Question => TeamMessageKind::Question,
-                        TeamMessageKindParam::Review => TeamMessageKind::Review,
-                        TeamMessageKindParam::Decision => TeamMessageKind::Decision,
-                        TeamMessageKindParam::Handoff => TeamMessageKind::Handoff,
-                    };
-                    let message = params.message.ok_or_else(|| "message is required for post_message.".to_string())?;
-                    let snapshot = team::post_message(&app, session_id, agent_id, kind, message, params.task_id)?;
-                    (snapshot, "teamMessage", "Posted AI-to-AI team message".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::CreateTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for create_task.".to_string())?;
-                    let title = params.title.ok_or_else(|| "title is required for create_task.".to_string())?;
-                    let snapshot = team::create_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        title,
-                        params.description.unwrap_or_default(),
-                        params.priority,
-                        params.depends_on.unwrap_or_default(),
-                    )?;
-                    (snapshot, "teamCreateTask", "Created AI team task".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::ClaimTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for claim_task.".to_string())?;
-                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for claim_task.".to_string())?;
-                    let snapshot = team::claim_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        task_id,
-                        params.paths.unwrap_or_default(),
-                        params.lock_ttl_seconds,
-                    )?;
-                    (snapshot, "teamClaimTask", "Claimed distinct AI team implementation task".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::HandoffTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for handoff_task.".to_string())?;
-                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for handoff_task.".to_string())?;
-                    let target_agent_id = params.target_agent_id.as_deref().ok_or_else(|| "target_agent_id is required for handoff_task.".to_string())?;
-                    let snapshot = team::handoff_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        task_id,
-                        target_agent_id,
-                        params.message,
-                    )?;
-                    (snapshot, "teamHandoffTask", "Transferred AI team task ownership".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::UpdateTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for update_task.".to_string())?;
-                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for update_task.".to_string())?;
-                    let task_status = match params.task_status.ok_or_else(|| "task_status is required for update_task.".to_string())? {
-                        TeamTaskStatusParam::Todo => TeamTaskStatus::Todo,
-                        TeamTaskStatusParam::InProgress => TeamTaskStatus::InProgress,
-                        TeamTaskStatusParam::Review => TeamTaskStatus::Review,
-                        TeamTaskStatusParam::Blocked => TeamTaskStatus::Blocked,
-                        TeamTaskStatusParam::Done => TeamTaskStatus::Done,
-                        TeamTaskStatusParam::Cancelled => TeamTaskStatus::Cancelled,
-                    };
-                    let snapshot = team::update_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        task_id,
-                        task_status,
-                        params.result,
-                        params.blocked_reason,
-                        params.reviewer_agent_id,
-                    )?;
-                    let activity_status = ActivityStatus::Succeeded;
-                    (snapshot, "teamUpdateTask", format!("Updated AI team task · {:?}", task_status), activity_status)
-                }
-                TeamActionParam::VerifyCriterion => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for verify_criterion.".to_string())?;
-                    let criterion_index = params.criterion_index.ok_or_else(|| "criterion_index is required for verify_criterion.".to_string())?;
-                    let evidence = params.evidence.ok_or_else(|| "evidence is required for verify_criterion.".to_string())?;
-                    let snapshot = team::verify_criterion(&app, session_id, agent_id, criterion_index, evidence)?;
-                    (snapshot, "teamVerifyCriterion", format!("Verified AI team success criterion {}", criterion_index + 1), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::LockPaths => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for lock_paths.".to_string())?;
-                    let snapshot = team::lock_paths(
-                        &app,
-                        session_id,
-                        agent_id,
-                        params.task_id,
-                        params.paths.unwrap_or_default(),
-                        params.lock_ttl_seconds,
-                    )?;
-                    (snapshot, "teamLockPaths", "Claimed project paths for AI team work".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::ReleasePaths => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for release_paths.".to_string())?;
-                    let snapshot = team::release_paths(&app, session_id, agent_id, params.paths.unwrap_or_default())?;
-                    (snapshot, "teamReleasePaths", "Released AI team path claims".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::SetPhase => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for set_phase.".to_string())?;
-                    let phase = match params.phase.ok_or_else(|| "phase is required for set_phase.".to_string())? {
-                        TeamPhaseParam::Planning => TeamPhase::Planning,
-                        TeamPhaseParam::Executing => TeamPhase::Executing,
-                        TeamPhaseParam::Reviewing => TeamPhase::Reviewing,
-                        TeamPhaseParam::Verifying => TeamPhase::Verifying,
-                    };
-                    let snapshot = team::set_phase(&app, session_id, agent_id, phase)?;
-                    (snapshot, "teamPhase", format!("Moved AI team to {:?}", phase), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::Complete => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for complete.".to_string())?;
-                    let summary_text = params.completion_summary.ok_or_else(|| "completion_summary is required for complete.".to_string())?;
-                    let snapshot = team::complete_work_cycle(&app, session_id, agent_id, summary_text)?;
-                    (snapshot, "teamComplete", "Completed current AI Team work request · persistent Team remains active".to_string(), ActivityStatus::Succeeded)
-                }
-            };
-
-            let detail = snapshot.recommended_action.clone();
-            let _ = activity::record(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Team,
-                action_name,
-                summary,
-                detail,
-                status,
-                Some(snapshot.session.id.clone()),
-            );
-            Ok(snapshot)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Inspect Git status for an approved workspace whose .git directory is inside the workspace root. Returns branch/HEAD, ahead/behind counts, and staged/unstaged/untracked/conflicted paths. This does not modify Git.",
-        annotations(read_only_hint = true)
-    )]
-    async fn git_status(
-        &self,
-        Parameters(params): Parameters<WorkspaceIdParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let status = git::repository_status(&workspace);
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Git,
-                "status",
-                format!(
-                    "Checked Git status · {} changed paths",
-                    status.changes.len()
-                ),
-                status
-                    .branch
-                    .as_ref()
-                    .map(|branch| format!("Branch: {branch}")),
-            );
-            Ok(status)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Inspect a Git diff without unnecessary huge responses. Set staged=true for the index or false for working-tree changes. mode defaults to summary: compact returns counts only, summary returns counts plus up to 100 changed paths, and full additionally returns the bounded patch text. External diff and textconv execution are disabled.",
-        annotations(read_only_hint = true)
-    )]
-    async fn git_diff(
-        &self,
-        Parameters(params): Parameters<GitDiffParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let mode = params.mode.unwrap_or(GitDiffOutputModeParam::Summary);
-            let mut stats = git::diff_stats(&workspace, params.staged)?;
-            let (content, content_truncated) = if matches!(mode, GitDiffOutputModeParam::Full) {
-                let diff = git::diff(&workspace, params.staged)?;
-                (Some(diff.content), diff.truncated)
-            } else {
-                (None, false)
-            };
-            if matches!(mode, GitDiffOutputModeParam::Compact) {
-                stats.paths.clear();
-                stats.paths_truncated = stats.changed_path_count > 0;
-            }
-
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Git,
-                "diff",
-                if params.staged {
-                    "Inspected staged Git diff"
-                } else {
-                    "Inspected working-tree Git diff"
-                },
-                Some(format!(
-                    "{} path(s) · +{} -{} · {:?}{}",
-                    stats.changed_path_count,
-                    stats.insertions,
-                    stats.deletions,
-                    mode,
-                    if content_truncated {
-                        " · content truncated"
-                    } else {
-                        ""
-                    }
-                )),
-            );
-            Ok(GitDiffView {
-                mode,
-                stats,
-                content,
-                content_truncated,
-            })
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Run Git's native diff whitespace/conflict-marker check through RepoTunnel's trusted Git subsystem, so verification does not depend on shell access to .git. Set staged=true for the index or false for unstaged working-tree changes. Returns passed plus structured file/line issues.",
-        annotations(read_only_hint = true)
-    )]
-    async fn git_diff_check(
-        &self,
-        Parameters(params): Parameters<GitDiffParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let check = git::diff_check(&workspace, params.staged)?;
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Git,
-                "diffCheck",
-                if check.passed {
-                    if params.staged {
-                        "Staged Git diff check passed"
-                    } else {
-                        "Working-tree Git diff check passed"
-                    }
-                } else if params.staged {
-                    "Staged Git diff check found issues"
-                } else {
-                    "Working-tree Git diff check found issues"
-                },
-                Some(format!(
-                    "{} issue(s){}",
-                    check.issue_count,
-                    if check.truncated { " · truncated" } else { "" }
-                )),
-            );
-            Ok(check)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "List recent local Git commits for an approved repository without exposing author email addresses.",
-        annotations(read_only_hint = true)
-    )]
-    async fn git_log(
-        &self,
-        Parameters(params): Parameters<GitLogParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let commits = git::recent_commits(&workspace, params.limit.unwrap_or(12))?;
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Git,
-                "log",
-                format!("Inspected Git log · {} commits", commits.len()),
-                None,
-            );
-            Ok(commits)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Stage 1 to 100 explicit workspace-relative files. RepoTunnel blocks protected paths, symlinks, directories, and files that use Git clean filters because filters may execute external programs. In AI Auto the validated staging action applies immediately. In AI Review it is queued for local Accept/Reject and MCP cannot approve it."
-    )]
-    async fn request_git_stage(
-        &self,
-        Parameters(params): Parameters<GitStageParams>,
-        Extension(parts): Extension<Parts>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            let action = git::request_stage(&app, &workspace, params.paths)?;
-            let _ =
-                activity::record_git_record(&app, &workspace, trace_group_id.as_deref(), &action);
-            Ok(action)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Commit the repository's currently staged changes. RepoTunnel records the exact staged diff and HEAD first. In AI Auto the validated commit applies immediately. In AI Review it is queued for local Accept/Reject and MCP cannot approve it. This tool never stages files automatically."
-    )]
-    async fn request_git_commit(
-        &self,
-        Parameters(params): Parameters<GitCommitParams>,
-        Extension(parts): Extension<Parts>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            let action = git::request_commit(&app, &workspace, params.message)?;
-            let _ =
-                activity::record_git_record(&app, &workspace, trace_group_id.as_deref(), &action);
-            Ok(compact_git_action_for_ai(action))
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Read RepoTunnel's actual connected GitHub account status through the trusted host-side GitHub broker. Use this instead of inferring GitHub access from a sandboxed shell or AI Workspace environment, which intentionally does not receive the GitHub credential. This tool is read-only and never returns tokens, device codes, verification URLs, or other credentials.",
-        annotations(read_only_hint = true)
-    )]
-    async fn github_connection_status(&self) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-            let status = github::status();
-            Ok(serde_json::json!({
-                "available": status.available,
-                "connected": status.connected,
-                "connecting": status.connecting,
-                "username": status.username,
-                "message": status.message,
-                "credentialExposed": false,
-                "source": "repotunnelTrustedGithubBroker",
-                "guidance": if status.connected {
-                    "GitHub is connected in RepoTunnel. Use RepoTunnel GitHub/Git tools or a direct approved gh command; do not treat missing sandbox credentials as a disconnected account."
-                } else {
-                    "GitHub is not currently connected in RepoTunnel."
-                }
-            }))
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Push the current or specified branch to a configured Git remote using RepoTunnel's connected GitHub credential without exposing the token. RepoTunnel runs its committed-file secret preflight before publishing. Defaults to remote=origin, current branch, set_upstream=true. force_with_lease is available for deliberate history replacement."
-    )]
-    async fn git_push(
-        &self,
-        Parameters(params): Parameters<GitPushParams>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let github_status = github::status();
-            if !github_status.connected {
-                return Err(github_status.message.unwrap_or_else(|| {
-                    "GitHub is not connected in RepoTunnel. Connect GitHub and try again."
-                        .to_string()
-                }));
-            }
-            git::push(
-                &workspace,
-                params.remote,
-                params.branch,
-                params.set_upstream.unwrap_or(true),
-                params.force_with_lease.unwrap_or(false),
-            )
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Create a GitHub pull request for an approved RepoTunnel workspace using the connected GitHub account. The credential stays private; title/body/base/head/draft are passed as structured GitHub CLI arguments."
-    )]
-    async fn github_create_pr(
-        &self,
-        Parameters(params): Parameters<GithubCreatePrParams>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            github::create_pull_request(
-                Path::new(&workspace.path),
-                params.title,
-                params.body,
-                params.base,
-                params.head,
-                params.draft.unwrap_or(false),
-            )
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Merge a GitHub pull request for an approved RepoTunnel workspace using the connected GitHub account. Supports merge, squash, or rebase plus optional branch deletion, auto-merge, and maintainer/admin merge."
-    )]
-    async fn github_merge_pr(
-        &self,
-        Parameters(params): Parameters<GithubMergePrParams>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        ensure_chatgpt_work_fallback(&app, &params.workspace_id, conversation_session.as_deref());
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            let method = match params.method.unwrap_or(GithubMergeMethodParam::Merge) {
-                GithubMergeMethodParam::Merge => "merge",
-                GithubMergeMethodParam::Squash => "squash",
-                GithubMergeMethodParam::Rebase => "rebase",
-            };
-            github::merge_pull_request(
-                Path::new(&workspace.path),
-                params.number,
-                method,
-                params.delete_branch.unwrap_or(false),
-                params.auto.unwrap_or(false),
-                params.admin.unwrap_or(false),
-            )
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Request restoration of one tracked UTF-8 text file to its HEAD version through RepoTunnel's normal safe-editing/history layer. In AI Auto the validated restore applies immediately; in AI Review it waits for local Accept/Reject. Staged or conflicted changes are not silently discarded."
-    )]
-    async fn request_git_restore_file(
-        &self,
-        Parameters(params): Parameters<GitRestoreParams>,
-        Extension(parts): Extension<Parts>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        run_filesystem_task(move || {
-            let workspace = approved_workspace(&app, &params.workspace_id)?;
-            ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            let outcome = git::request_restore_file(
-                &app,
-                &workspace,
-                params.relative_path,
-                trace_group_id.as_deref(),
-            )?;
-            let _ = activity::record_change_outcome(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                &outcome,
-            );
-            Ok(outcome)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "List recent Git commit requests and their pending/applied/rejected/failed status. This tool cannot approve or reject pending Git actions.",
-        annotations(read_only_hint = true)
-    )]
-    async fn list_git_history(
-        &self,
-        Parameters(params): Parameters<ListGitActionsParams>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-            git::list_actions(
-                &app,
-                params.workspace_id.as_deref(),
-                params.limit.unwrap_or(30),
-            )
-            .map(|actions| {
-                actions
-                    .into_iter()
-                    .map(compact_git_action_for_ai)
-                    .collect::<Vec<_>>()
-            })
-        })
-        .await
-    }
-
-    #[tool(
-        description = "List recent RepoTunnel change records and their pending/applied/rejected/undone/failed status. This is read-only and does not approve, reject, or undo changes.",
-        annotations(read_only_hint = true)
-    )]
-    async fn list_change_history(
-        &self,
-        Parameters(params): Parameters<ListChangesParams>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-            changes::list_changes(
-                &app,
-                params.workspace_id.as_deref(),
-                params.limit.unwrap_or(30),
-            )
-        })
-        .await
-    }
 }
 
-fn tool_meta(resource_uri: Option<&str>, visibility: &[&str]) -> MetaObject {
-    let mut meta = MetaObject::new();
-    let mut ui = serde_json::Map::new();
-    ui.insert("visibility".to_string(), serde_json::json!(visibility));
-    if let Some(resource_uri) = resource_uri {
-        ui.insert("resourceUri".to_string(), serde_json::json!(resource_uri));
-        // Keep both compatibility aliases because some MCP Apps hosts still
-        // inspect the historical flat key while ChatGPT also supports
-        // openai/outputTemplate.
-        meta.insert(
-            "ui/resourceUri".to_string(),
-            serde_json::json!(resource_uri),
-        );
-        meta.insert(
-            "openai/outputTemplate".to_string(),
-            serde_json::json!(resource_uri),
-        );
-    }
-    meta.insert("ui".to_string(), serde_json::Value::Object(ui));
-    meta.insert(
-        "openai/widgetAccessible".to_string(),
-        serde_json::json!(visibility.contains(&"app")),
-    );
-    meta
-}
-
+// The primary router remains the only router used by the MCP handler.
 impl RepoTunnelMcp {
     fn tool_router() -> ToolRouter<Self> {
         let mut router = Self::base_tool_router();
+        #[cfg(feature = "legacy_video")]
+        router.map.extend(Self::legacy_video_tool_router().map);
 
         // The Chrome extension bridge is now the only model-facing continuation
         // path. Keep the legacy MCP-App implementation compiled for compatibility
@@ -11266,58 +11276,6 @@ impl RepoTunnelMcp {
             if let Some(route) = router.map.get_mut(name) {
                 route.attr.meta = Some(tool_meta(None, &["app"]));
             }
-        }
-        // Legacy video tools are absent from MCP discovery and dispatch in lean mode.
-        // Methods remain compiled until the feature modules can be isolated safely.
-        #[cfg(not(feature = "legacy_video"))]
-        for name in [
-            "start_video_analysis",
-            "get_video_analysis",
-            "list_video_analyses",
-            "get_video_analysis_content",
-            "cancel_video_analysis",
-            "create_video_project",
-            "list_video_projects",
-            "get_video_project",
-            "get_video_story_capabilities",
-            "compile_video_story_plan",
-            "get_video_story_plan",
-            "get_video_story_animatic_plan",
-            "render_video_story_animatic",
-            "get_video_story_qa",
-            "get_video_story_render_queue",
-            "record_video_story_shot_render",
-            "start_video_story_shot_render",
-            "get_video_story_shot_render",
-            "cancel_video_story_shot_render",
-            "set_video_project_resource_policy",
-            "upsert_video_project_scene",
-            "get_video_project_scene",
-            "list_video_project_scenes",
-            "write_video_project_document",
-            "video_project_ai_workspace",
-            "video_project_recording",
-            "validate_video_project_scene",
-            "render_video_project_scene",
-            "render_video_project_diagram",
-            "list_video_html_templates",
-            "render_video_project_html_scene",
-            "record_video_workflow_checkpoint",
-            "list_video_asset_sources",
-            "record_video_asset_license",
-            "create_video_project_subtitles",
-            "synthesize_video_project_narration",
-            "list_video_narration_providers",
-            "start_video_project_render",
-            "get_video_project_render",
-            "list_video_project_renders",
-            "cancel_video_project_render",
-            "get_video_project_pipeline_status",
-            "clean_video_project",
-            "qa_video_project",
-            "render_video_project_timeline",
-        ] {
-            router.map.remove(name);
         }
         router
     }
