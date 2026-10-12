@@ -74,6 +74,14 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
           </div>
         </div>
 
+        <div className="gateway-client-summary" aria-label="Partial MCP task outcomes">
+          <div>
+            <span>Instrumented MCP tasks</span>
+            <strong>{status.taskToolSuccesses} succeeded · {status.taskToolFailures} failed</strong>
+            <small>Partial coverage: filesystem and structured task wrappers only, across local and remote clients this launch. Not a complete tool-execution count.</small>
+          </div>
+        </div>
+
         <div className="gateway-client-summary" aria-label="Gateway client status">
           <div>
             <span>Remote connection</span>
