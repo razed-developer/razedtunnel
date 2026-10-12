@@ -1,18 +1,6 @@
 import RepoTunnelLogo from "./RepoTunnelLogo";
 
-export type AppView =
-  | "overview"
-  | "projects"
-  | "models"
-  | "editor"
-  | "changes"
-  | "checks"
-  | "git"
-  | "connections"
-  | "commands"
-  | "httpsSetup"
-  | "system"
-  | "help";
+export type AppView = "projects" | "connections";
 
 type AppSidebarProps = {
   activeView: AppView;
