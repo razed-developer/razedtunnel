@@ -19,7 +19,8 @@ mod change_commands;
 mod chatgpt_bridge;
 mod checkpoint;
 mod checkpoint_commands;
-mod commands;
+#[cfg(feature = "legacy_video")]
+mod legacy_video_commands;
 mod connection;
 mod continuity;
 mod conversation;
