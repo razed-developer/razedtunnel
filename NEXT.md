@@ -24,6 +24,7 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
 
 ## Current stage: background system tray (awaiting local validation)
+- User confirmed `npm run check` and `npm run build` passed, but Rust compilation failed with E0432/E0433: `tauri::tray` gated by `tray-icon` feature. Fixed `src-tauri/Cargo.toml` in commit `0eefd78`. Re-run Rust check and tray runtime test. Cargo.lock is locally modified; do not overwrite it.
 - Commits `6095ed0`, `57725ef`: new `src-tauri/src/system_tray.rs` with Open RazedTunnel / Quit RazedTunnel menu and double-click-to-open; close of main window is intercepted and hides it, preserving gateway runtime. Explicit Quit invokes app exit and existing shutdown path.
 - No `Cargo.toml` or lockfile changes; existing default Tauri tray API used. User must validate Rust compilation and manually verify close-to-tray, reopening, Quit, and connection persistence.
 - Validation: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Run app afterward to test tray. Preserve user's local modifications in Cargo.lock and github.rs.
