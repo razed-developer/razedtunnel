@@ -1,3 +1,8 @@
+## Gateway shell dialog cleanup (awaiting validation)
+- Commit `95d5020`: removed unreachable HomeFeatureDialog, NewProjectDialog, old editor-switch confirmation, and unused ProjectSetupPanel/ProjectMemoryPanel imports from the two-page UI. Retained project removal and gateway credential confirmation dialogs. No MCP/backend changes.
+- The legacy editor/home state and callbacks remain in `App.tsx` despite being unreachable; remove incrementally after validation rather than deleting dependent hooks blindly. Existing create-project path is currently inaccessible from the two-page shell (it was only on Home); adding approved local folders remains available on Projects.
+- Validate `git pull --ff-only && npm run check && npm run build`; visually check Projects and Connections, and tray navigation. Next prioritize replacing dead editor/home state and startup effects, ensuring no editor file monitoring runs in background.
+
 ## Validation: gateway-only layout (2026-10-12)
 - User confirmed the responsive Projects/Connections layout fix works. Regression resolved.
 - Next: incremental removal of unused frontend state and imports, keeping Projects/Connections functionality and tray navigation intact.
