@@ -38,6 +38,7 @@ mod models;
 mod monitoring;
 mod phone;
 mod platform_sandbox;
+mod projects;
 mod project_context;
 mod project_index;
 mod project_memory;
