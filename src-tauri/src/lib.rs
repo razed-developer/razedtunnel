@@ -53,17 +53,29 @@ mod temp_workspace;
 mod terminal;
 mod updates;
 mod versioning;
+#[cfg(feature = "legacy_video")]
 mod video;
+#[cfg(feature = "legacy_video")]
 mod video_assets;
+#[cfg(feature = "legacy_video")]
 mod video_director;
+#[cfg(feature = "legacy_video")]
 mod video_html;
+#[cfg(feature = "legacy_video")]
 mod video_narration;
+#[cfg(feature = "legacy_video")]
 mod video_narration_managed;
+#[cfg(feature = "legacy_video")]
 mod video_preview;
+#[cfg(feature = "legacy_video")]
 mod video_production;
+#[cfg(feature = "legacy_video")]
 mod video_qa;
+#[cfg(feature = "legacy_video")]
 mod video_render;
+#[cfg(feature = "legacy_video")]
 mod video_scene;
+#[cfg(feature = "legacy_video")]
 mod video_story_render;
 #[cfg(any(windows, test))]
 mod windows_uia;
