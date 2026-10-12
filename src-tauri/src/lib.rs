@@ -79,7 +79,6 @@ mod models;
 mod monitoring;
 mod monitoring_commands;
 mod phone;
-mod phone_commands;
 mod platform_sandbox;
 mod projects;
 mod project_context;
@@ -238,21 +237,6 @@ pub fn run() {
                 workspace_diagnostics_commands::get_workflow_readiness,
                 workspace_diagnostics_commands::get_environment_diagnostics,
                 workspace_diagnostics_commands::list_tool_capabilities,
-                phone_commands::get_phone_discovery,
-                phone_commands::pair_phone_wirelessly,
-                phone_commands::get_phone_access_status,
-                phone_commands::select_phone_device,
-                phone_commands::set_phone_access_mode,
-                phone_commands::set_phone_access_paused,
-                phone_commands::get_phone_runtime_status,
-                phone_commands::ensure_phone_runtime,
-                phone_commands::clear_phone_runtime,
-                phone_commands::probe_phone_runtime,
-                phone_commands::get_phone_screen_frame,
-                phone_commands::phone_tap,
-                phone_commands::phone_swipe,
-                phone_commands::phone_key_event,
-                phone_commands::phone_type_text,
                 workspace_diagnostics_commands::get_system_resource_snapshot,
                 temp_workspace_commands::create_temp_workspace,
                 temp_workspace_commands::list_temp_workspaces,
