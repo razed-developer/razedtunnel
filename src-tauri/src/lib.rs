@@ -60,6 +60,7 @@ mod mcp_filesystem_params;
 mod mcp_execution_params;
 mod mcp_launch_params;
 mod mcp_phone_params;
+mod mcp_ai_workspace_params;
 mod media_inspection;
 mod media_commands;
 mod media_tools;
