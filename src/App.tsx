@@ -264,6 +264,23 @@ async function loadEditorDocument(workspace: Workspace, entry: DirectoryEntry): 
 
 function App() {
   const [activeView, setActiveView] = useState<AppView>("projects");
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    let disposed = false;
+    void listen<string>("razedtunnel:open-page", (event) => {
+      if (event.payload === "projects" || event.payload === "connections") {
+        setActiveView(event.payload);
+      }
+    }).then((cleanup) => {
+      if (disposed) cleanup();
+      else unlisten = cleanup;
+    }).catch((error) => console.error("Could not listen for tray navigation", error));
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, []);
   const [startupProjectRestored, setStartupProjectRestored] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
