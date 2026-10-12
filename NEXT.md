@@ -23,6 +23,12 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - `ProductionPanel` is actually system/runtime settings, update controls and history retention; do not mistake it for removed Video Production.
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
 
+## Locked product scope (2026-10-12)
+- User explicitly requires only: (1) add/manage projects and permissions, (2) connect MCP to ChatGPT, (3) background system tray with open/quit.
+- If functionality is not on Projects or Connections and not a dependency of those pages or tray, it is out of scope. Retain security/auth, persistence, runtime lifecycle, and required MCP tool handlers as dependencies, not separate UI features.
+- Current `src-tauri/src/lib.rs` setup/run handles runtime startup/shutdown but no system tray setup is visible there; implement and validate tray behavior explicitly, including close-to-tray and true Quit.
+- Strategy: dependency-first reduction toward a two-page shell; do not keep Model Hub, Home generation, editor, Git UI, terminal UI, AI Workspace UI, etc. merely for compatibility. Avoid wholesale deletion until dependencies are traced. Next patch should establish minimal navigation and tray foundation, with small validated commits.
+
 ## Current stage: dead navigation cleanup
 - Branch `cleanup/dead-video-view` removes retired Video view routing, header mapping, and obsolete Team icon type. Commits: `8bbb7dd`, `b1b9d4d`, `26737af`.
 - User reported TypeScript TS2367 on the last `activeView === "video"` comparison in `src/App.tsx`; fixed in `4781f3c`. No backend changes. Next: validate `npm run check && npm run build`, then inspect remaining obsolete UI references. Do not overwrite local Rust edits.
