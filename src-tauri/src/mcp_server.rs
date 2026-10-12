@@ -322,13 +322,6 @@ struct GitDiffView {
     content_truncated: bool,
 }
 
-fn compact_git_action_for_ai(mut action: GitActionRecord) -> GitActionRecord {
-    if action.kind == GitActionKind::Commit {
-        action.detail = None;
-    }
-    action
-}
-
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct CloneRepositoryParams {
     /// GitHub repository explicitly provided by the human, as owner/repository or https://github.com/owner/repository.
@@ -9959,7 +9952,7 @@ impl RepoTunnelMcp {
             let action = git::request_commit(&app, &workspace, params.message)?;
             let _ =
                 activity::record_git_record(&app, &workspace, trace_group_id.as_deref(), &action);
-            Ok(compact_git_action_for_ai(action))
+            Ok(crate::mcp_git_helpers::compact_git_action_for_ai(action))
         })
         .await
     }
