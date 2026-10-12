@@ -553,35 +553,7 @@ fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), St
         );
     }
 
-    let mut archive = ZipArchive::new(Cursor::new(wheel))
-        .map_err(|error| format!("Could not open the verified FFmpeg package: {error}"))?;
-    let mut binary = None;
-    for index in 0..archive.len() {
-        let mut file = archive
-            .by_index(index)
-            .map_err(|error| format!("Could not inspect the FFmpeg package: {error}"))?;
-        let name = file.name().replace('\\', "/");
-        let lower = name.to_ascii_lowercase();
-        let looks_like_binary = lower.contains("/binaries/ffmpeg-")
-            && !lower.ends_with(".txt")
-            && !lower.ends_with(".md");
-        if looks_like_binary {
-            let mut bytes = Vec::new();
-            file.read_to_end(&mut bytes).map_err(|error| {
-                format!("Could not extract FFmpeg from its verified package: {error}")
-            })?;
-            if !bytes.is_empty() {
-                binary = Some(bytes);
-                break;
-            }
-        }
-    }
-    let bytes = binary.ok_or_else(|| {
-        format!(
-            "The verified FFmpeg wheel {} did not contain its expected executable.",
-            selected.0
-        )
-    })?;
+    let bytes = crate::media_tools::extract_ffmpeg_wheel_binary(wheel, &selected.0)?;
     let destination = tools_root(app)?.join(executable_name("ffmpeg"));
     private_write(&destination, &bytes, true)?;
     if program_version(&destination, "ffmpeg").is_none() {
