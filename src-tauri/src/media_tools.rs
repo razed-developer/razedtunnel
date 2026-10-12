@@ -1,7 +1,8 @@
 //! Shared FFmpeg/FFprobe discovery for media inspection and phone workflows.
 //! Provisioning remains delegated to legacy video code until safely extracted.
 
-use std::{env, fs, io::Read, path::PathBuf, sync::atomic::{AtomicBool, Ordering}, time::Duration};
+use std::{env, fs, io::{Cursor, Read}, path::PathBuf, sync::atomic::{AtomicBool, Ordering}, time::Duration};
+use zip::ZipArchive;
 use reqwest::blocking::Client;
 use url::Url;
 use sha2::{Digest, Sha256};
@@ -109,6 +110,39 @@ pub(crate) fn download_bytes(
         }
         bytes.extend_from_slice(&buffer[..read]);
     }
+    Ok(bytes)
+}
+
+pub(crate) fn extract_ffmpeg_wheel_binary(wheel: Vec<u8>, filename: &str) -> Result<Vec<u8>, String> {
+    let mut archive = ZipArchive::new(Cursor::new(wheel))
+        .map_err(|error| format!("Could not open the verified FFmpeg package: {error}"))?;
+    let mut binary = None;
+    for index in 0..archive.len() {
+        let mut file = archive
+            .by_index(index)
+            .map_err(|error| format!("Could not inspect the FFmpeg package: {error}"))?;
+        let name = file.name().replace('\\', "/");
+        let lower = name.to_ascii_lowercase();
+        let looks_like_binary = lower.contains("/binaries/ffmpeg-")
+            && !lower.ends_with(".txt")
+            && !lower.ends_with(".md");
+        if looks_like_binary {
+            let mut bytes = Vec::new();
+            file.read_to_end(&mut bytes).map_err(|error| {
+                format!("Could not extract FFmpeg from its verified package: {error}")
+            })?;
+            if !bytes.is_empty() {
+                binary = Some(bytes);
+                break;
+            }
+        }
+    }
+    let bytes = binary.ok_or_else(|| {
+        format!(
+            "The verified FFmpeg wheel {} did not contain its expected executable.",
+            filename
+        )
+    })?;
     Ok(bytes)
 }
 
