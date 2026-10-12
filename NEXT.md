@@ -1,3 +1,9 @@
+## Two-page navigation type cleanup (awaiting local validation)
+- User confirmed stale clone setter fix passed.
+- Commits `5b5e129`, `4f7b634`: AppHeader now renders only Projects/Connections title/icon; AppSidebar AppView type narrowed to those two pages. No gateway, project or Rust MCP behavior changed. Header focus/status controls intentionally preserved.
+- Validate `git pull --ff-only && npm run check && npm run build`, then tray Projects/Connections and normal sidebar navigation. Other components may import AppView; fix any TypeScript errors before further cleanup. No local compile performed by assistant.
+- Next: dependency-led Rust backend audit; preserve every MCP operation still required for ChatGPT-approved projects, regardless of removed UI.
+
 ## Clone TypeScript regression fix (awaiting validation)
 - User's `npm run check` caught TS2552 at `src/App.tsx:266`: clone handler still called removed `setSelectedWorkspaceId`.
 - Commit `4a92301` removes the stale setter. Clone still refreshes workspaces and navigates to Projects. No backend changes.
