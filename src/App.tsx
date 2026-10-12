@@ -3,33 +3,19 @@ import { listen } from "@tauri-apps/api/event";
 import AppHeader from "./components/AppHeader";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AppSidebar, { type AppView } from "./components/AppSidebar";
-import ChangeHistoryPanel from "./components/ChangeHistoryPanel";
-import PendingChangeReview from "./components/PendingChangeReview";
-import CheckpointManager from "./components/CheckpointManager";
 import ChatConnectionPanel from "./components/ChatConnectionPanel";
 import ConfirmationDialog from "./components/ConfirmationDialog";
-import ExecutionPanel from "./components/ExecutionPanel";
 import GatewayPanel from "./components/GatewayPanel";
-import GitPanel from "./components/GitPanel";
-import ProductionPanel from "./components/ProductionPanel";
-import HelpPanel from "./components/HelpPanel";
-import HttpsSetupGuide from "./components/HttpsSetupGuide";
-import HomeWorkspace from "./components/HomeWorkspace";
-import ModelHub from "./components/ModelHub";
 import HomeFeatureDialog from "./components/HomeFeatureDialog";
 import NewProjectDialog from "./components/NewProjectDialog";
 import ProjectSetupPanel from "./components/ProjectSetupPanel";
 import ProjectMemoryPanel from "./components/ProjectMemoryPanel";
-import ProjectRail from "./components/ProjectRail";
 
 import WindowChrome from "./components/WindowChrome";
-import ProjectOverviewPanel from "./components/ProjectOverviewPanel";
 import PublicTunnelPanel from "./components/PublicTunnelPanel";
 import WorkspaceList from "./components/WorkspaceList";
-import WorkflowPanel from "./components/WorkflowPanel";
-import WorkspaceEditor, { type EditorDocument, type EditorRevealLocation, type EditorSelectionContext } from "./components/WorkspaceEditor";
+import type { EditorDocument, EditorRevealLocation, EditorSelectionContext } from "./components/WorkspaceEditor";
 import type { EditorProblem } from "./components/DeveloperDock";
-import WorkspaceProductivity from "./components/WorkspaceProductivity";
 import {
   getFileInfo,
   openWorkspacePathLocal,
@@ -1609,96 +1595,6 @@ function App() {
       );
     }
 
-    if (activeView === "models") {
-      return (
-        <ModelHub
-          snapshot={modelHub}
-          loading={modelHubLoading}
-          onSnapshotChange={setModelHub}
-          onNotice={setNotice}
-        />
-      );
-    }
-
-    if (activeView === "changes") {
-      return (
-        <div className="page-stack">
-          <PendingChangeReview
-            changes={changes}
-            busyId={changeBusyId}
-            onApprove={(change) => void handlePendingChange(change, "approve")}
-            onReject={(change) => void handlePendingChange(change, "reject")}
-          />
-          <ChangeHistoryPanel
-            timeline={versionTimeline}
-            activityTimeline={activityTimeline}
-            workspaceName={selectedWorkspace()?.name ?? null}
-            busy={versionBusy}
-            onRestore={handleRestoreVersion}
-            onClear={handleClearVersionHistory}
-            onRefresh={() => {
-              if (!selectedWorkspaceId) return;
-              Promise.all([getVersionTimeline(selectedWorkspaceId), getActivityTimeline(selectedWorkspaceId)])
-                .then(([versions, activities]) => {
-                  setVersionTimeline(versions);
-                  setActivityTimeline(activities);
-                })
-                .catch((error) => setNotice(`Could not refresh history: ${errorMessage(error)}`));
-            }}
-          />
-          <CheckpointManager
-            workspaces={workspaces}
-            selectedWorkspaceId={selectedWorkspaceId}
-            onError={(message) => setNotice(`Checkpoint: ${message}`)}
-            onNotice={setNotice}
-            onRestored={() => {
-              refreshChanges().catch(() => undefined);
-            }}
-          />
-        </div>
-      );
-    }
-
-    if (activeView === "checks") {
-      return (
-        <WorkflowPanel
-          workspaces={workspaces}
-          gatewayRunning={gatewayStatus.running}
-          chatConnected={publicTunnelStatus.ready || connectionStatus.ready}
-        />
-      );
-    }
-
-    if (activeView === "commands") {
-      return (
-        <ExecutionPanel
-          workspaces={workspaces}
-          gatewayRunning={gatewayStatus.running}
-          onError={handleExecutionError}
-        />
-      );
-    }
-
-
-    if (activeView === "httpsSetup") {
-      return (
-        <HttpsSetupGuide
-          onError={(message) => setNotice(`HTTPS Setup: ${message}`)}
-        />
-      );
-    }
-
-    if (activeView === "git") {
-      return (
-        <GitPanel
-          workspaces={workspaces}
-          gatewayRunning={gatewayStatus.running}
-          onError={(message) => setNotice(`Git: ${message}`)}
-          onChangeQueued={() => refreshChanges().catch(() => undefined)}
-        />
-      );
-    }
-
     if (activeView === "connections") {
       return (
         <div className="page-stack">
@@ -1735,14 +1631,7 @@ function App() {
       );
     }
 
-    if (activeView === "help") return <HelpPanel />;
-    return (
-      <ProductionPanel
-        onError={(message) => setNotice(`Runtime: ${message}`)}
-        onNotice={setNotice}
-        hasUnsavedChanges={editorSavingKey !== null || editorTabs.some((tab) => tab.dirty)}
-      />
-    );
+    return null;
   }
 
   return (
@@ -1755,25 +1644,6 @@ function App() {
           onNavigate={setActiveView}
         />
 
-        {activeView !== "httpsSetup" ? (
-          <ProjectRail
-            workspaces={workspaces}
-            selectedWorkspaceId={selectedWorkspaceId}
-            activeEditorPath={activeEditorDocument?.workspaceId === selectedWorkspaceId ? activeEditorDocument.path : null}
-            refreshToken={projectTreeRefreshToken}
-            gitChanges={gitStatus?.available ? gitStatus.changes : []}
-            workspaceHealth={workspaceHealth}
-            relocatingWorkspaceId={relocatingWorkspaceId}
-            onSelectWorkspace={handleSelectWorkspaceSafe}
-            onRemoveWorkspace={setWorkspaceToRemove}
-            onOpenFile={(workspace, entry) => void handleOpenEditorFile(workspace, entry)}
-            onEntryRemoved={handleEntryRemoved}
-            onEntryRenamed={handleEntryRenamed}
-            onRelocateWorkspace={(workspace) => void handleRelocateWorkspace(workspace)}
-            onRetryWorkspace={(workspaceId) => void handleWorkspaceHealthRetry(workspaceId)}
-            onNotice={setNotice}
-          />
-        ) : null}
 
         <main className={`main-view ${activeView === "overview" ? "home-main-view" : ""} ${activeView === "editor" ? "editor-main-view" : ""} ${activeView === "httpsSetup" ? "https-setup-main-view" : ""}`}>
           <AppHeader
@@ -1801,57 +1671,6 @@ function App() {
               <div className="loader" aria-hidden="true" />
               <span>Loading RazedTunnel…</span>
             </section>
-          ) : activeView === "overview" ? (
-            <HomeWorkspace
-              gateway={gatewayStatus}
-              connection={connectionStatus}
-              publicTunnel={publicTunnelStatus}
-              workspaces={workspaces}
-              selectedWorkspace={selectedWorkspace()}
-              modelHub={modelHub}
-              currentFile={homeCurrentFile}
-              selection={homeSelection}
-              errors={homeErrors}
-              gatewayBusy={gatewayBusy}
-              adding={adding}
-              checkpointBusy={checkpointBusy}
-              safetyBusy={safetyBusy}
-              aiAccessBusy={aiAccessBusy}
-              aiAccessPaused={aiAccessPaused}
-              onModelHubChange={setModelHub}
-              onToggleGateway={handleGatewayToggle}
-              onAddProject={handleAddWorkspace}
-              onCreateProject={() => setShowNewProject(true)}
-              onCreateCheckpoint={handleCreateCheckpoint}
-              onSafetyScan={handleSafetyScan}
-              onToggleAiAccess={handleAiAccessToggle}
-              onNavigate={setActiveView}
-            />
-          ) : activeView === "editor" ? (
-            <WorkspaceEditor
-              tabs={editorTabs}
-              activeKey={activeEditorKey}
-              savingKey={editorSavingKey}
-              workspacePathById={workspacePathById}
-              gitChanges={gitStatus?.available ? gitStatus.changes : []}
-              revealLocation={editorRevealLocation}
-              secondaryKey={secondaryEditorKey}
-              onSecondaryChange={setSecondaryEditorKey}
-              onSelect={handleEditorSelect}
-              onClose={handleEditorClose}
-              onChange={handleEditorChange}
-              onSave={handleEditorSave}
-              onOpenExternal={(key) => void handleEditorOpenExternal(key)}
-              onReloadExternal={handleReloadExternal}
-              onKeepLocal={handleKeepLocal}
-              onDismissExternalNotice={(key) => setEditorTabs((current) => current.map((tab) => tab.key === key ? { ...tab, updatedExternally: false } : tab))}
-              onOpenProblem={(workspaceId, path, line, column) => void handleOpenEditorProblem(workspaceId, path, line, column)}
-              onSelectionContext={setEditorSelectionContext}
-              onProblemsChange={setEditorProblems}
-              canReopenClosed={closedEditorTabs.length > 0}
-              onReopenClosed={() => void handleReopenClosedEditor()}
-              onNotice={setNotice}
-            />
           ) : (
             <div className="page-scroll">
               <div className="page-content">{renderPage()}</div>
@@ -1861,19 +1680,6 @@ function App() {
         </main>
       </div>
 
-      <WorkspaceProductivity
-        workspaces={workspaces}
-        selectedWorkspaceId={selectedWorkspaceId}
-        activeFile={activeView === "editor" && activeEditorDocument ? { workspaceId: activeEditorDocument.workspaceId, path: activeEditorDocument.path, dirty: activeEditorDocument.dirty } : null}
-        onOpenPath={(workspaceId, path, line, column) => void handleOpenEditorPath(workspaceId, path, line, column)}
-        onSaveActive={() => { if (activeEditorKey) void handleEditorSave(activeEditorKey); }}
-        onOpenExternalActive={() => { if (activeEditorKey) void handleEditorOpenExternal(activeEditorKey); }}
-        onRefreshProject={() => { setProjectTreeRefreshToken((current) => current + 1); void refreshGitStatus(); }}
-        onNavigate={setActiveView}
-        onNotice={setNotice}
-        focusMode={focusMode}
-        onToggleFocusMode={() => setFocusMode((current) => !current)}
-      />
 
       {workspaceToRemove ? (
         <ConfirmationDialog
