@@ -2,6 +2,7 @@
 //! Provisioning remains delegated to legacy video code until safely extracted.
 
 use std::{env, fs, path::PathBuf};
+use sha2::{Digest, Sha256};
 use tauri::{path::BaseDirectory, AppHandle, Manager};
 
 pub(crate) fn wheel_matches_platform(filename: &str) -> bool {
@@ -31,6 +32,16 @@ pub(crate) fn trusted_helper_host(host: &str) -> bool {
             | "pypi.org"
             | "files.pythonhosted.org"
     )
+}
+
+pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
+    let mut digest = Sha256::new();
+    digest.update(bytes);
+    digest
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 
 fn executable_name(name: &str) -> String {
