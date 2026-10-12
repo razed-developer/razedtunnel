@@ -1,7 +1,7 @@
 //! Shared FFmpeg/FFprobe discovery for media inspection and phone workflows.
 //! Provisioning remains delegated to legacy video code until safely extracted.
 
-use std::{env, fs, io::{Cursor, Read}, path::PathBuf, sync::atomic::{AtomicBool, Ordering}, time::Duration};
+use std::{env, fs, io::{Cursor, Read}, path::{Path, PathBuf}, process::{Command, Stdio}, sync::atomic::{AtomicBool, Ordering}, time::Duration};
 use zip::ZipArchive;
 use reqwest::blocking::Client;
 use url::Url;
@@ -144,6 +144,25 @@ pub(crate) fn extract_ffmpeg_wheel_binary(wheel: Vec<u8>, filename: &str) -> Res
         )
     })?;
     Ok(bytes)
+}
+
+pub(crate) fn program_version(path: &Path, name: &str) -> Option<String> {
+    let arg = if name == "ffmpeg" {
+        "-version"
+    } else {
+        "--version"
+    };
+    let output = Command::new(path)
+        .arg(arg)
+        .stdin(Stdio::null())
+        .output()
+        .ok()?;
+    let text = if output.stdout.is_empty() {
+        String::from_utf8_lossy(&output.stderr)
+    } else {
+        String::from_utf8_lossy(&output.stdout)
+    };
+    text.lines().next().map(|line| line.trim().to_string())
 }
 
 fn executable_name(name: &str) -> String {
