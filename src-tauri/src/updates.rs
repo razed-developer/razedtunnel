@@ -39,7 +39,7 @@ struct PendingInstall {
 }
 
 fn default_auto_check() -> bool {
-    true
+    false // No RazedTunnel update feed is configured.
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -66,7 +66,7 @@ struct PersistedUpdateState {
 impl Default for PersistedUpdateState {
     fn default() -> Self {
         Self {
-            auto_check: true,
+            auto_check: false,
             last_checked_at: None,
             cached_update: None,
             deferred_version: None,
@@ -287,18 +287,18 @@ fn status_from(
     app_state: Option<&AppState>,
 ) -> UpdateStatus {
     let now = now_seconds();
-    let should_notify = notification_due(&state, now);
+    let should_notify = false; // Fork has no configured update feed.
     let install_blocked_reason = app_state.and_then(|app_state| active_work_reason(app, app_state));
     UpdateStatus {
         current_version: app.package_info().version.to_string(),
-        auto_check: state.auto_check,
+        auto_check: false,
         check_interval_seconds: AUTO_CHECK_INTERVAL_SECONDS,
         last_checked_at: state.last_checked_at,
-        update: state.cached_update,
+        update: None,
         should_notify,
         deferred_until: state.deferred_until.filter(|until| *until > now),
         last_successful_version: state.last_successful_version,
-        last_error: state.last_error,
+        last_error: None,
         install_blocked_reason,
     }
 }
@@ -316,7 +316,8 @@ pub(crate) fn set_auto_check(
     app_state: Option<&AppState>,
 ) -> Result<UpdateStatus, String> {
     let mut state = load(app)?;
-    state.auto_check = enabled;
+    state.auto_check = false;
+    let _ = enabled;
     save(app, &state)?;
     hardening::log_event(
         app,
@@ -357,6 +358,9 @@ pub(crate) async fn check(
     manual: bool,
     app_state: Option<&AppState>,
 ) -> Result<UpdateStatus, String> {
+    let _ = manual;
+    return status(app, app_state);
+    #[allow(unreachable_code)]
     let state = load(app)?;
     if !manual && !state.auto_check {
         return Ok(status_from(app, state, app_state));
@@ -525,6 +529,8 @@ pub(crate) async fn install_and_restart(
     app: &AppHandle,
     app_state: &AppState,
 ) -> Result<UpdateInstallResult, String> {
+    return Err("RazedTunnel updates are unavailable until a fork-specific signed update feed is configured.".to_string());
+    #[allow(unreachable_code)]
     if let Some(reason) = active_work_reason(app, app_state) {
         return Err(reason);
     }
