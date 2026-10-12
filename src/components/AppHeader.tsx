@@ -21,7 +21,6 @@ const titles: Record<AppView, string> = {
   connections: "Connect",
   commands: "Commands",
   httpsSetup: "HTTPS Setup",
-  video: "Video",
   system: "Settings",
   help: "Help",
 };
@@ -37,7 +36,6 @@ const icons: Record<AppView, Parameters<typeof NavIcon>[0]["name"]> = {
   connections: "link",
   commands: "terminal",
   httpsSetup: "shield",
-  video: "video",
   system: "settings",
   help: "help",
 };
