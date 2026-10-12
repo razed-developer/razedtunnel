@@ -114,22 +114,16 @@ function HomeWorkspace({
           <div style={{ width: "100%", maxWidth: 760, margin: "0 auto", display: "grid", gap: 20 }}>
             <div>
               <span className="section-kicker">RazedTunnel workspace</span>
-              <h1 style={{ margin: "8px 0" }}>Connection &amp; projects</h1>
-              <p style={{ color: "var(--text-muted, #8995a6)" }}>Your local development bridge at a glance.</p>
+              <h1 style={{ margin: "8px 0" }}>Projects</h1>
+              <p style={{ color: "var(--text-muted, #8995a6)" }}>Approved workspaces and access permissions.</p>
             </div>
             <section className="rail-card connection-card">
-              <div className="rail-card-title"><NavIcon name="gateway" size={16} /><strong>Connection status</strong></div>
-              <p>{gateway.running ? "Local MCP gateway running" : "Local MCP gateway stopped"} · {remoteReady ? "Remote endpoint ready" : "Remote endpoint not ready"}</p>
-              <p>{aiAccessPaused ? "AI workspace access is paused." : "AI workspace access is enabled."}</p>
-              <button type="button" onClick={() => onNavigate("connections")}>Manage connections</button>
-            </section>
-            <section className="rail-card connection-card">
-              <div className="rail-card-title"><NavIcon name="folder" size={16} /><strong>Approved projects ({workspaces.length})</strong></div>
+              <div className="rail-card-title"><NavIcon name="folder" size={16} /><strong>Approved projects</strong></div>
               {workspaces.length === 0 ? <p>No projects approved yet.</p> : (
-                <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ display: "grid", gap: 12 }}>
                   {workspaces.map((workspace) => (
-                    <div key={workspace.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                      <span><strong>{workspace.name}</strong>{selectedWorkspace?.id === workspace.id ? " · Selected" : ""}</span>
+                    <div key={workspace.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <strong>{workspace.name}</strong>
                       <small>{workspace.accessMode === "readOnly" ? "Read only" : "Read/write"} · Changes: {workspace.changePolicy} · Commands: {workspace.commandPolicy}</small>
                     </div>
                   ))}
@@ -138,8 +132,7 @@ function HomeWorkspace({
               <button type="button" onClick={() => onNavigate("projects")}>Manage projects</button>
             </section>
             <section className="rail-card connection-card">
-              <div className="rail-card-title"><NavIcon name="checks" size={16} /><strong>Development tools</strong></div>
-              <p>Review pending changes, run checks, or inspect Git for the selected project.</p>
+              <div className="rail-card-title"><NavIcon name="checks" size={16} /><strong>Development</strong></div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button type="button" onClick={() => onNavigate("changes")}>History</button>
                 <button type="button" onClick={() => onNavigate("checks")}>Checks</button>
