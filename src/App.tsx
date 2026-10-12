@@ -263,7 +263,7 @@ async function loadEditorDocument(workspace: Workspace, entry: DirectoryEntry): 
 }
 
 function App() {
-  const [activeView, setActiveView] = useState<AppView>("overview");
+  const [activeView, setActiveView] = useState<AppView>("projects");
   const [startupProjectRestored, setStartupProjectRestored] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
