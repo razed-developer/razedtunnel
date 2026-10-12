@@ -15,6 +15,7 @@ type WorkspaceListProps = {
   workspaceHealth: Record<string, WorkspaceHealth>;
   relocatingWorkspaceId: string | null;
   onAdd: () => void;
+  onClone: (url: string) => Promise<void>;
   onRemove: (workspace: Workspace) => void;
   onAccessChange: (workspace: Workspace, accessMode: WorkspaceAccessMode) => void;
   onChangePolicyChange: (workspace: Workspace, changePolicy: WorkspaceChangePolicy) => void;
@@ -50,6 +51,7 @@ function WorkspaceList({
   workspaceHealth,
   relocatingWorkspaceId,
   onAdd,
+  onClone,
   onRemove,
   onAccessChange,
   onChangePolicyChange,
@@ -58,6 +60,23 @@ function WorkspaceList({
   onRetryHealth,
 }: WorkspaceListProps) {
   const [showGitInstructions, setShowGitInstructions] = useState(false);
+  const [gitUrl, setGitUrl] = useState("");
+  const [cloning, setCloning] = useState(false);
+  const [cloneError, setCloneError] = useState<string | null>(null);
+  async function submitClone(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCloning(true);
+    setCloneError(null);
+    try {
+      await onClone(gitUrl.trim());
+      setGitUrl("");
+      setShowGitInstructions(false);
+    } catch (error) {
+      setCloneError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setCloning(false);
+    }
+  }
   return (
     <section className="workspace-section" aria-labelledby="workspace-title">
       <div className="section-heading">
@@ -83,9 +102,15 @@ function WorkspaceList({
       {showGitInstructions ? (
         <div className="security-note" role="region" aria-label="Connect a Git repository">
           <div>
-            <strong>Connect an existing Git checkout</strong>
-            <p>RazedTunnel currently registers folders on this computer, not remote URLs. Clone your repository with Git first (for example, <code>git clone https://github.com/OWNER/REPO.git</code>), then select the cloned folder using Add local folder. Your existing Git credentials and permissions remain in effect. Cloning directly from this screen is not available yet.</p>
-            <button className="secondary-button" type="button" onClick={onAdd} disabled={adding}>{adding ? "Opening…" : "Select cloned folder"}</button>
+            <strong>Clone and connect a Git repository</strong>
+            <p>Enter an HTTPS clone URL, then select a parent folder on this computer. RazedTunnel will clone into a new subfolder and register it as an approved workspace. Git must be installed; private repositories need non-interactive credentials already configured.</p>
+            <form onSubmit={(event) => void submitClone(event)}>
+              <label htmlFor="git-clone-url">Repository URL</label>
+              <input id="git-clone-url" type="url" required placeholder="https://github.com/owner/repository.git" value={gitUrl} onChange={(event) => setGitUrl(event.target.value)} disabled={cloning} style={{ width: "100%", margin: "8px 0" }} />
+              <button className="secondary-button" type="submit" disabled={cloning || !gitUrl.trim()}>{cloning ? "Cloning…" : "Choose destination and clone"}</button>
+            </form>
+            {cloneError ? <p role="alert">{cloneError}</p> : null}
+            <p>Already cloned? <button className="secondary-button" type="button" onClick={onAdd} disabled={adding || cloning}>Select existing checkout</button></p>
           </div>
         </div>
       ) : null}
