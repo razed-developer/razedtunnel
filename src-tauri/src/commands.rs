@@ -39,7 +39,7 @@ use crate::{
         WorkflowReadiness, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy,
         WorkspaceEnvironmentDiagnostics, WorkspaceHealth,
     },
-    monitoring, phone, project_context, project_index, project_memory, project_setup,
+    monitoring, phone, projects::{canonical_workspace_path, workspace_name, new_workspace_id}, project_context, project_index, project_memory, project_setup,
     public_tunnel::PublicTunnelProvider,
     repository, semantic,
     storage::{
@@ -55,68 +55,6 @@ use crate::{
     video, video_assets, video_director, video_narration, video_preview, video_production,
     video_qa, video_render, video_scene, video_story_render,
 };
-
-fn canonical_workspace_path(path: &str) -> Result<PathBuf, String> {
-    let requested = Path::new(path);
-
-    if !requested.exists() {
-        return Err("The selected project folder no longer exists.".to_string());
-    }
-
-    if !requested.is_dir() {
-        return Err("The selected path is not a folder.".to_string());
-    }
-
-    requested
-        .canonicalize()
-        .map_err(|error| format!("Could not resolve the selected project folder: {error}"))
-}
-
-fn workspace_name(path: &Path) -> String {
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .filter(|name| !name.trim().is_empty())
-        .unwrap_or("Project")
-        .to_string()
-}
-
-fn allocate_unique_workspace_id_with<F>(
-    existing: &[Workspace],
-    mut fill_random: F,
-) -> Result<String, String>
-where
-    F: FnMut(&mut [u8; 16]) -> Result<(), String>,
-{
-    for _ in 0..16 {
-        let mut random = [0u8; 16];
-        fill_random(&mut random)?;
-        let id = format!(
-            "workspace-{}",
-            random
-                .iter()
-                .map(|byte| format!("{byte:02x}"))
-                .collect::<String>()
-        );
-        if existing.iter().all(|workspace| workspace.id != id) {
-            return Ok(id);
-        }
-    }
-
-    Err("Could not allocate a unique workspace ID.".to_string())
-}
-
-fn new_workspace_id(existing: &[Workspace]) -> Result<(String, u64), String> {
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|_| "System time is unavailable.".to_string())?
-        .as_millis();
-    let added_at = u64::try_from(timestamp).unwrap_or(u64::MAX);
-    let id = allocate_unique_workspace_id_with(existing, |random| {
-        getrandom::fill(random)
-            .map_err(|error| format!("Could not generate a workspace ID: {error}"))
-    })?;
-    Ok((id, added_at))
-}
 
 fn approved_workspace(app: &AppHandle, id: &str) -> Result<Workspace, String> {
     load_workspaces(app)?
@@ -4220,36 +4158,3 @@ pub fn delete_team_session(app: AppHandle, session_id: String) -> Result<(), Str
     team::delete_session(&app, &session_id)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn workspace_with_id(id: String) -> Workspace {
-        Workspace {
-            id,
-            name: "Test".to_string(),
-            path: ".".to_string(),
-            added_at: 0,
-            access_mode: WorkspaceAccessMode::ReadWrite,
-            change_policy: WorkspaceChangePolicy::Automatic,
-            command_policy: CommandPolicy::Automatic,
-        }
-    }
-
-    #[test]
-    fn workspace_id_allocator_retries_a_collision() {
-        let colliding_id = format!("workspace-{}", "00".repeat(16));
-        let existing = vec![workspace_with_id(colliding_id.clone())];
-        let mut attempt = 0usize;
-        let id = allocate_unique_workspace_id_with(&existing, |random| {
-            *random = if attempt == 0 { [0u8; 16] } else { [1u8; 16] };
-            attempt += 1;
-            Ok(())
-        })
-        .unwrap();
-
-        assert_eq!(attempt, 2);
-        assert_ne!(id, colliding_id);
-        assert_eq!(id, format!("workspace-{}", "01".repeat(16)));
-    }
-}
