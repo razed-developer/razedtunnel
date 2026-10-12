@@ -1758,7 +1758,7 @@ function App() {
           />
         ) : null}
 
-        <main className={`main-view ${activeView === "overview" ? "home-main-view" : ""} ${activeView === "editor" ? "editor-main-view" : ""} ${activeView === "video" ? "video-main-view" : ""} ${activeView === "httpsSetup" ? "https-setup-main-view" : ""}`}>
+        <main className={`main-view ${activeView === "overview" ? "home-main-view" : ""} ${activeView === "editor" ? "editor-main-view" : ""} ${activeView === "httpsSetup" ? "https-setup-main-view" : ""}`}>
           <AppHeader
             view={activeView}
             gatewayRunning={gatewayStatus.running}
