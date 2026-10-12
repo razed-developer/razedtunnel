@@ -1570,7 +1570,7 @@ function App() {
           />
           <ProjectSetupPanel workspaces={workspaces} selectedWorkspaceId={selectedWorkspaceId} onNotice={setNotice} />
           <ProjectMemoryPanel workspaces={workspaces} selectedWorkspaceId={selectedWorkspaceId} onNotice={setNotice} />
-          <ProjectOverviewPanel workspaces={workspaces} />
+          <ProjectOverviewPanel workspaces={workspaces} selectedWorkspaceId={selectedWorkspaceId} />
         </div>
       );
     }
@@ -1784,7 +1784,7 @@ function App() {
           {loading ? (
             <section className="loading-state" aria-live="polite">
               <div className="loader" aria-hidden="true" />
-              <span>Loading RepoTunnel…</span>
+              <span>Loading RazedTunnel…</span>
             </section>
           ) : activeView === "overview" ? (
             <HomeWorkspace
