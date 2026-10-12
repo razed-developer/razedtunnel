@@ -63,6 +63,7 @@ mod mcp_phone_params;
 mod mcp_ai_workspace_params;
 mod mcp_desktop_params;
 mod mcp_browser_params;
+mod mcp_phone_helpers;
 mod media_inspection;
 mod media_commands;
 mod media_tools;
