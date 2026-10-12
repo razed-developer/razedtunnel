@@ -24,6 +24,7 @@ mod filesystem;
 mod filesystem_commands;
 mod gateway;
 mod git;
+mod git_commands;
 mod github;
 mod github_commands;
 mod gmail_access;
@@ -345,16 +346,16 @@ pub fn run() {
                 monitoring_commands::stop_workspace_monitoring,
                 monitoring_commands::get_monitoring_snapshot,
                 monitoring_commands::list_monitoring_file_events,
-                commands::get_git_status,
-                commands::get_git_diff,
-                commands::get_git_diff_check,
-                commands::get_git_log,
-                commands::request_git_stage,
-                commands::request_git_commit,
-                commands::list_git_actions,
-                commands::approve_git_action,
-                commands::reject_git_action,
-                commands::request_git_restore_file,
+                git_commands::get_git_status,
+                git_commands::get_git_diff,
+                git_commands::get_git_diff_check,
+                git_commands::get_git_log,
+                git_commands::request_git_stage,
+                git_commands::request_git_commit,
+                git_commands::list_git_actions,
+                git_commands::approve_git_action,
+                git_commands::reject_git_action,
+                git_commands::request_git_restore_file,
                 commands::get_file_info,
                 commands::create_checkpoint,
                 commands::list_checkpoints,
