@@ -103,7 +103,7 @@ function WorkspaceList({
         <div className="security-note" role="region" aria-label="Connect a Git repository">
           <div>
             <strong>Clone and connect a Git repository</strong>
-            <p>Enter an HTTPS clone URL, then select a parent folder on this computer. RazedTunnel will clone into a new subfolder and register it as an approved workspace. Git must be installed; private repositories need non-interactive credentials already configured.</p>
+            <p>Enter an HTTPS clone URL, then select a parent folder on this computer. RazedTunnel will clone into a new subfolder and register it with read-only access, edit review, and commands disabled by default. You can change permissions afterward. Git must be installed; private repositories need non-interactive credentials already configured.</p>
             <form onSubmit={(event) => void submitClone(event)}>
               <label htmlFor="git-clone-url">Repository URL</label>
               <input id="git-clone-url" type="url" required placeholder="https://github.com/owner/repository.git" value={gitUrl} onChange={(event) => setGitUrl(event.target.value)} disabled={cloning} style={{ width: "100%", margin: "8px 0" }} />
