@@ -258,44 +258,6 @@ fn ensure_private_dir(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn private_write(path: &Path, bytes: &[u8], executable: bool) -> Result<(), String> {
-    #[cfg(not(unix))]
-    let _ = executable;
-
-    let parent = path
-        .parent()
-        .ok_or_else(|| "Could not resolve RepoTunnel video helper directory.".to_string())?;
-    ensure_private_dir(parent)?;
-    let temporary = parent.join(format!(
-        ".video-write-{:x}-{:x}.tmp",
-        now_millis(),
-        COMMAND_SEQUENCE.fetch_add(1, Ordering::Relaxed)
-    ));
-    let mut options = OpenOptions::new();
-    options.create_new(true).write(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(if executable { 0o700 } else { 0o600 });
-    }
-    let mut file = options
-        .open(&temporary)
-        .map_err(|error| format!("Could not create a private video helper file: {error}"))?;
-    file.write_all(bytes)
-        .and_then(|_| file.sync_all())
-        .map_err(|error| format!("Could not save a video helper: {error}"))?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(
-            &temporary,
-            fs::Permissions::from_mode(if executable { 0o700 } else { 0o600 }),
-        )
-        .map_err(|error| format!("Could not protect a video helper: {error}"))?;
-    }
-    fs::rename(&temporary, path)
-        .map_err(|error| format!("Could not install a video helper: {error}"))
-}
 
 fn cache_root(app: &AppHandle) -> Result<PathBuf, String> {
     let path = data_path(app, VIDEO_CACHE_DIR)?;
@@ -468,7 +430,7 @@ fn install_yt_dlp(
         fs::remove_file(&destination)
             .map_err(|error| format!("Could not replace the managed yt-dlp helper: {error}"))?;
     }
-    private_write(&destination, &bytes, true)?;
+    crate::media_tools::private_write(&destination, &bytes, true)?;
     if crate::media_tools::program_version(&destination, "yt-dlp").is_none() {
         let _ = fs::remove_file(&destination);
         return Err("Downloaded yt-dlp could not be verified by execution.".to_string());
@@ -536,7 +498,7 @@ fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), St
 
     let bytes = crate::media_tools::extract_ffmpeg_wheel_binary(wheel, &selected.0)?;
     let destination = tools_root(app)?.join(executable_name("ffmpeg"));
-    private_write(&destination, &bytes, true)?;
+    crate::media_tools::private_write(&destination, &bytes, true)?;
     if crate::media_tools::program_version(&destination, "ffmpeg").is_none() {
         let _ = fs::remove_file(&destination);
         return Err("Downloaded FFmpeg could not be verified by execution.".to_string());
@@ -1645,7 +1607,7 @@ fn load_cached(directory: &Path) -> Option<CachedVideoResult> {
 fn save_cached(directory: &Path, cached: &CachedVideoResult) -> Result<(), String> {
     let contents = serde_json::to_vec_pretty(cached)
         .map_err(|error| format!("Could not serialize video analysis cache: {error}"))?;
-    private_write(&result_path(directory), &contents, false)
+    crate::media_tools::private_write(&result_path(directory), &contents, false)
 }
 
 fn prune_cache(app: &AppHandle, keep: &Path) {
