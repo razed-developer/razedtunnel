@@ -59,37 +59,10 @@ type NavGroup = {
 };
 
 const navGroups: NavGroup[] = [
-  {
-    label: "Workspace",
-    items: [
-      { id: "overview", label: "Home", icon: "home" },
-      { id: "projects", label: "Projects", icon: "folder" },
-    ],
-  },
-  {
-    label: "Development",
-    items: [
-      { id: "changes", label: "History", icon: "changes" },
-      { id: "checks", label: "Checks", icon: "checks" },
-      { id: "git", label: "Git", icon: "git" },
-      { id: "commands", label: "Commands", icon: "terminal" },
-    ],
-  },
-  {
-    label: "Connections",
-    items: [
-      { id: "connections", label: "Connect", icon: "link" },
-      { id: "httpsSetup", label: "HTTPS Setup", icon: "shield" },
-    ],
-  },
-  {
-    label: "Additional Tools",
-    items: [
-      { id: "team", label: "GPT Agents", icon: "team" },
-      { id: "video", label: "Video", icon: "video" },
-      { id: "phone", label: "Phone", icon: "phone" },
-    ],
-  },
+  { label: "Gateway", items: [
+    { id: "projects", label: "Projects", icon: "folder" },
+    { id: "connections", label: "Connections", icon: "link" },
+  ] },
 ];
 
 export function NavIcon({ name, size = 17 }: { name: IconName; size?: number }) {
@@ -151,7 +124,7 @@ function AppSidebar({
         <RepoTunnelLogo size={39} className="sidebar-product-logo" />
         <div className="sidebar-brand-copy">
           <strong>RazedTunnel</strong>
-          <span>Local AI Workspace</span>
+          <span>Project access gateway</span>
         </div>
       </div>
 
