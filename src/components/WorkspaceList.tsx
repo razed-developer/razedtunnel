@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import type {
   CommandPolicy,
   Workspace,
@@ -63,7 +63,7 @@ function WorkspaceList({
   const [gitUrl, setGitUrl] = useState("");
   const [cloning, setCloning] = useState(false);
   const [cloneError, setCloneError] = useState<string | null>(null);
-  async function submitClone(event: React.FormEvent<HTMLFormElement>) {
+  async function submitClone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCloning(true);
     setCloneError(null);
