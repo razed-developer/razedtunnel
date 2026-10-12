@@ -30,6 +30,7 @@ mod hardening;
 mod history_commands;
 mod https_setup;
 mod integrations;
+mod integration_commands;
 mod large_project_read;
 mod launcher;
 #[cfg(any(target_os = "macos", test))]
@@ -287,13 +288,13 @@ pub fn run() {
                 github_commands::connect_github,
                 github_commands::cancel_github_connection,
                 github_commands::disconnect_github,
-                commands::list_deep_integrations,
-                commands::set_deep_integration_enabled,
-                commands::list_desktop_control_applications,
-                commands::get_desktop_control_enabled,
-                commands::set_desktop_control_enabled,
-                commands::get_gmail_access_enabled,
-                commands::set_gmail_access_enabled,
+                integration_commands::list_deep_integrations,
+                integration_commands::set_deep_integration_enabled,
+                integration_commands::list_desktop_control_applications,
+                integration_commands::get_desktop_control_enabled,
+                integration_commands::set_desktop_control_enabled,
+                integration_commands::get_gmail_access_enabled,
+                integration_commands::set_gmail_access_enabled,
                 commands::get_ai_workspace_status,
                 commands::start_ai_workspace,
                 commands::stop_ai_workspace,
