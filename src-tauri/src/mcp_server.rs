@@ -2870,7 +2870,10 @@ where
                 error_result(format!("RepoTunnel could not serialize the structured tool result: {error}"))
             },
         },
-        Ok(Err(message)) => error_result(message),
+        Ok(Err(message)) => {
+            TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+            error_result(message)
+        },
         Err(error) => {
             TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
             error_result(format!("The local structured task could not complete: {error}"))
