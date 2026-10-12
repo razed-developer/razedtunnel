@@ -282,8 +282,10 @@ pub async fn clone_git_workspace(
             return Err("Destination already exists. Choose another parent folder or register the existing checkout.".to_string());
         }
         let mut command = std::process::Command::new("git");
+        // Git for Windows may reject the \\?\\ prefix returned by canonicalize().
+        // Run from the validated parent and pass only the relative checkout name.
         command.args(["-c", "credential.interactive=never", "clone", "--", url])
-            .arg(&destination)
+            .arg(repo_name)
             .env("GIT_TERMINAL_PROMPT", "0")
             .env("GCM_INTERACTIVE", "Never")
             .current_dir(&parent);
