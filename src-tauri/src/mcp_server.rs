@@ -801,12 +801,6 @@ impl RepoTunnelMcp {
                     let destination = params.destination_path.as_deref().ok_or_else(|| {
                         "destination_path is required for action=import.".to_string()
                     })?;
-                    team::assert_paths_available(
-                        &app,
-                        &workspace.id,
-                        &[destination.to_string()],
-                        client_key.as_deref(),
-                    )?;
                     ExternalFileAction::Import
                 }
             };
@@ -1753,12 +1747,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::create_file(
                 &app,
                 &workspace,
@@ -1793,12 +1781,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::write_file(
                 &app,
                 &workspace,
@@ -1833,12 +1815,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::patch_file(
                 &app,
                 &workspace,
@@ -1874,12 +1850,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::create_directory(
                 &app,
                 &workspace,
@@ -1920,12 +1890,6 @@ impl RepoTunnelMcp {
                 .join(&params.new_name)
                 .to_string_lossy()
                 .replace('\\', "/");
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                &[params.relative_path.clone(), destination],
-                client_key.as_deref(),
-            )?;
             let outcome = changes::rename_entry(
                 &app,
                 &workspace,
@@ -1960,12 +1924,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                &[params.source_path.clone(), params.destination_path.clone()],
-                client_key.as_deref(),
-            )?;
             let outcome = changes::move_entry(
                 &app,
                 &workspace,
@@ -2000,12 +1958,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::delete_entry(
                 &app,
                 &workspace,
