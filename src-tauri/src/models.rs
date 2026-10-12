@@ -244,6 +244,8 @@ pub(crate) struct SafetyScanResult {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct GatewayStatus {
+    pub(crate) task_tool_successes: u64,
+    pub(crate) task_tool_failures: u64,
     pub(crate) running: bool,
     pub(crate) port: Option<u16>,
     pub(crate) workspace_count: usize,
