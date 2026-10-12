@@ -23,7 +23,7 @@ import ProjectSetupPanel from "./components/ProjectSetupPanel";
 import ProjectMemoryPanel from "./components/ProjectMemoryPanel";
 import ProjectRail from "./components/ProjectRail";
 import TeamPanel from "./components/TeamPanel";
-import VideoPanel from "./components/VideoPanel";
+
 import WindowChrome from "./components/WindowChrome";
 import ProjectOverviewPanel from "./components/ProjectOverviewPanel";
 import PublicTunnelPanel from "./components/PublicTunnelPanel";
@@ -1685,14 +1685,10 @@ function App() {
       );
     }
 
+    // Legacy video production is intentionally absent from the lean gateway UI.
+    // Keep the view identifier for compatibility with older persisted navigation state.
     if (activeView === "video") {
-      return (
-        <VideoPanel
-          workspaces={workspaces}
-          selectedWorkspaceId={selectedWorkspaceId}
-          onNotice={setNotice}
-        />
-      );
+      return <div className="empty-state">Video production is not part of RazedTunnel.</div>;
     }
 
     if (activeView === "git") {
