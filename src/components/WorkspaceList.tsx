@@ -27,12 +27,12 @@ function accessLabel(accessMode: WorkspaceAccessMode): string {
 }
 
 function changePolicyLabel(changePolicy: WorkspaceChangePolicy): string {
-  return changePolicy === "automatic" ? "AI auto" : "AI review";
+  return changePolicy === "automatic" ? "Apply edits automatically" : "Review edits first";
 }
 
 function commandPolicyLabel(commandPolicy: CommandPolicy): string {
-  if (commandPolicy === "disabled") return "Commands off";
-  return commandPolicy === "review" ? "Cmd review" : "Cmd auto";
+  if (commandPolicy === "disabled") return "Commands disabled";
+  return commandPolicy === "review" ? "Review commands" : "Run commands automatically";
 }
 
 function nextCommandPolicy(commandPolicy: CommandPolicy): CommandPolicy {
@@ -63,13 +63,13 @@ function WorkspaceList({
           <span className="section-kicker">Projects</span>
           <h2 id="workspace-title">Approved workspaces</h2>
           <p>
-            Only these project roots are available to RepoTunnel. Choose AI auto for immediate
-            versioned edits, or AI review when you want to approve each proposed change locally.
+            Only approved local folders are exposed through RazedTunnel. To connect a Git repository,
+            select its local checkout. Access and execution permissions are configured per project.
           </p>
         </div>
         <button className="secondary-button" type="button" onClick={onAdd} disabled={adding}>
           <span aria-hidden="true">+</span>
-          {adding ? "Adding…" : "Add project"}
+          {adding ? "Adding…" : "Add local folder"}
         </button>
       </div>
 
@@ -77,7 +77,7 @@ function WorkspaceList({
         <div className="empty-state">
           <div className="empty-icon" aria-hidden="true">&lt;/&gt;</div>
           <h3>No projects added yet</h3>
-          <p>Select a local project folder to make it available to RepoTunnel.</p>
+          <p>Choose an existing local folder or a checked-out Git repository to make it available through MCP.</p>
           <button className="primary-button" type="button" onClick={onAdd} disabled={adding}>
             {adding ? "Opening…" : "Choose project folder"}
           </button>
@@ -130,7 +130,7 @@ function WorkspaceList({
                         workspace.changePolicy === "automatic" ? "review" : "automatic",
                       )
                     }
-                    title="Switch AI file edits between automatic apply and local review"
+                    title="Toggle whether MCP file changes require local approval"
                   >
                     {changePolicyLabel(workspace.changePolicy)}
                   </button>
@@ -140,8 +140,8 @@ function WorkspaceList({
                     disabled={updating || workspace.changePolicy === "automatic"}
                     onClick={() => onCommandPolicyChange(workspace, nextCommandPolicy(workspace.commandPolicy))}
                     title={workspace.changePolicy === "automatic"
-                      ? "AI Auto always runs commands automatically"
-                      : "Cycle command execution policy: review, automatic, or off"}
+                      ? "Automatic edit mode also enables automatic command execution"
+                      : "Cycle command policy: review, automatic execution, or disabled"}
                   >
                     {commandPolicyLabel(workspace.commandPolicy)}
                   </button>
@@ -178,7 +178,7 @@ function WorkspaceList({
           <strong>Workspace boundary enforced locally</strong>
           <p>
             File access stays inside the approved root. Applied AI code edits are saved into local
-            version history. AI Auto runs live development commands directly; disposable preset verification remains sandboxed.
+            version history. Automatic command execution can run live development commands. Enable it only for trusted projects.
           </p>
         </div>
       </div>
