@@ -45,6 +45,7 @@ mod model_hub;
 mod model_trial;
 mod models;
 mod monitoring;
+mod monitoring_commands;
 mod phone;
 mod phone_commands;
 mod platform_sandbox;
@@ -339,11 +340,11 @@ pub fn run() {
                 commands::validate_media_decode,
                 // Legacy video Tauri commands intentionally not registered in lean gateway.
                 // Their implementations remain for now; restore from Git history if needed.
-                commands::get_monitoring_status,
-                commands::start_workspace_monitoring,
-                commands::stop_workspace_monitoring,
-                commands::get_monitoring_snapshot,
-                commands::list_monitoring_file_events,
+                monitoring_commands::get_monitoring_status,
+                monitoring_commands::start_workspace_monitoring,
+                monitoring_commands::stop_workspace_monitoring,
+                monitoring_commands::get_monitoring_snapshot,
+                monitoring_commands::list_monitoring_file_events,
                 commands::get_git_status,
                 commands::get_git_diff,
                 commands::get_git_diff_check,
