@@ -48,6 +48,7 @@ mod media_tools;
 mod model_hub;
 mod model_hub_commands;
 mod model_trial;
+mod model_trial_commands;
 mod models;
 mod monitoring;
 mod monitoring_commands;
@@ -393,9 +394,9 @@ pub fn run() {
                 model_hub_commands::update_model_runtime_endpoint,
                 model_hub_commands::set_selected_local_model,
                 model_hub_commands::test_local_model,
-                commands::get_model_trial,
-                commands::run_model_trial,
-                commands::cancel_model_trial,
+                model_trial_commands::get_model_trial,
+                model_trial_commands::run_model_trial,
+                model_trial_commands::cancel_model_trial,
                 commands::list_home_conversations,
                 commands::get_home_conversation,
                 commands::create_home_conversation,
