@@ -167,6 +167,7 @@ pub fn run() {
                 commands::get_workspace_health,
                 commands::relocate_workspace,
                 commands::add_workspace,
+                commands::clone_git_workspace,
                 commands::create_project,
                 commands::remove_workspace,
                 commands::update_workspace_access,
