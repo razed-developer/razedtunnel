@@ -4,6 +4,7 @@ mod ai_resources;
 mod ai_workspace;
 mod ai_workspace_commands;
 mod app_state;
+mod workspace_policy_commands;
 mod safety_commands;
 mod workspace_diagnostics_commands;
 mod project_lifecycle_commands;
@@ -220,10 +221,10 @@ pub fn run() {
                 commands::clone_git_workspace,
                 commands::create_project,
                 commands::remove_workspace,
-                commands::update_workspace_access,
-                commands::update_workspace_change_policy,
-                commands::update_workspace_command_policy,
-                commands::check_workspace_access,
+                workspace_policy_commands::update_workspace_access,
+                workspace_policy_commands::update_workspace_change_policy,
+                workspace_policy_commands::update_workspace_command_policy,
+                workspace_policy_commands::check_workspace_access,
                 filesystem_commands::list_directory,
                 filesystem_commands::read_file,
                 filesystem_commands::search_files,
@@ -233,7 +234,7 @@ pub fn run() {
                 editor_commands::editor_rename_entry,
                 editor_commands::editor_delete_entry,
                 editor_commands::preview_workspace_image,
-                commands::open_workspace_path_local,
+                workspace_policy_commands::open_workspace_path_local,
                 project_lifecycle_commands::get_project_setup,
                 project_lifecycle_commands::prepare_project,
                 project_lifecycle_commands::get_project_memory,
