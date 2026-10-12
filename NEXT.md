@@ -1,3 +1,8 @@
+## Clone TypeScript regression fix (awaiting validation)
+- User's `npm run check` caught TS2552 at `src/App.tsx:266`: clone handler still called removed `setSelectedWorkspaceId`.
+- Commit `4a92301` removes the stale setter. Clone still refreshes workspaces and navigates to Projects. No backend changes.
+- Re-run `git pull --ff-only && npm run check && npm run build`; test clone if practical. Do not advance until validated.
+
 ## Obsolete selected-project session cleanup (awaiting local validation)
 - User confirmed previous shell polling cleanup passed.
 - Commits `b2386e2`, `80b233d`: removed hidden selectedWorkspaceId/startupProjectRestored React state and last-workspace localStorage restoration effect left over from editor; simplified error-boundary reset to current visible page; removed editor alias in Projects nav highlighting. Project approval/listing/health and all MCP/tray controls unchanged. App.tsx ~669 lines.
