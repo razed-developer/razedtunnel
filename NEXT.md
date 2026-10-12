@@ -1,7 +1,7 @@
 # RazedTunnel — NEXT
 
 Updated: 2026-10-12
-Current branch: `main` (documentation cleanup merged via PR #3)
+Current branch: `cleanup/dead-video-view` (not merged)
 Purpose: durable handoff between ChatGPT conversations. **Read this file first** before changing code. Keep it updated after each validated stage, before switching chats, and after merges.
 
 ## Completed stage: legacy documentation cleanup
@@ -22,6 +22,10 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - `AppView` still includes `video` as a compatibility placeholder (not an active Video feature); `AppSidebar` icon union still includes `team` and `video`. These are cleanup candidates after confirming references.
 - `ProductionPanel` is actually system/runtime settings, update controls and history retention; do not mistake it for removed Video Production.
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
+
+## Current stage: dead navigation cleanup
+- Branch `cleanup/dead-video-view` removes retired Video view routing, header mapping, and obsolete Team icon type. Commits: `8bbb7dd`, `b1b9d4d`, `26737af`.
+- No backend changes. Next: validate `npm run check && npm run build`, then inspect remaining obsolete UI references. Do not overwrite local Rust edits.
 
 ## Goal and boundaries
 RazedTunnel is a compact Windows/Tauri Rust MCP gateway for approved local workspaces, files, terminal, Git/GitHub, and related development tools. Keep modules focused and remove legacy RepoTunnel features that do not serve the gateway. Do not break ordinary workspace permissions, MCP access, or file operations. Prefer small commits and local validation; do not merge before user approval/validation.
