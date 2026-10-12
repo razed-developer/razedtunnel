@@ -263,7 +263,6 @@ function App() {
     try {
       const workspace = await cloneGitWorkspace(url, parentPath);
       await refresh();
-      setSelectedWorkspaceId(workspace.id);
       setActiveView("projects");
       setNotice(`Cloned and connected ${workspace.name}.`);
     } catch (error) {
