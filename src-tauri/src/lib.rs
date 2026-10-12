@@ -17,6 +17,7 @@ mod direct_https;
 mod environment;
 mod editor_commands;
 mod execution;
+mod execution_commands;
 mod external_access;
 mod filesystem;
 mod filesystem_commands;
@@ -260,12 +261,12 @@ pub fn run() {
                 history_commands::get_history_settings,
                 history_commands::update_history_settings,
                 history_commands::restore_version,
-                commands::get_execution_status,
-                commands::list_command_presets,
-                commands::run_workspace_command,
-                commands::list_command_history,
-                commands::approve_command,
-                commands::reject_command,
+                execution_commands::get_execution_status,
+                execution_commands::list_command_presets,
+                execution_commands::run_workspace_command,
+                execution_commands::list_command_history,
+                execution_commands::approve_command,
+                execution_commands::reject_command,
                 commands::run_terminal_command,
                 commands::run_local_terminal_command,
                 commands::list_terminal_history,
