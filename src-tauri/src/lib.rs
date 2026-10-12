@@ -88,6 +88,7 @@ mod secret_guard;
 mod self_continuation;
 mod semantic;
 mod storage;
+mod system_tray;
 mod system_resources;
 mod temp_workspace;
 mod temp_workspace_commands;
@@ -397,7 +398,16 @@ pub fn run() {
             ];
             handler
         })
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .setup(|app| {
+            system_tray::install(app)?;
             if let Err(error) = hardening::initialize(app.handle()) {
                 eprintln!("RepoTunnel production initialization warning: {error}");
             }
