@@ -5831,3 +5831,58 @@ textarea:focus-visible {
 :root[data-theme="light"] .section-kicker {
   color: #61738a;
 }
+
+
+/* Light theme: cover the actual desktop layout and inherited dark surfaces. */
+:root[data-theme="light"] body,
+:root[data-theme="light"] #root,
+:root[data-theme="light"] .window-chrome,
+:root[data-theme="light"] .desktop-app,
+:root[data-theme="light"] .desktop-layout,
+:root[data-theme="light"] .desktop-workspace,
+:root[data-theme="light"] .app-main,
+:root[data-theme="light"] .app-sidebar,
+:root[data-theme="light"] .project-rail,
+:root[data-theme="light"] .home-right-rail,
+:root[data-theme="light"] .home-center-stage,
+:root[data-theme="light"] .home-workspace,
+:root[data-theme="light"] .rail-card,
+:root[data-theme="light"] .home-quick-action {
+  background: #f7f9fc;
+  color: #253247;
+  border-color: #dce3ec;
+}
+:root[data-theme="light"] .app-sidebar,
+:root[data-theme="light"] .project-rail,
+:root[data-theme="light"] .home-right-rail,
+:root[data-theme="light"] .rail-card,
+:root[data-theme="light"] .home-quick-action {
+  background: #fff;
+}
+:root[data-theme="light"] .window-title,
+:root[data-theme="light"] .sidebar-brand-copy strong,
+:root[data-theme="light"] .rail-card-title,
+:root[data-theme="light"] .rail-card strong,
+:root[data-theme="light"] .rail-status strong,
+:root[data-theme="light"] .home-center-stage h1,
+:root[data-theme="light"] .home-center-stage p,
+:root[data-theme="light"] .home-center-stage strong,
+:root[data-theme="light"] .project-rail strong,
+:root[data-theme="light"] .home-quick-action-copy strong {
+  color: #253247;
+}
+:root[data-theme="light"] .rail-card small,
+:root[data-theme="light"] .home-quick-action-copy small,
+:root[data-theme="light"] .sidebar-brand-copy span {
+  color: #607189;
+}
+:root[data-theme="light"] .home-center-stage .rail-card {
+  background: #fff;
+  border: 1px solid #dce3ec;
+}
+:root[data-theme="light"] .home-center-stage .rail-card button,
+:root[data-theme="light"] .home-right-rail .rail-card button {
+  background: #edf2f8;
+  color: #253247;
+  border: 1px solid #dce3ec;
+}
