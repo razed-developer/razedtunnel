@@ -1,8 +1,3 @@
-use std::{
-    fs,
-    path::Path,
-    time::{SystemTime, UNIX_EPOCH},
-};
 
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
@@ -27,7 +22,7 @@ use crate::{
         CheckpointRestoreResult, CheckpointSummary, CommandOutcome, CommandPolicy, CommandPreset,
         CommandRecord, DirectoryEntry, EnvironmentToolDiagnostic, ExecutionStatus, FileContent,
         FileInfo, GatewayStatus, GitActionRecord, GitCommitSummary, GitDiff, GitDiffCheck,
-        GitRepositoryStatus, HistoryClearResult, HistorySettings, ImagePreview,
+        GitRepositoryStatus, HistoryClearResult, HistorySettings,
         LaunchActionOutcome, LaunchActionRecord, LaunchApplication, ManagedProcessOutcome,
         ManagedProcessOutput, ManagedProcessRecord, ManagedProcessWaitResult,
         MediaDecodeValidation, MediaFrameExtraction, MediaInspection, MonitoringFileEvent,
@@ -368,15 +363,13 @@ pub fn search_files(
     filesystem::search_files(&workspace, &relative_path, &query)
 }
 
-pub use crate::editor_commands::{editor_save_file, editor_create_file, editor_create_directory, editor_rename_entry, editor_delete_entry, preview_workspace_image};
-
 #[tauri::command]
 pub fn open_workspace_path_local(
     app: AppHandle,
     workspace_id: String,
     relative_path: String,
 ) -> Result<LaunchActionOutcome, String> {
-    let workspace = local_user_workspace(approved_workspace(&app, &workspace_id)?);
+    let workspace = crate::editor_commands::local_user_workspace(approved_workspace(&app, &workspace_id)?);
     launcher::request_open_workspace_path(&app, &workspace, relative_path, None)
 }
 
