@@ -1,7 +1,9 @@
 //! Shared FFmpeg/FFprobe discovery for media inspection and phone workflows.
 //! Provisioning remains delegated to legacy video code until safely extracted.
 
-use std::{env, fs, path::PathBuf};
+use std::{env, fs, io::Read, path::PathBuf, sync::atomic::{AtomicBool, Ordering}, time::Duration};
+use reqwest::blocking::Client;
+use url::Url;
 use sha2::{Digest, Sha256};
 use tauri::{path::BaseDirectory, AppHandle, Manager};
 
@@ -42,6 +44,72 @@ pub(crate) fn sha256_hex(bytes: &[u8]) -> String {
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect()
+}
+
+pub(crate) fn download_client() -> Result<Client, String> {
+    Client::builder()
+        .connect_timeout(Duration::from_secs(15))
+        .timeout(Duration::from_secs(180))
+        .redirect(reqwest::redirect::Policy::custom(|attempt| {
+            if attempt.url().host_str().is_some_and(crate::media_tools::trusted_helper_host) {
+                attempt.follow()
+            } else {
+                attempt.stop()
+            }
+        }))
+        .user_agent("RepoTunnel/0.3.1 Video Intelligence")
+        .build()
+        .map_err(|error| format!("Could not initialize the video helper downloader: {error}"))
+}
+
+pub(crate) fn download_bytes(
+    client: &Client,
+    url: &str,
+    limit: u64,
+    cancel: Option<&AtomicBool>,
+) -> Result<Vec<u8>, String> {
+    let parsed =
+        Url::parse(url).map_err(|_| "Video helper download URL is invalid.".to_string())?;
+    if parsed.scheme() != "https" {
+        return Err("Video helpers may only be downloaded over HTTPS.".to_string());
+    }
+    let host = parsed.host_str().unwrap_or_default();
+    if !crate::media_tools::trusted_helper_host(host) {
+        return Err("Video helper download host is not allowlisted.".to_string());
+    }
+
+    let mut response = client
+        .get(url)
+        .send()
+        .map_err(|error| format!("Could not download a video helper: {error}"))?;
+    if !response.status().is_success() {
+        return Err(format!(
+            "Video helper download failed with HTTP {}.",
+            response.status()
+        ));
+    }
+    if response.content_length().is_some_and(|size| size > limit) {
+        return Err("Video helper download exceeds RepoTunnel's safety limit.".to_string());
+    }
+
+    let mut bytes = Vec::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        if cancel.is_some_and(|flag| flag.load(Ordering::Relaxed)) {
+            return Err("Video analysis cancelled.".to_string());
+        }
+        let read = response
+            .read(&mut buffer)
+            .map_err(|error| format!("Could not read a video helper download: {error}"))?;
+        if read == 0 {
+            break;
+        }
+        if bytes.len().saturating_add(read) > usize::try_from(limit).unwrap_or(usize::MAX) {
+            return Err("Video helper download exceeds RepoTunnel's safety limit.".to_string());
+        }
+        bytes.extend_from_slice(&buffer[..read]);
+    }
+    Ok(bytes)
 }
 
 fn executable_name(name: &str) -> String {
