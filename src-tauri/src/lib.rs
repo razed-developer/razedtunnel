@@ -2,6 +2,7 @@ mod access;
 mod activity;
 mod ai_resources;
 mod ai_workspace;
+mod ai_workspace_commands;
 mod app_state;
 mod browser;
 mod changes;
@@ -295,12 +296,12 @@ pub fn run() {
                 integration_commands::set_desktop_control_enabled,
                 integration_commands::get_gmail_access_enabled,
                 integration_commands::set_gmail_access_enabled,
-                commands::get_ai_workspace_status,
-                commands::start_ai_workspace,
-                commands::stop_ai_workspace,
-                commands::get_ai_workspace_frame,
-                commands::ai_workspace_action,
-                commands::ai_workspace_sequence,
+                ai_workspace_commands::get_ai_workspace_status,
+                ai_workspace_commands::start_ai_workspace,
+                ai_workspace_commands::stop_ai_workspace,
+                ai_workspace_commands::get_ai_workspace_frame,
+                ai_workspace_commands::ai_workspace_action,
+                ai_workspace_commands::ai_workspace_sequence,
                 commands::open_url,
                 commands::open_workspace_path,
                 commands::launch_application,
