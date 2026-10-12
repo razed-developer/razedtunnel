@@ -15,6 +15,7 @@ use rmcp::{
 #[cfg(feature = "legacy_video")]
 use rmcp::model::AudioContent;
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_browser_access::{browser_scope_for_request, require_google_tab_access, require_ai_browser_tab_access};
 use crate::mcp_continuation_fallback::{ensure_chatgpt_work_fallback, ensure_chatgpt_work_fallback_with_identities};
 use crate::mcp_request_identity::{request_edit_group_id, openai_conversation_session, continuation_identity_keys_from, continuation_identity_keys, request_client_key, request_resource_owner_key};
 use crate::mcp_phone_helpers::{parse_phone_key, parse_phone_settings_namespace};
@@ -977,39 +978,6 @@ struct ListGitActionsParams {
     workspace_id: Option<String>,
     /// Maximum records to return. RepoTunnel clamps this to 1..100.
     limit: Option<usize>,
-}
-
-fn browser_scope_for_request(
-    workspace: &Workspace,
-    client_key: Option<&str>,
-) -> browser::BrowserScope {
-    let owner_id = client_key.map(ai_resources::opaque_owner_id);
-    browser::BrowserScope::new(workspace, owner_id.as_deref())
-}
-
-fn require_google_tab_access(
-    app: &AppHandle,
-    scope: &browser::BrowserScope,
-    tab_id: &str,
-) -> Result<(), String> {
-    let tab = browser::list_tabs(app, scope)?
-        .into_iter()
-        .find(|tab| tab.id == tab_id)
-        .ok_or_else(|| {
-            "That managed browser tab is not available to this AI browser session.".to_string()
-        })?;
-    gmail_access::require_url_access(app, &tab.url)
-}
-
-fn require_ai_browser_tab_access(
-    workspace: &Workspace,
-    client_key: Option<&str>,
-    tab_id: &str,
-) -> Result<(), String> {
-    if let Some(client_key) = client_key {
-        ai_resources::claim_or_assert_browser_tab(&workspace.id, client_key, tab_id)?;
-    }
-    Ok(())
 }
 
 fn resolve_ai_workspace_app_session(
