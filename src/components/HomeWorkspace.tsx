@@ -148,6 +148,22 @@ function HomeWorkspace({
           </button>
         </section>
 
+        <section className="rail-card connection-card">
+          <div className="rail-card-title"><NavIcon name="folder" size={16} /><strong>Projects</strong></div>
+          <div className="rail-status neutral">
+            <strong>{workspaces.length} approved workspace{workspaces.length === 1 ? "" : "s"}</strong>
+          </div>
+          <small>
+            {selectedWorkspace
+              ? `Selected: ${selectedWorkspace.name} · ${selectedWorkspace.accessMode === "readOnly" ? "Read only" : "Read/write"}`
+              : "No project selected"}
+          </small>
+          <button type="button" onClick={() => onNavigate("projects")}>
+            <NavIcon name="folder" size={16} />
+            Manage projects
+          </button>
+        </section>
+
         <section className="rail-card quick-actions-card">
           <div className="rail-card-heading-row">
             <strong>Quick Actions</strong>
