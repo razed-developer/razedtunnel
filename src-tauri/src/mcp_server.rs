@@ -3,7 +3,7 @@ use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Extension, wrapper::Parameters},
     model::{
-        AudioContent, CallToolResult, ContentBlock, ExtensionCapabilities, Implementation,
+        CallToolResult, ContentBlock, ExtensionCapabilities, Implementation,
         ListResourcesResult, MetaObject, PaginatedRequestParams, ReadResourceRequestParams,
         ReadResourceResponse, ReadResourceResult, Resource, ResourceContents, ServerCapabilities,
         ServerInfo,
@@ -12,13 +12,15 @@ use rmcp::{
     service::{NotificationContext, RequestContext},
     tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler,
 };
+#[cfg(feature = "legacy_video")]
+use rmcp::model::AudioContent;
 use crate::mcp_git_helpers::compact_git_action_for_ai;
 use crate::mcp_phone_helpers::{parse_phone_key, parse_phone_settings_namespace};
 use crate::mcp_phone_transactions::{PhoneTransactionAliasTarget, phone_transaction_find_unique, phone_transaction_condition_met, validate_phone_transaction_steps};
-use crate::mcp_browser_params::{BrowserActionParam, BrowserActionParams, BrowserContextParams, BrowserSemanticActionParam, BrowserSemanticActionParams, BrowserSemanticSequenceOperationParam, BrowserSemanticSequenceStepParam, BrowserSemanticSequenceParams, BrowserSemanticSequenceCancelParams, BrowserInspectParams, BrowserDownloadConfigureParams, BrowserDownloadCancelParams, BrowserUploadParams, BrowserSemanticSnapshotParams, BrowserSemanticFindParams, BrowserScreenshotParams, BrowserDiagnosticsParams};
-use crate::mcp_desktop_params::{DesktopInspectParams, DesktopSemanticSnapshotParams, UiSemanticActionParam, DesktopSemanticActionParams, AiWorkspaceSemanticActionParams, UiSemanticSequenceOperationParam, UiSemanticSequenceStepParam, DesktopSemanticSequenceParams, AiWorkspaceSemanticSequenceParams, DesktopActionParams, DesktopScreenshotParams};
-use crate::mcp_ai_workspace_params::{AiWorkspaceFrameParams, AiWorkspaceInspectParams, AiWorkspaceSemanticSnapshotParams, AiWorkspaceActionParams, AiWorkspaceSequenceStep, AiWorkspaceSequenceParams};
-use crate::mcp_phone_params::{PhoneTargetParams, PhoneTapParams, PhoneSwipeParams, PhoneKeyParams, PhoneTextParams, PhonePackageParams, PhoneShellParams, PhoneLogsParams, PhonePingParams, PhoneSettingParams, PhoneSettingWriteParams, PhonePathParams, PhoneFileWriteParams, PhoneSequenceStepParam, PhoneSequenceParams, PhoneFastSequenceStepParam, PhoneFastSequenceParams, PhoneFastScreenParams, PhoneSemanticSnapshotParams, PhoneSemanticFindParams, PhoneSemanticActionParams, PhoneTransactionStepParam, PhoneTransactionParams};
+use crate::mcp_browser_params::{BrowserActionParam, BrowserActionParams, BrowserContextParams, BrowserSemanticActionParam, BrowserSemanticActionParams, BrowserSemanticSequenceOperationParam, BrowserSemanticSequenceParams, BrowserSemanticSequenceCancelParams, BrowserInspectParams, BrowserDownloadConfigureParams, BrowserDownloadCancelParams, BrowserUploadParams, BrowserSemanticSnapshotParams, BrowserSemanticFindParams, BrowserScreenshotParams, BrowserDiagnosticsParams};
+use crate::mcp_desktop_params::{DesktopInspectParams, DesktopSemanticSnapshotParams, UiSemanticActionParam, DesktopSemanticActionParams, AiWorkspaceSemanticActionParams, UiSemanticSequenceOperationParam, DesktopSemanticSequenceParams, AiWorkspaceSemanticSequenceParams, DesktopActionParams, DesktopScreenshotParams};
+use crate::mcp_ai_workspace_params::{AiWorkspaceFrameParams, AiWorkspaceInspectParams, AiWorkspaceSemanticSnapshotParams, AiWorkspaceActionParams, AiWorkspaceSequenceParams};
+use crate::mcp_phone_params::{PhoneTargetParams, PhoneTapParams, PhoneSwipeParams, PhoneKeyParams, PhoneTextParams, PhonePackageParams, PhoneShellParams, PhoneLogsParams, PhonePingParams, PhoneSettingParams, PhoneSettingWriteParams, PhonePathParams, PhoneFileWriteParams, PhoneSequenceParams, PhoneFastSequenceParams, PhoneFastScreenParams, PhoneSemanticSnapshotParams, PhoneSemanticFindParams, PhoneSemanticActionParams, PhoneTransactionParams};
 use crate::mcp_launch_params::{LaunchTargetKindParam, LaunchTargetParams, IntegrationActionParams, AiWorkspaceSessionParams};
 use crate::mcp_execution_params::{WorkspaceCommandParams, ListCommandsParams, TerminalCommandParams, ManagedProcessStartParams, ListProcessesParams, WorkspaceRuntimeStatusParams, ProcessIdParams, ProcessOutputParams, ProcessWaitParams, StopProcessParams};
 use crate::mcp_filesystem_params::{ProjectSnapshotParams, WorkspacePathParams, SearchFilesParams, FastSearchFilesParams, ReadFileRangeParams, ListDirectoryPageParams, InspectProjectPageParams, FileContentParams, PatchFileParams, CreateDirectoryParams, RenameEntryParams, MoveEntryParams, DeleteEntryParams};
@@ -29,7 +31,7 @@ use std::{
     collections::BTreeMap,
     path::Path,
     sync::atomic::{AtomicU64, Ordering},
-    time::{Instant, SystemTime, UNIX_EPOCH},
+    time::Instant,
 };
 use tauri::{AppHandle, Manager};
 
@@ -42,8 +44,8 @@ use crate::{
     filesystem, git, github, gmail_access, integrations, large_project_read, launcher,
     media_inspection,
     models::{
-        ActivityKind, ActivityStatus, BrowserScreenshot, CommandPolicy, GitActionKind,
-        GitActionRecord, GitRepositoryStatus, ManagedProcessRecord, TeamMessageKind, TeamPhase,
+        ActivityKind, ActivityStatus, BrowserScreenshot, CommandPolicy,
+        GitRepositoryStatus, ManagedProcessRecord, TeamMessageKind, TeamPhase,
         TeamTaskStatus, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy,
     },
     monitoring, phone, project_index, project_memory, project_setup, repository, secret_guard,
