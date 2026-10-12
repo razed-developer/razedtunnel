@@ -8,7 +8,7 @@ use serde::Serialize;
 use tauri::AppHandle;
 use url::Url;
 
-use crate::{commands::register_workspace_path, models::Workspace, storage::load_workspaces};
+use crate::{models::Workspace, projects::register_workspace_path, storage::load_workspaces};
 
 const GITHUB_HOST: &str = "github.com";
 
