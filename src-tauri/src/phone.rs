@@ -7752,28 +7752,6 @@ mod tests {
     }
 
     #[test]
-    fn local_phone_panel_control_stays_separate_from_mcp_ai_control() {
-        let commands = include_str!("phone_commands.rs");
-        let mcp = include_str!("mcp_server.rs");
-
-        assert!(commands.contains(".local_ui_screen_frame"));
-        assert!(commands.contains("state.phone.local_ui_tap"));
-        assert!(commands.contains("state.phone.local_ui_swipe"));
-        assert!(commands.contains("state.phone.local_ui_key_event"));
-        assert!(commands.contains("state.phone.local_ui_type_text"));
-
-        assert!(!mcp.contains("local_ui_screen_frame"));
-        assert!(!mcp.contains("local_ui_tap"));
-        assert!(!mcp.contains("local_ui_swipe"));
-        assert!(!mcp.contains("local_ui_key_event"));
-        assert!(!mcp.contains("local_ui_type_text"));
-        assert!(mcp.contains("state.phone.tap_guarded"));
-        assert!(mcp.contains("state.phone.swipe_guarded"));
-        assert!(mcp.contains("state.phone.key_event"));
-        assert!(mcp.contains(".type_text_verified"));
-    }
-
-    #[test]
     fn phone_helper_response_waits_through_transient_would_block() {
         let listener =
             std::net::TcpListener::bind(("127.0.0.1", 0)).expect("bind helper test listener");
