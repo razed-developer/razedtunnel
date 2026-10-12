@@ -2278,8 +2278,8 @@ fn spawn_phone_live_stream(
     target: &PhoneRuntimeTarget,
 ) -> Result<PhoneLiveStreamSession, String> {
     let server_path = resolve_scrcpy_server(app)?;
-    let ffmpeg = crate::video::available_ffmpeg_program(app)
-        .or_else(|| crate::video::ensure_ffmpeg_program(app).ok())
+    let ffmpeg = crate::media_tools::available_ffmpeg_program(app)
+        .or_else(|| crate::media_tools::ensure_ffmpeg_program(app).ok())
         .ok_or_else(|| {
             "RepoTunnel could not prepare its private FFmpeg helper for live phone video."
                 .to_string()
@@ -3748,7 +3748,7 @@ impl PhoneRuntimeState {
             app: &AppHandle,
             target: &PhoneRuntimeTarget,
         ) -> Result<(Vec<u8>, &'static str, u32, u32), String> {
-            if let Some(ffmpeg) = crate::video::available_ffmpeg_program(app) {
+            if let Some(ffmpeg) = crate::media_tools::available_ffmpeg_program(app) {
                 if let Ok(raw) = run_bounded(
                     &target.adb,
                     &["-s", &target.serial, "exec-out", "screencap"],
