@@ -166,6 +166,8 @@ export type SafetyScanResult = {
 };
 
 export type GatewayStatus = {
+  taskToolSuccesses: number;
+  taskToolFailures: number;
   running: boolean;
   port: number | null;
   workspaceCount: number;
