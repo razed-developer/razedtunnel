@@ -119,12 +119,12 @@ function AppSidebar({
       <div className="sidebar-brand">
         <RepoTunnelLogo size={39} className="sidebar-product-logo" />
         <div className="sidebar-brand-copy">
-          <strong>RepoTunnel</strong>
+          <strong>RazedTunnel</strong>
           <span>Local AI Workspace</span>
         </div>
       </div>
 
-      <nav className="sidebar-nav" aria-label="RepoTunnel navigation">
+      <nav className="sidebar-nav" aria-label="RazedTunnel navigation">
         {navItems.map((item) => (
           <button
             key={item.id}
