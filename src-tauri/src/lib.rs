@@ -5,6 +5,7 @@ mod ai_workspace;
 mod app_state;
 mod browser;
 mod changes;
+mod change_commands;
 mod chatgpt_bridge;
 mod checkpoint;
 mod commands;
@@ -239,17 +240,17 @@ pub fn run() {
                 temp_workspace_commands::set_temp_workspace_preserved,
                 temp_workspace_commands::cleanup_temp_workspace,
                 temp_workspace_commands::temp_workspace_file_action,
-                commands::create_file,
-                commands::write_file,
-                commands::patch_file,
-                commands::create_directory,
-                commands::rename_entry,
-                commands::move_entry,
-                commands::delete_entry,
-                commands::list_changes,
-                commands::approve_change,
-                commands::reject_change,
-                commands::undo_change,
+                change_commands::create_file,
+                change_commands::write_file,
+                change_commands::patch_file,
+                change_commands::create_directory,
+                change_commands::rename_entry,
+                change_commands::move_entry,
+                change_commands::delete_entry,
+                change_commands::list_changes,
+                change_commands::approve_change,
+                change_commands::reject_change,
+                change_commands::undo_change,
                 commands::get_version_timeline,
                 commands::get_activity_timeline,
                 commands::clear_version_history,
