@@ -5757,3 +5757,77 @@ textarea:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* RazedTunnel light appearance: opt-in, persisted by the sidebar control. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  color: #253247;
+  background: #f4f6f9;
+  --surface: #ffffff;
+  --surface-soft: #f7f9fc;
+  --border: #dce3ec;
+  --text-primary: #253247;
+  --text-secondary: #53657b;
+  --text-muted: #6c7c90;
+  --accent: #245f9c;
+}
+:root[data-theme="light"] html,
+:root[data-theme="light"] body {
+  background: #f4f6f9;
+  color: #253247;
+}
+:root[data-theme="light"] .app-sidebar,
+:root[data-theme="light"] .project-rail,
+:root[data-theme="light"] .home-right-rail,
+:root[data-theme="light"] .home-center-stage,
+:root[data-theme="light"] .home-workspace,
+:root[data-theme="light"] .desktop-shell,
+:root[data-theme="light"] .desktop-main,
+:root[data-theme="light"] .desktop-content,
+:root[data-theme="light"] .app-header,
+:root[data-theme="light"] .rail-card,
+:root[data-theme="light"] .connection-card,
+:root[data-theme="light"] .workspace-section,
+:root[data-theme="light"] .workspace-card,
+:root[data-theme="light"] .gateway-panel,
+:root[data-theme="light"] .quick-actions-card {
+  background: #ffffff;
+  color: #253247;
+  border-color: #dce3ec;
+}
+:root[data-theme="light"] .home-center-stage,
+:root[data-theme="light"] .home-workspace,
+:root[data-theme="light"] .desktop-main,
+:root[data-theme="light"] .desktop-content {
+  background: #f4f6f9;
+}
+:root[data-theme="light"] .sidebar-nav-item,
+:root[data-theme="light"] .sidebar-brand-copy strong,
+:root[data-theme="light"] .rail-card strong,
+:root[data-theme="light"] .home-center-stage h1,
+:root[data-theme="light"] .section-heading h2,
+:root[data-theme="light"] .workspace-details h3,
+:root[data-theme="light"] .rail-card p {
+  color: #253247;
+}
+:root[data-theme="light"] .sidebar-nav-item.active,
+:root[data-theme="light"] .sidebar-nav-item:hover,
+:root[data-theme="light"] .home-quick-action:hover {
+  background: #eaf0f7;
+}
+:root[data-theme="light"] .rail-card button,
+:root[data-theme="light"] .secondary-button,
+:root[data-theme="light"] .home-quick-action,
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  background: #f7f9fc;
+  color: #253247;
+  border-color: #dce3ec;
+}
+:root[data-theme="light"] small,
+:root[data-theme="light"] .sidebar-nav-group-label,
+:root[data-theme="light"] .section-kicker {
+  color: #61738a;
+}
