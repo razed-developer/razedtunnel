@@ -69,6 +69,7 @@ mod semantic;
 mod storage;
 mod system_resources;
 mod team;
+mod team_commands;
 mod temp_workspace;
 mod temp_workspace_commands;
 mod terminal;
@@ -413,15 +414,15 @@ pub fn run() {
                 runtime_commands::set_auto_update_checks,
                 runtime_commands::defer_update,
                 runtime_commands::install_update_and_restart,
-                commands::list_team_sessions,
-                commands::get_team_session,
-                commands::create_team_session,
-                commands::post_team_user_message,
-                commands::pause_team_session,
-                commands::resume_team_session,
-                commands::cancel_team_session,
-                commands::complete_team_session,
-                commands::delete_team_session,
+                team_commands::list_team_sessions,
+                team_commands::get_team_session,
+                team_commands::create_team_session,
+                team_commands::post_team_user_message,
+                team_commands::pause_team_session,
+                team_commands::resume_team_session,
+                team_commands::cancel_team_session,
+                team_commands::complete_team_session,
+                team_commands::delete_team_session,
             ];
             handler
         })
