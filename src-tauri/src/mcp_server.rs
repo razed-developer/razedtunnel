@@ -2719,11 +2719,15 @@ fn approved_workspace(app: &AppHandle, workspace_id: &str) -> Result<Workspace, 
         .ok_or_else(|| "That project is not approved in RepoTunnel.".to_string())
 }
 
-fn success_result<T: Serialize>(value: T) -> CallToolResult {
-    match serde_json::to_string(&serde_json::json!({
+fn serialize_success_payload<T: Serialize>(value: T) -> Result<String, serde_json::Error> {
+    serde_json::to_string(&serde_json::json!({
         "ok": true,
         "result": value,
-    })) {
+    }))
+}
+
+fn success_result<T: Serialize>(value: T) -> CallToolResult {
+    match serialize_success_payload(value) {
         Ok(content) => CallToolResult::success(vec![ContentBlock::text(content)]),
         Err(error) => CallToolResult::error(vec![ContentBlock::text(format!(
             "RepoTunnel could not serialize the tool result: {error}"
@@ -2842,10 +2846,7 @@ where
         Ok(Ok(value)) => {
             // Serialization can fail even when the filesystem operation succeeded.
             // Count the actual MCP result, not just the task closure outcome.
-            match serde_json::to_string(&serde_json::json!({
-                "ok": true,
-                "result": value,
-            })) {
+            match serialize_success_payload(value) {
                 Ok(content) => {
                     TASK_TOOL_SUCCESSES.fetch_add(1, Ordering::Relaxed);
                     CallToolResult::success(vec![ContentBlock::text(content)])
