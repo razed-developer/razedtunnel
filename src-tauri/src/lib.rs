@@ -19,8 +19,6 @@ mod change_commands;
 mod chatgpt_bridge;
 mod checkpoint;
 mod checkpoint_commands;
-#[cfg(feature = "legacy_video")]
-mod legacy_video_commands;
 mod connection;
 mod continuity;
 mod conversation;
@@ -105,30 +103,6 @@ mod terminal_commands;
 mod updates;
 mod runtime_commands;
 mod versioning;
-#[cfg(feature = "legacy_video")]
-mod video;
-#[cfg(feature = "legacy_video")]
-mod video_assets;
-#[cfg(feature = "legacy_video")]
-mod video_director;
-#[cfg(feature = "legacy_video")]
-mod video_html;
-#[cfg(feature = "legacy_video")]
-mod video_narration;
-#[cfg(feature = "legacy_video")]
-mod video_narration_managed;
-#[cfg(feature = "legacy_video")]
-mod video_preview;
-#[cfg(feature = "legacy_video")]
-mod video_production;
-#[cfg(feature = "legacy_video")]
-mod video_qa;
-#[cfg(feature = "legacy_video")]
-mod video_render;
-#[cfg(feature = "legacy_video")]
-mod video_scene;
-#[cfg(feature = "legacy_video")]
-mod video_story_render;
 #[cfg(any(windows, test))]
 mod windows_uia;
 mod workflow;
@@ -481,12 +455,6 @@ pub fn run() {
                 terminal::stop_transient_activity_for_shutdown();
                 browser::stop_all_activity();
                 // Legacy video lifecycle is opt-in during gateway simplification.
-                #[cfg(feature = "legacy_video")]
-                {
-                    video::stop_all_activity();
-                    video_production::stop_all_activity();
-                    video_preview::clear_all(app_handle);
-                }
                 model_hub::stop_owned_local_runtimes();
                 #[cfg(feature = "legacy_background_services")]
                 {
