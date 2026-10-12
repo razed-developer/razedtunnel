@@ -18,12 +18,9 @@ use crate::mcp_ai_workspace_helpers::{resolve_ai_workspace_app_session, ai_works
 use crate::mcp_browser_access::{browser_scope_for_request, require_google_tab_access, require_ai_browser_tab_access};
 use crate::mcp_continuation_fallback::{ensure_chatgpt_work_fallback, ensure_chatgpt_work_fallback_with_identities};
 use crate::mcp_request_identity::{request_edit_group_id, openai_conversation_session, continuation_identity_keys_from, continuation_identity_keys, request_client_key, request_resource_owner_key};
-use crate::mcp_phone_helpers::{parse_phone_key, parse_phone_settings_namespace};
-use crate::mcp_phone_transactions::{PhoneTransactionAliasTarget, phone_transaction_find_unique, phone_transaction_condition_met, validate_phone_transaction_steps};
 use crate::mcp_browser_params::{BrowserActionParam, BrowserActionParams, BrowserContextParams, BrowserSemanticActionParam, BrowserSemanticActionParams, BrowserSemanticSequenceOperationParam, BrowserSemanticSequenceParams, BrowserSemanticSequenceCancelParams, BrowserInspectParams, BrowserDownloadConfigureParams, BrowserDownloadCancelParams, BrowserUploadParams, BrowserSemanticSnapshotParams, BrowserSemanticFindParams, BrowserScreenshotParams, BrowserDiagnosticsParams};
 use crate::mcp_desktop_params::{DesktopInspectParams, DesktopSemanticSnapshotParams, UiSemanticActionParam, DesktopSemanticActionParams, AiWorkspaceSemanticActionParams, UiSemanticSequenceOperationParam, DesktopSemanticSequenceParams, AiWorkspaceSemanticSequenceParams, DesktopActionParams, DesktopScreenshotParams};
 use crate::mcp_ai_workspace_params::{AiWorkspaceFrameParams, AiWorkspaceInspectParams, AiWorkspaceSemanticSnapshotParams, AiWorkspaceActionParams, AiWorkspaceSequenceParams};
-use crate::mcp_phone_params::{PhoneTargetParams, PhoneTapParams, PhoneSwipeParams, PhoneKeyParams, PhoneTextParams, PhonePackageParams, PhoneShellParams, PhoneLogsParams, PhonePingParams, PhoneSettingParams, PhoneSettingWriteParams, PhonePathParams, PhoneFileWriteParams, PhoneSequenceParams, PhoneFastSequenceParams, PhoneFastScreenParams, PhoneSemanticSnapshotParams, PhoneSemanticFindParams, PhoneSemanticActionParams, PhoneTransactionParams};
 use crate::mcp_launch_params::{LaunchTargetKindParam, LaunchTargetParams, IntegrationActionParams, AiWorkspaceSessionParams};
 use crate::mcp_execution_params::{WorkspaceCommandParams, ListCommandsParams, TerminalCommandParams, ManagedProcessStartParams, ListProcessesParams, WorkspaceRuntimeStatusParams, ProcessIdParams, ProcessOutputParams, ProcessWaitParams, StopProcessParams};
 use crate::mcp_filesystem_params::{ProjectSnapshotParams, WorkspacePathParams, SearchFilesParams, FastSearchFilesParams, ReadFileRangeParams, ListDirectoryPageParams, InspectProjectPageParams, FileContentParams, PatchFileParams, CreateDirectoryParams, RenameEntryParams, MoveEntryParams, DeleteEntryParams};
@@ -50,7 +47,7 @@ use crate::{
         GitRepositoryStatus, ManagedProcessRecord, TeamMessageKind, TeamPhase,
         TeamTaskStatus, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy,
     },
-    monitoring, phone, project_index, project_memory, project_setup, repository, secret_guard,
+    monitoring, project_index, project_memory, project_setup, repository, secret_guard,
     self_continuation, semantic,
     storage::load_workspaces,
     system_resources, team, temp_workspace, terminal, workflow,
@@ -202,7 +199,6 @@ struct RepoTunnelCapabilities {
     semantic_interaction: SemanticInteractionCapabilities,
     continuity: ContinuityCapabilities,
     desktop: DesktopCapabilities,
-    phone: PhoneCapabilities,
     generic_middleware: GenericMiddlewareCapabilities,
 }
 
@@ -264,31 +260,6 @@ struct DesktopCapabilities {
     ai_workspace: bool,
     real_desktop_control: bool,
     repotunnel_self_control_blocked: bool,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct PhoneCapabilities {
-    wireless_adb_pairing: bool,
-    automatic_wireless_reconnect: bool,
-    usb_fallback: bool,
-    persistent_runtime: bool,
-    live_screen: bool,
-    normalized_tap: bool,
-    normalized_swipe: bool,
-    key_input: bool,
-    text_input: bool,
-    app_control: bool,
-    files: bool,
-    app_install: bool,
-    device_settings: bool,
-    shell: bool,
-    logs: bool,
-    network_tools: bool,
-    rapid_sequence: bool,
-    full_limited_off_access: bool,
-    pause_ai: bool,
-    mcp_access_escalation: bool,
 }
 
 #[derive(Serialize)]
@@ -704,97 +675,6 @@ fn error_result(message: impl Into<String>) -> CallToolResult {
     CallToolResult::error(vec![ContentBlock::text(content)])
 }
 
-fn phone_error_result(message: impl Into<String>) -> CallToolResult {
-    let message = message.into();
-    let reason_code = message
-        .split_once(':')
-        .map(|(prefix, _)| prefix)
-        .unwrap_or(message.as_str())
-        .split_whitespace()
-        .next()
-        .filter(|value| {
-            !value.is_empty()
-                && value.len() <= 64
-                && value
-                    .bytes()
-                    .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit() || byte == b'_')
-        })
-        .unwrap_or("PHONE_OPERATION_FAILED");
-
-    let exit_code = message
-        .split("[exitCode=")
-        .nth(1)
-        .and_then(|tail| tail.split(']').next())
-        .and_then(|value| value.parse::<i32>().ok());
-
-    let retryable = matches!(
-        reason_code,
-        "TIMEOUT"
-            | "TRANSPORT_LOST"
-            | "APP_NOT_FOREGROUND"
-            | "UI_NOT_READY"
-            | "CONDITION_TIMEOUT"
-            | "PHONE_HELPER_UNAVAILABLE"
-    );
-    let retry_guidance = match reason_code {
-        "STALE_UI" | "STALE_FRAME" | "STALE_DISPLAY" => {
-            "Re-observe the current phone UI, then retry against the new frame/ref."
-        }
-        "PHONE_HELPER_UNAVAILABLE" => {
-            "Retry once after re-checking phone_semantic_helper_status. If it persists, reinstall the bundled helper if needed or ask the user to enable it in Android Accessibility settings."
-        }
-        "PHONE_HELPER_INTEGRITY_ERROR" => {
-            "Do not use the installed helper. Reinstall the pinned RepoTunnel Phone helper from this build before semantic control."
-        }
-        "PAYMENT_APP_BLOCKED" => {
-            "RepoTunnel Accessibility stays enabled, but AI inspection and control are intentionally blocked while a payment-sensitive app is foreground. Finish or leave the payment app manually; RepoTunnel resumes automatically afterward."
-        }
-        "PAYMENT_SAFE_MODE" | "PAYMENT_SAFE_MODE_TIMEOUT" | "PAYMENT_SAFE_MODE_FAILED" => {
-            "This is the explicit compatibility fallback for a payment app that requires RepoTunnel Accessibility to be disabled. Finish the sensitive task with RepoTunnel accessibility off, then explicitly re-enable RepoTunnel Phone Helper in Android Accessibility settings."
-        }
-        "PERMISSION_DENIED" | "POLICY_BLOCKED" => {
-            "Do not retry unchanged. The user or Android/device policy must change first."
-        }
-        "NOT_FOUND" | "PACKAGE_NOT_FOUND" | "ALREADY_ABSENT" => {
-            "Do not retry the same target unchanged. Re-resolve the path/package/element first."
-        }
-        "TIMEOUT" | "TRANSPORT_LOST" | "APP_NOT_FOREGROUND" | "UI_NOT_READY"
-        | "CONDITION_TIMEOUT" => {
-            "Re-check connection/UI state before a bounded retry."
-        }
-        _ => "Inspect the structured reason and current phone state before retrying.",
-    };
-
-    let content = serde_json::to_string(&serde_json::json!({
-        "ok": false,
-        "error": message,
-        "reasonCode": reason_code,
-        "exitCode": exit_code,
-        "retryable": retryable,
-        "transient": retryable,
-        "retryGuidance": retry_guidance,
-    }))
-    .unwrap_or_else(|_| {
-        "{\"ok\":false,\"reasonCode\":\"PHONE_OPERATION_FAILED\",\"retryable\":false,\"error\":\"RepoTunnel Phone operation failed.\"}".to_string()
-    });
-
-    CallToolResult::error(vec![ContentBlock::text(content)])
-}
-
-async fn run_phone_task<T, F>(task: F) -> Result<CallToolResult, McpError>
-where
-    T: Serialize + Send + 'static,
-    F: FnOnce() -> Result<T, String> + Send + 'static,
-{
-    Ok(match tokio::task::spawn_blocking(task).await {
-        Ok(Ok(value)) => success_result(value),
-        Ok(Err(message)) => phone_error_result(message),
-        Err(error) => phone_error_result(format!(
-            "PHONE_TASK_FAILED: The Phone task could not complete: {error}"
-        )),
-    })
-}
-
 // Shared outcome recording for instrumented task wrappers. This is not a
 // complete count of all MCP tools until instrumentation moves to dispatch.
 fn record_task_outcome(succeeded: bool) {
@@ -1175,28 +1055,6 @@ impl RepoTunnelMcp {
                     ai_workspace: cfg!(target_os = "linux"),
                     real_desktop_control: true,
                     repotunnel_self_control_blocked: true,
-                },
-                phone: PhoneCapabilities {
-                    wireless_adb_pairing: true,
-                    automatic_wireless_reconnect: true,
-                    usb_fallback: true,
-                    persistent_runtime: true,
-                    live_screen: true,
-                    normalized_tap: true,
-                    normalized_swipe: true,
-                    key_input: true,
-                    text_input: true,
-                    app_control: true,
-                    files: true,
-                    app_install: true,
-                    device_settings: true,
-                    shell: true,
-                    logs: true,
-                    network_tools: true,
-                    rapid_sequence: true,
-                    full_limited_off_access: true,
-                    pause_ai: true,
-                    mcp_access_escalation: false,
                 },
                 generic_middleware: GenericMiddlewareCapabilities {
                     resource_snapshot: true,
