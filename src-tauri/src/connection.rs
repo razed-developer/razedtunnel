@@ -7,6 +7,18 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+fn hide_background_console(command: &mut Command) -> &mut Command {
+    #[cfg(target_os = "windows")]
+    command.creation_flags(CREATE_NO_WINDOW);
+    command
+}
+
 const LOG_TAIL_LIMIT: u64 = 8 * 1024;
 
 #[derive(Debug)]
@@ -24,7 +36,7 @@ pub(crate) struct TunnelRuntime {
 }
 
 fn command_version(executable: &Path) -> Option<String> {
-    let output = Command::new(executable).arg("--version").output().ok()?;
+    let output = hide_background_console(&mut Command::new(executable)).arg("--version").output().ok()?;
     if !output.status.success() {
         return None;
     }
@@ -163,7 +175,7 @@ pub(crate) fn spawn_tunnel(
         }
     };
 
-    let child = match Command::new(&client.executable)
+    let child = match hide_background_console(&mut Command::new(&client.executable))
         .arg("run")
         .arg("--control-plane.tunnel-id")
         .arg(&tunnel_id)
@@ -220,7 +232,7 @@ pub(crate) fn runtime_ready(runtime: &TunnelRuntime) -> Result<bool, String> {
         return Ok(false);
     }
 
-    let output = Command::new(&runtime.executable)
+    let output = hide_background_console(&mut Command::new(&runtime.executable))
         .arg("health")
         .arg("--url-file")
         .arg(&runtime.health_url_file)
