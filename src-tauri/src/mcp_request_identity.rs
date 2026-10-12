@@ -74,3 +74,21 @@ pub(crate) fn continuation_identity_keys(_parts: &Parts, context: &RequestContex
     continuation_identity_keys_from(openai_conversation_session(context))
 }
 
+pub(crate) fn request_client_key(parts: &Parts) -> Option<String> {
+    if let Some(session_key) = request_mcp_session_key(parts) {
+        return Some(session_key);
+    }
+    request_edit_group_id(parts).map(|trace| format!("request:{trace}"))
+}
+
+pub(crate) fn request_resource_owner_key(
+    parts: &Parts,
+    context: &RequestContext<RoleServer>,
+) -> Option<String> {
+    if let Some(conversation_session) = openai_conversation_session(context) {
+        let bounded = conversation_session.chars().take(220).collect::<String>();
+        return Some(format!("openai-session:{bounded}"));
+    }
+    request_client_key(parts)
+}
+
