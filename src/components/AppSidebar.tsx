@@ -16,6 +16,7 @@ export type AppView =
 
 type AppSidebarProps = {
   activeView: AppView;
+  pendingCount: number;
   onNavigate: (view: AppView) => void;
 };
 
