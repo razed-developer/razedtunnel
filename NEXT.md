@@ -1,3 +1,10 @@
+## Rust IPC audit: first registration-only removal (awaiting local validation)
+- User confirmed previous two-page navigation fix passed.
+- Inspected `src-tauri/src/lib.rs`: Tauri IPC registers extensive legacy UI commands while MCP server is separate; core Projects/Connections commands and gateway/public tunnel/chat connection remain required. Startup also initializes terminal and monitoring; do not remove without MCP dependency audit.
+- Commit `a610b15` unregisters 15 Tauri IPC commands for unmounted Model Hub, model trials, and Home chat only. All implementation modules, Rust MCP tool registrations, and core gateway/project commands are untouched. This is intentionally registration-only, not deletion of underlying services.
+- Run `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Verify Projects, Connections, tray and MCP connectivity. Assistant could not compile locally.
+- Next inspect Rust MCP references and frontend backend calls before unregistering more UI-only IPC. Preserve MCP operations irrespective of UI removal.
+
 ## Two-page navigation typecheck fix (awaiting validation)
 - User's `npm run check` reported four TS2345 errors in unmounted `WorkspaceProductivity.tsx` command palette: Home, History, Commands, Settings navigation no longer matches two-page AppView.
 - Commit `fe29008` removed four unsupported navigation actions and added Connections alongside Projects in that component. It remains unmounted; no runtime MCP changes.
