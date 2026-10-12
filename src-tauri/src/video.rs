@@ -440,17 +440,6 @@ fn sha256_hex(bytes: &[u8]) -> String {
         .collect()
 }
 
-fn trusted_helper_host(host: &str) -> bool {
-    matches!(
-        host,
-        "github.com"
-            | "release-assets.githubusercontent.com"
-            | "objects.githubusercontent.com"
-            | "pypi.org"
-            | "files.pythonhosted.org"
-    )
-}
-
 fn download_client() -> Result<Client, String> {
     Client::builder()
         .connect_timeout(Duration::from_secs(15))
@@ -479,7 +468,7 @@ fn download_bytes(
         return Err("Video helpers may only be downloaded over HTTPS.".to_string());
     }
     let host = parsed.host_str().unwrap_or_default();
-    if !trusted_helper_host(host) {
+    if !crate::media_tools::trusted_helper_host(host) {
         return Err("Video helper download host is not allowlisted.".to_string());
     }
 
