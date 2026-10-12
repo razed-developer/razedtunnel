@@ -209,6 +209,14 @@ pub fn relocate_workspace(
 }
 
 pub(crate) fn register_workspace_path(app: &AppHandle, path: String) -> Result<Workspace, String> {
+    register_workspace_path_with_policy(app, path, false)
+}
+
+fn register_workspace_path_with_policy(
+    app: &AppHandle,
+    path: String,
+    restricted: bool,
+) -> Result<Workspace, String> {
     let canonical_path = canonical_workspace_path(&path)?;
     let canonical_string = canonical_path.to_string_lossy().into_owned();
     let canonical_name = workspace_name(&canonical_path);
@@ -226,9 +234,9 @@ pub(crate) fn register_workspace_path(app: &AppHandle, path: String) -> Result<W
             name: canonical_name,
             path: canonical_string,
             added_at,
-            access_mode: WorkspaceAccessMode::ReadWrite,
-            change_policy: WorkspaceChangePolicy::Automatic,
-            command_policy: CommandPolicy::Automatic,
+            access_mode: if restricted { WorkspaceAccessMode::ReadOnly } else { WorkspaceAccessMode::ReadWrite },
+            change_policy: if restricted { WorkspaceChangePolicy::Review } else { WorkspaceChangePolicy::Automatic },
+            command_policy: if restricted { CommandPolicy::Disabled } else { CommandPolicy::Automatic },
         };
 
         workspaces.push(workspace.clone());
@@ -298,7 +306,7 @@ pub async fn clone_git_workspace(
         if !output.status.success() {
             return Err(format!("Git clone failed: {}", String::from_utf8_lossy(&output.stderr).chars().take(600).collect::<String>()));
         }
-        register_workspace_path(&app, destination.to_string_lossy().into_owned())
+        register_workspace_path_with_policy(&app, destination.to_string_lossy().into_owned(), true)
     }).await.map_err(|e| format!("Clone task failed: {e}"))?
 }
 
