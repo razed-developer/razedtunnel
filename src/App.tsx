@@ -1,4 +1,4 @@
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import AppHeader from "./components/AppHeader";
 import AppErrorBoundary from "./components/AppErrorBoundary";
@@ -10,15 +10,6 @@ import GatewayPanel from "./components/GatewayPanel";
 import WindowChrome from "./components/WindowChrome";
 import PublicTunnelPanel from "./components/PublicTunnelPanel";
 import WorkspaceList from "./components/WorkspaceList";
-import type { EditorDocument, EditorRevealLocation, EditorSelectionContext } from "./components/WorkspaceEditor";
-import type { EditorProblem } from "./components/DeveloperDock";
-import {
-  getFileInfo,
-  openWorkspacePathLocal,
-  previewWorkspaceImage,
-  readFile,
-  saveEditorFile,
-} from "./lib/filesystem";
 import {
   addWorkspace,
   cloneGitWorkspace,
@@ -187,19 +178,8 @@ function App() {
   const [aiAccessBusy, setAiAccessBusy] = useState(false);
   const [checkpointResult, setCheckpointResult] = useState<CheckpointSummary | null>(null);
   const [safetyScanResult, setSafetyScanResult] = useState<SafetyScanResult | null>(null);
-  const [editorTabs, setEditorTabs] = useState<EditorDocument[]>([]);
-  const [activeEditorKey, setActiveEditorKey] = useState<string | null>(null);
-  const [editorSavingKey, setEditorSavingKey] = useState<string | null>(null);
   const [projectTreeRefreshToken, setProjectTreeRefreshToken] = useState(0);
   const [gitStatus, setGitStatus] = useState<GitRepositoryStatus | null>(null);
-  const [editorRevealLocation, setEditorRevealLocation] = useState<EditorRevealLocation | null>(null);
-  const [editorSelectionContext, setEditorSelectionContext] = useState<EditorSelectionContext | null>(null);
-  const [editorProblems, setEditorProblems] = useState<EditorProblem[]>([]);
-  const [secondaryEditorKey, setSecondaryEditorKey] = useState<string | null>(null);
-  const [closedEditorTabs, setClosedEditorTabs] = useState<Array<{ workspaceId: string; path: string }>>([]);
-  const editorTabsRef = useRef<EditorDocument[]>([]);
-  const editorSavingKeyRef = useRef<string | null>(null);
-  const editorSessionRestoredRef = useRef(false);
 
   const pendingCount = useMemo(
     () => changes.filter((change) => change.status === "pending").length,
