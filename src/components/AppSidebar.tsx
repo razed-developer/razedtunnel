@@ -52,18 +52,43 @@ export type IconName =
   | "pause"
   | "resume";
 
-const navItems: Array<{ id: AppView; label: string; icon: IconName }> = [
-  { id: "overview", label: "Home", icon: "home" },
-  { id: "projects", label: "Projects", icon: "folder" },
-  { id: "team", label: "GPT Agents", icon: "team" },
-  { id: "video", label: "Video", icon: "video" },
-  { id: "changes", label: "History", icon: "changes" },
-  { id: "checks", label: "Checks", icon: "checks" },
-  { id: "git", label: "Git", icon: "git" },
-  { id: "connections", label: "Connect", icon: "link" },
-  { id: "commands", label: "Commands", icon: "terminal" },
-  { id: "phone", label: "Phone", icon: "phone" },
-  { id: "httpsSetup", label: "HTTPS Setup", icon: "shield" },
+type NavGroup = {
+  label: string;
+  items: Array<{ id: AppView; label: string; icon: IconName }>;
+};
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Workspace",
+    items: [
+      { id: "overview", label: "Home", icon: "home" },
+      { id: "projects", label: "Projects", icon: "folder" },
+    ],
+  },
+  {
+    label: "Development",
+    items: [
+      { id: "changes", label: "History", icon: "changes" },
+      { id: "checks", label: "Checks", icon: "checks" },
+      { id: "git", label: "Git", icon: "git" },
+      { id: "commands", label: "Commands", icon: "terminal" },
+    ],
+  },
+  {
+    label: "Connections",
+    items: [
+      { id: "connections", label: "Connect", icon: "link" },
+      { id: "httpsSetup", label: "HTTPS Setup", icon: "shield" },
+    ],
+  },
+  {
+    label: "Additional Tools",
+    items: [
+      { id: "team", label: "GPT Agents", icon: "team" },
+      { id: "video", label: "Video", icon: "video" },
+      { id: "phone", label: "Phone", icon: "phone" },
+    ],
+  },
 ];
 
 export function NavIcon({ name, size = 17 }: { name: IconName; size?: number }) {
@@ -125,17 +150,22 @@ function AppSidebar({
       </div>
 
       <nav className="sidebar-nav" aria-label="RazedTunnel navigation">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`sidebar-nav-item ${activeView === item.id || (item.id === "projects" && activeView === "editor") ? "active" : ""}`}
-            onClick={() => onNavigate(item.id)}
-          >
-            <NavIcon name={item.icon} />
-            <span>{item.label}</span>
-            {item.id === "changes" && pendingCount > 0 ? <span className="sidebar-count">{pendingCount}</span> : null}
-          </button>
+        {navGroups.map((group) => (
+          <div className="sidebar-nav-group" key={group.label}>
+            <div className="sidebar-nav-group-label">{group.label}</div>
+            {group.items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`sidebar-nav-item ${activeView === item.id || (item.id === "projects" && activeView === "editor") ? "active" : ""}`}
+                onClick={() => onNavigate(item.id)}
+              >
+                <NavIcon name={item.icon} />
+                <span>{item.label}</span>
+                {item.id === "changes" && pendingCount > 0 ? <span className="sidebar-count">{pendingCount}</span> : null}
+              </button>
+            ))}
+          </div>
         ))}
       </nav>
 
