@@ -151,6 +151,10 @@ export async function addWorkspace(path: string): Promise<Workspace> {
   return invoke<Workspace>("add_workspace", { path });
 }
 
+export async function cloneGitWorkspace(url: string, parentPath: string): Promise<Workspace> {
+  return invoke<Workspace>("clone_git_workspace", { url, parentPath });
+}
+
 export async function createProject(name: string): Promise<Workspace> {
   return invoke<Workspace>("create_project", { name });
 }
