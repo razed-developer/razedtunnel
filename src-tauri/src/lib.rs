@@ -470,9 +470,13 @@ pub fn run() {
                 monitoring::stop_all_activity();
                 terminal::stop_transient_activity_for_shutdown();
                 browser::stop_all_activity();
-                video::stop_all_activity();
-                video_production::stop_all_activity();
-                video_preview::clear_all(app_handle);
+                // Legacy video lifecycle is opt-in during gateway simplification.
+                #[cfg(feature = "legacy_video")]
+                {
+                    video::stop_all_activity();
+                    video_production::stop_all_activity();
+                    video_preview::clear_all(app_handle);
+                }
                 model_hub::stop_owned_local_runtimes();
                 #[cfg(feature = "legacy_background_services")]
                 {
