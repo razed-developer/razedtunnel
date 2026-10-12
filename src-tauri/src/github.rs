@@ -8,6 +8,16 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+fn background_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    let mut command = Command::new(program);
+    #[cfg(target_os = "windows")]
+    command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    command
+}
+
 use serde::Serialize;
 use serde_json::{json, Value};
 
@@ -135,7 +145,7 @@ pub(crate) fn configure_cli_command(command: &mut Command) {
 }
 
 fn run_gh(gh: &Path, args: &[&str]) -> Result<std::process::Output, String> {
-    let mut command = Command::new(gh);
+    let mut command = background_command(gh);
     configure_cli_command(&mut command);
     command
         .args(args)
@@ -147,7 +157,7 @@ fn run_gh(gh: &Path, args: &[&str]) -> Result<std::process::Output, String> {
 }
 
 fn run_gh_in_dir(gh: &Path, cwd: &Path, args: &[String]) -> Result<std::process::Output, String> {
-    let mut command = Command::new(gh);
+    let mut command = background_command(gh);
     configure_cli_command(&mut command);
     command
         .current_dir(cwd)
@@ -533,7 +543,7 @@ pub(crate) fn connect() -> Result<GithubConnectionStatus, String> {
         return Ok(current);
     }
 
-    let mut command = Command::new(&gh);
+    let mut command = background_command(&gh);
     configure_cli_command(&mut command);
     let mut child = command
         .args([
@@ -679,7 +689,7 @@ mod tests {
         #[cfg(windows)]
         assert!(config_dir.ends_with("GitHub CLI"));
 
-        let mut command = std::process::Command::new(executable_name());
+        let mut command = background_command(executable_name());
         super::configure_cli_command(&mut command);
         let configured = command
             .get_envs()
