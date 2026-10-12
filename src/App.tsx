@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import AppHeader from "./components/AppHeader";
 import AppErrorBoundary from "./components/AppErrorBoundary";
@@ -13,13 +13,11 @@ import WorkspaceList from "./components/WorkspaceList";
 import {
   addWorkspace,
   cloneGitWorkspace,
-  checkForUpdates,
   getAiAccessStatus,
   getChatConnectionStatus,
   getGatewayStatus,
   getWorkspaceHealth,
   getPublicTunnelStatus,
-  listChanges,
   listWorkspaces,
   removeWorkspace,
   relocateWorkspace,
@@ -39,7 +37,6 @@ import {
   updateWorkspaceCommandPolicy,
 } from "./lib/backend";
 import type {
-  ChangeRecord,
   ChatConnectionStatus,
   CommandPolicy,
   GatewayStatus,
@@ -122,7 +119,6 @@ function App() {
   const [startupProjectRestored, setStartupProjectRestored] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
-  const [changes, setChanges] = useState<ChangeRecord[]>([]);
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>(initialStatus);
   const [connectionStatus, setConnectionStatus] = useState<ChatConnectionStatus>(
     initialConnectionStatus,
@@ -145,33 +141,18 @@ function App() {
   const [confirmRevokeMcpAccess, setConfirmRevokeMcpAccess] = useState(false);
   const [aiAccessPaused, setAiAccessPausedState] = useState(false);
 
-  const pendingCount = useMemo(
-    () => changes.filter((change) => change.status === "pending").length,
-    [changes],
-  );
-
-  const handleExecutionError = useCallback((message: string) => {
-    setNotice(`Command execution: ${message}`);
-  }, []);
-
-  const refreshPendingChanges = useCallback(async () => {
-    setChanges(await listChanges(undefined, 100));
-  }, []);
-
   const refresh = useCallback(async () => {
-    const [savedWorkspaces, status, publicStatus, chatStatus, savedChanges, aiStatus] = await Promise.all([
+    const [savedWorkspaces, status, publicStatus, chatStatus, aiStatus] = await Promise.all([
       listWorkspaces(),
       getGatewayStatus(),
       getPublicTunnelStatus(),
       getChatConnectionStatus(),
-      listChanges(undefined, 100),
       getAiAccessStatus(),
     ]);
     setWorkspaces(savedWorkspaces);
     setGatewayStatus(status);
     setPublicTunnelStatus(publicStatus);
     setConnectionStatus(chatStatus);
-    setChanges(savedChanges);
     setAiAccessPausedState(aiStatus.paused);
   }, []);
 
@@ -196,25 +177,6 @@ function App() {
       .catch((error) => setNotice(`RepoTunnel could not initialize: ${errorMessage(error)}`))
       .finally(() => setLoading(false));
   }, [refresh]);
-
-  useEffect(() => {
-    let active = true;
-    const check = () => {
-      checkForUpdates(false)
-        .then((status) => {
-          if (active && status.shouldNotify && status.update) {
-            setNotice(`RepoTunnel ${status.update.version} is available. Open Settings to update.`);
-          }
-        })
-        .catch(() => undefined);
-    };
-    check();
-    const timer = window.setInterval(check, 6 * 60 * 60 * 1000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
-  }, []);
 
   useEffect(() => {
     if (!notice) return;
@@ -296,16 +258,6 @@ function App() {
     const timer = window.setInterval(poll, 4000);
     return () => window.clearInterval(timer);
   }, [publicTunnelStatus.configured]);
-
-  useEffect(() => {
-    if (!gatewayStatus.running) return;
-
-    const timer = window.setInterval(() => {
-      refreshPendingChanges().catch(() => undefined);
-    }, 10_000);
-
-    return () => window.clearInterval(timer);
-  }, [gatewayStatus.running, refreshPendingChanges]);
 
   async function handleAddWorkspace() {
     setNotice(null);
