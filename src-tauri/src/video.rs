@@ -430,16 +430,6 @@ pub(crate) fn tools_status(app: &AppHandle) -> Result<VideoToolsStatus, String> 
     })
 }
 
-fn sha256_hex(bytes: &[u8]) -> String {
-    let mut digest = Sha256::new();
-    digest.update(bytes);
-    digest
-        .finalize()
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
-}
-
 fn download_client() -> Result<Client, String> {
     Client::builder()
         .connect_timeout(Duration::from_secs(15))
@@ -552,7 +542,7 @@ fn install_yt_dlp(
         })?;
     let url = format!("https://github.com/yt-dlp/yt-dlp/releases/latest/download/{asset}");
     let bytes = download_bytes(&client, &url, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
-    let actual = sha256_hex(&bytes);
+    let actual = crate::media_tools::sha256_hex(&bytes);
     if actual != expected {
         return Err(
             "yt-dlp checksum verification failed; RepoTunnel refused to install it.".to_string(),
@@ -622,7 +612,7 @@ fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), St
     }
 
     let wheel = download_bytes(&client, &selected.1, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
-    if sha256_hex(&wheel) != selected.2 {
+    if crate::media_tools::sha256_hex(&wheel) != selected.2 {
         return Err(
             "FFmpeg package checksum verification failed; RepoTunnel refused to install it."
                 .to_string(),
@@ -837,7 +827,7 @@ fn cache_key(
         end.map(|value| format!("{value:.3}"))
             .unwrap_or_else(|| "end".to_string())
     );
-    sha256_hex(input.as_bytes())
+    crate::media_tools::sha256_hex(input.as_bytes())
 }
 
 fn validate_range(start: Option<f64>, end: Option<f64>) -> Result<(f64, Option<f64>), String> {
