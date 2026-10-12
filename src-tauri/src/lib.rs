@@ -4,6 +4,7 @@ mod ai_resources;
 mod ai_workspace;
 mod ai_workspace_commands;
 mod app_state;
+mod chat_connection_commands;
 mod gateway_commands;
 mod ai_access_commands;
 mod browser;
@@ -392,9 +393,9 @@ pub fn run() {
                 https_setup::verify_https_setup_hostname,
                 public_tunnel_commands::clear_public_tunnel,
                 public_tunnel_commands::revoke_mcp_access,
-                commands::get_chat_connection_status,
-                commands::start_chat_connection,
-                commands::stop_chat_connection,
+                chat_connection_commands::get_chat_connection_status,
+                chat_connection_commands::start_chat_connection,
+                chat_connection_commands::stop_chat_connection,
                 model_hub_commands::get_model_hub,
                 model_hub_commands::refresh_model_runtime,
                 model_hub_commands::update_model_runtime_endpoint,
