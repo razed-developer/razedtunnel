@@ -8,6 +8,13 @@ edition = "2021"
 name = "repotunnel_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# Reversible migration switch: disabled by default while we validate the lean gateway.
+# Restore the legacy background startup integrations with:
+# cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services
+[features]
+default = []
+legacy_background_services = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
