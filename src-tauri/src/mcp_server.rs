@@ -15,6 +15,7 @@ use rmcp::{
 #[cfg(feature = "legacy_video")]
 use rmcp::model::AudioContent;
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_continuation_fallback::{ensure_chatgpt_work_fallback, ensure_chatgpt_work_fallback_with_identities};
 use crate::mcp_request_identity::{request_edit_group_id, openai_conversation_session, continuation_identity_keys_from, continuation_identity_keys, request_client_key, request_resource_owner_key};
 use crate::mcp_phone_helpers::{parse_phone_key, parse_phone_settings_namespace};
 use crate::mcp_phone_transactions::{PhoneTransactionAliasTarget, phone_transaction_find_unique, phone_transaction_condition_met, validate_phone_transaction_steps};
@@ -978,30 +979,6 @@ struct ListGitActionsParams {
     limit: Option<usize>,
 }
 
-fn ensure_chatgpt_work_fallback_with_identities(
-    app: &AppHandle,
-    workspace_id: &str,
-    identity_keys: &[String],
-) {
-    if approved_workspace(app, workspace_id).is_err() {
-        return;
-    }
-    if let Err(error) =
-        chatgpt_bridge::ensure_automatic_fallback_for_identities(workspace_id, identity_keys)
-    {
-        eprintln!("RepoTunnel automatic ChatGPT continuation fallback failed: {error}");
-    }
-}
-
-fn ensure_chatgpt_work_fallback(
-    app: &AppHandle,
-    workspace_id: &str,
-    conversation_session: Option<&str>,
-) {
-    let identity_keys = continuation_identity_keys_from(conversation_session);
-    ensure_chatgpt_work_fallback_with_identities(app, workspace_id, &identity_keys);
-}
-
 fn browser_scope_for_request(
     workspace: &Workspace,
     client_key: Option<&str>,
@@ -1380,7 +1357,7 @@ fn ensure_ai_access(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-fn approved_workspace(app: &AppHandle, workspace_id: &str) -> Result<Workspace, String> {
+pub(crate) fn approved_workspace(app: &AppHandle, workspace_id: &str) -> Result<Workspace, String> {
     ensure_ai_access(app)?;
 
     load_workspaces(app)?
