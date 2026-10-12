@@ -438,77 +438,9 @@ fn install_yt_dlp(
     Ok(())
 }
 
-fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), String> {
-    if program_path(app, "ffmpeg").is_some() {
-        return Ok(());
-    }
-    let client = crate::media_tools::download_client()?;
-    let metadata = crate::media_tools::download_bytes(
-        &client,
-        "https://pypi.org/pypi/imageio-ffmpeg/json",
-        4 * 1024 * 1024,
-        cancel,
-    )?;
-    let value: serde_json::Value = serde_json::from_slice(&metadata)
-        .map_err(|error| format!("Could not parse imageio-ffmpeg package metadata: {error}"))?;
-    let files = value
-        .get("urls")
-        .and_then(|item| item.as_array())
-        .ok_or_else(|| {
-            "imageio-ffmpeg package metadata did not include release files.".to_string()
-        })?;
-
-    let selected = files
-        .iter()
-        .filter_map(|item| {
-            let filename = item.get("filename")?.as_str()?;
-            if !crate::media_tools::wheel_matches_platform(filename) {
-                return None;
-            }
-            let url = item.get("url")?.as_str()?;
-            let sha256 = item.get("digests")?.get("sha256")?.as_str()?;
-            Some((
-                filename.to_string(),
-                url.to_string(),
-                sha256.to_ascii_lowercase(),
-            ))
-        })
-        .next()
-        .ok_or_else(|| {
-            format!(
-                "No managed FFmpeg build is available for {} {}.",
-                env::consts::OS,
-                env::consts::ARCH
-            )
-        })?;
-
-    let parsed =
-        Url::parse(&selected.1).map_err(|_| "FFmpeg package URL is invalid.".to_string())?;
-    if parsed.scheme() != "https" || parsed.host_str() != Some("files.pythonhosted.org") {
-        return Err("FFmpeg package URL did not use the expected PyPI file host.".to_string());
-    }
-
-    let wheel = crate::media_tools::download_bytes(&client, &selected.1, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
-    if crate::media_tools::sha256_hex(&wheel) != selected.2 {
-        return Err(
-            "FFmpeg package checksum verification failed; RepoTunnel refused to install it."
-                .to_string(),
-        );
-    }
-
-    let bytes = crate::media_tools::extract_ffmpeg_wheel_binary(wheel, &selected.0)?;
-    let destination = tools_root(app)?.join(executable_name("ffmpeg"));
-    crate::media_tools::private_write(&destination, &bytes, true)?;
-    if crate::media_tools::program_version(&destination, "ffmpeg").is_none() {
-        let _ = fs::remove_file(&destination);
-        return Err("Downloaded FFmpeg could not be verified by execution.".to_string());
-    }
-    Ok(())
-}
-
 pub(crate) fn install_missing_tools(app: &AppHandle) -> Result<VideoToolsStatus, String> {
     install_yt_dlp(app, None, false)?;
-    install_ffmpeg(app, None)?;
+    crate::media_tools::install_ffmpeg(app, None)?;
     tools_status(app)
 }
 
@@ -518,7 +450,7 @@ fn ensure_tool(app: &AppHandle, name: &str, cancel: &AtomicBool) -> Result<PathB
     }
     match name {
         "yt-dlp" => install_yt_dlp(app, Some(cancel), false)?,
-        "ffmpeg" => install_ffmpeg(app, Some(cancel))?,
+        "ffmpeg" => crate::media_tools::install_ffmpeg(app, Some(cancel))?,
         _ => return Err("Unknown video helper.".to_string()),
     }
     program_path(app, name)
