@@ -38,6 +38,7 @@ mod model_trial;
 mod models;
 mod monitoring;
 mod phone;
+mod phone_commands;
 mod platform_sandbox;
 mod projects;
 mod project_context;
@@ -215,21 +216,21 @@ pub fn run() {
                 commands::get_workflow_readiness,
                 commands::get_environment_diagnostics,
                 commands::list_tool_capabilities,
-                commands::get_phone_discovery,
-                commands::pair_phone_wirelessly,
-                commands::get_phone_access_status,
-                commands::select_phone_device,
-                commands::set_phone_access_mode,
-                commands::set_phone_access_paused,
-                commands::get_phone_runtime_status,
-                commands::ensure_phone_runtime,
-                commands::clear_phone_runtime,
-                commands::probe_phone_runtime,
-                commands::get_phone_screen_frame,
-                commands::phone_tap,
-                commands::phone_swipe,
-                commands::phone_key_event,
-                commands::phone_type_text,
+                phone_commands::get_phone_discovery,
+                phone_commands::pair_phone_wirelessly,
+                phone_commands::get_phone_access_status,
+                phone_commands::select_phone_device,
+                phone_commands::set_phone_access_mode,
+                phone_commands::set_phone_access_paused,
+                phone_commands::get_phone_runtime_status,
+                phone_commands::ensure_phone_runtime,
+                phone_commands::clear_phone_runtime,
+                phone_commands::probe_phone_runtime,
+                phone_commands::get_phone_screen_frame,
+                phone_commands::phone_tap,
+                phone_commands::phone_swipe,
+                phone_commands::phone_key_event,
+                phone_commands::phone_type_text,
                 commands::get_system_resource_snapshot,
                 commands::create_temp_workspace,
                 commands::list_temp_workspaces,
