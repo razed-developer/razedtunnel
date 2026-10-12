@@ -5909,3 +5909,76 @@ textarea:focus-visible {
 :root[data-theme="light"] .razed-home-intro h1 { color: #253247; }
 :root[data-theme="light"] .razed-home-primary-actions button,
 :root[data-theme="light"] .razed-home-chat-toggle > button { color: #253247; background: #fff; border: 1px solid #dce3ec; }
+
+
+/* Gateway-only shell: two-page layout without the removed project rail. */
+.desktop-app .desktop-shell {
+  grid-template-columns: 218px minmax(0, 1fr) !important;
+}
+.desktop-app .main-view {
+  min-width: 0;
+  width: 100%;
+}
+.desktop-app .page-content {
+  box-sizing: border-box;
+  width: min(1100px, 100%) !important;
+  padding: 26px 28px 48px !important;
+}
+.desktop-app .workspace-section,
+.desktop-app .workspace-list,
+.desktop-app .workspace-card {
+  min-width: 0;
+}
+.desktop-app .workspace-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 900px) {
+  .desktop-app .desktop-shell {
+    grid-template-columns: 180px minmax(0, 1fr) !important;
+  }
+  .desktop-app .page-content {
+    padding: 20px 18px 36px !important;
+  }
+  .desktop-app .workspace-card {
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+  }
+  .desktop-app .workspace-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+    padding-left: 0 !important;
+  }
+  .desktop-app .section-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+@media (max-width: 650px) {
+  html, body, #root {
+    min-width: 0;
+  }
+  .desktop-app .desktop-shell {
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+  }
+  .desktop-app .app-sidebar {
+    padding: 10px 7px !important;
+  }
+  .desktop-app .sidebar-brand-copy,
+  .desktop-app .sidebar-nav-item > span:not(.sidebar-count),
+  .desktop-app .sidebar-section-heading {
+    display: none !important;
+  }
+  .desktop-app .page-content {
+    padding: 16px 12px 28px !important;
+  }
+  .desktop-app .page-header {
+    padding: 0 12px !important;
+    gap: 8px;
+  }
+  .desktop-app .page-statuses {
+    gap: 6px;
+  }
+  .desktop-app .focus-mode-toggle {
+    display: none;
+  }
+}
