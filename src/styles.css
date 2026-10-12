@@ -2583,6 +2583,24 @@ body {
   margin-top: 8px;
 }
 
+.sidebar-nav-group {
+  display: grid;
+  gap: 3px;
+}
+
+.sidebar-nav-group + .sidebar-nav-group {
+  margin-top: 12px;
+}
+
+.sidebar-nav-group-label {
+  padding: 4px 10px 3px;
+  color: #686e79;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
 .sidebar-nav-item {
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) auto;
