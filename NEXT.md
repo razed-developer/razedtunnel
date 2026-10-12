@@ -23,7 +23,13 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - `ProductionPanel` is actually system/runtime settings, update controls and history retention; do not mistake it for removed Video Production.
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
 
-## Tray-first navigation stage (awaiting validation)
+## Gateway-only frontend mount (awaiting validation)
+- User confirmed tray Projects/Connections shortcuts work, along with close-to-tray and Quit.
+- Commits `99a504f`, `d04ba65`: `src/App.tsx` now mounts only Projects and Connections page bodies; removed the ProjectRail and WorkspaceProductivity from the shell, removed HomeWorkspace and WorkspaceEditor render branches, and removed imports of the development panels so their heavy runtime modules should no longer bundle. Retained existing internal hooks/state and type-only editor imports for a safer first step; dead state cleanup comes later. Error recovery now routes to Projects.
+- Validate `git pull --ff-only && npm run check && npm run build` and inspect Vite output for disappearance of `editor-core` bundle. Then test both pages and tray navigation in `npm run tauri dev` before further deletion.
+- Important: no Rust MCP tool registry or permissions changed. Do not assume removed UI panels imply removed MCP capabilities.
+
+## Tray-first navigation stage (validated)
 - Commits `825a0d9`, `4cb7cbf`: tray menu now opens Projects or Connections directly, retaining Open and Quit; Rust emits `razedtunnel:open-page` after showing window, React listens and switches the active page. No backend MCP changes.
 - Validate `npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, then `npm run tauri dev` and test each tray menu entry, close-to-tray, and Quit. Unset `REPOTUNNEL_WINDOWS_TEST_MANIFEST` before launching normally.
 - Next: replace legacy App.tsx composition and eliminate editor/home imports and compiled chunks, preserving the two required pages and gateway state.
