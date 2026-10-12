@@ -445,7 +445,7 @@ fn download_client() -> Result<Client, String> {
         .connect_timeout(Duration::from_secs(15))
         .timeout(Duration::from_secs(180))
         .redirect(reqwest::redirect::Policy::custom(|attempt| {
-            if attempt.url().host_str().is_some_and(trusted_helper_host) {
+            if attempt.url().host_str().is_some_and(crate::media_tools::trusted_helper_host) {
                 attempt.follow()
             } else {
                 attempt.stop()
