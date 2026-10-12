@@ -74,7 +74,7 @@ fn next_ai_workspace_app_session_id() -> String {
     format!(
         "aiwapp-mcp-{}-{}-{sequence}",
         std::process::id(),
-        unix_epoch_millis()
+        crate::mcp_time::unix_epoch_millis()
     )
 }
 
@@ -90,13 +90,6 @@ fn is_self_continuation_resource_uri(uri: &str) -> bool {
             | LEGACY_V2_SELF_CONTINUATION_RESOURCE_URI
             | LEGACY_V1_SELF_CONTINUATION_RESOURCE_URI
     )
-}
-
-fn unix_epoch_millis() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis().min(u64::MAX as u128) as u64)
-        .unwrap_or(0)
 }
 
 fn self_continuation_ui_diagnostics() -> serde_json::Value {
@@ -5677,7 +5670,7 @@ impl RepoTunnelMcp {
         context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         SELF_CONTINUATION_ATTEMPT_COUNT.fetch_add(1, Ordering::Relaxed);
-        SELF_CONTINUATION_LAST_ATTEMPT_AT.store(unix_epoch_millis(), Ordering::Relaxed);
+        SELF_CONTINUATION_LAST_ATTEMPT_AT.store(crate::mcp_time::unix_epoch_millis(), Ordering::Relaxed);
         let app = self.app.clone();
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_structured_task(move || {
@@ -11372,7 +11365,7 @@ impl ServerHandler for RepoTunnelMcp {
         if request.uri == SELF_CONTINUATION_RESOURCE_URI {
             SELF_CONTINUATION_CURRENT_RESOURCE_READ_COUNT.fetch_add(1, Ordering::Relaxed);
         }
-        SELF_CONTINUATION_LAST_RESOURCE_READ_AT.store(unix_epoch_millis(), Ordering::Relaxed);
+        SELF_CONTINUATION_LAST_RESOURCE_READ_AT.store(crate::mcp_time::unix_epoch_millis(), Ordering::Relaxed);
 
         let response_uri = request.uri.clone();
 
