@@ -26,6 +26,7 @@ mod github;
 mod github_commands;
 mod gmail_access;
 mod hardening;
+mod history_commands;
 mod https_setup;
 mod integrations;
 mod large_project_read;
@@ -253,12 +254,12 @@ pub fn run() {
                 change_commands::approve_change,
                 change_commands::reject_change,
                 change_commands::undo_change,
-                commands::get_version_timeline,
-                commands::get_activity_timeline,
-                commands::clear_version_history,
-                commands::get_history_settings,
-                commands::update_history_settings,
-                commands::restore_version,
+                history_commands::get_version_timeline,
+                history_commands::get_activity_timeline,
+                history_commands::clear_version_history,
+                history_commands::get_history_settings,
+                history_commands::update_history_settings,
+                history_commands::restore_version,
                 commands::get_execution_status,
                 commands::list_command_presets,
                 commands::run_workspace_command,
