@@ -98,105 +98,44 @@ function HomeWorkspace({
   const [showLocalChat, setShowLocalChat] = useState(false);
   const hasProject = workspaces.length > 0;
   const remoteReady = publicTunnel.ready || connection.ready;
-  const remoteTitle = publicTunnel.ready ? "Public MCP ready" : connection.ready ? "Connected" : "Disconnected";
-  const remoteDetail = aiAccessPaused
-    ? "MCP workspace access paused"
-    : publicTunnel.ready
-      ? (publicTunnel.lastRemoteRequestAt ? "Remote MCP traffic detected" : "Stable public endpoint online")
-      : connection.ready
-        ? (connection.clientVersion ?? "Managed client connected")
-        : "External MCP access";
+
 
   return (
     <div className="home-workspace home-workspace-chat">
       <section className="home-center-stage">
-        <div className="home-center-content home-chat-center-content" style={{ overflowY: "auto", justifyContent: "flex-start", padding: "32px", gap: "20px" }}>
-          <div style={{ width: "100%", maxWidth: 760, margin: "0 auto", display: "grid", gap: 20 }}>
-            <div>
-              <span className="section-kicker">RazedTunnel workspace</span>
-              <h1 style={{ margin: "8px 0" }}>Projects</h1>
-              <p style={{ color: "var(--text-muted, #8995a6)" }}>Approved workspaces and access permissions.</p>
-            </div>
-            <section className="rail-card connection-card">
-              <div className="rail-card-title"><NavIcon name="folder" size={16} /><strong>Approved projects</strong></div>
-              {workspaces.length === 0 ? <p>No projects approved yet.</p> : (
-                <div style={{ display: "grid", gap: 12 }}>
-                  {workspaces.map((workspace) => (
-                    <div key={workspace.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                      <strong>{workspace.name}</strong>
-                      <small>{workspace.accessMode === "readOnly" ? "Read only" : "Read/write"} · Changes: {workspace.changePolicy} · Commands: {workspace.commandPolicy}</small>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <button type="button" onClick={() => onNavigate("projects")}>Manage projects</button>
-            </section>
-            <section className="rail-card connection-card">
-              <div className="rail-card-title"><NavIcon name="checks" size={16} /><strong>Development</strong></div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button type="button" onClick={() => onNavigate("changes")}>History</button>
-                <button type="button" onClick={() => onNavigate("checks")}>Checks</button>
-                <button type="button" onClick={() => onNavigate("git")}>Git</button>
-              </div>
-            </section>
-            <section className="rail-card connection-card">
-              <button type="button" aria-expanded={showLocalChat} onClick={() => setShowLocalChat((value) => !value)}>
-                <NavIcon name="model" size={16} /> {showLocalChat ? "Hide local AI chat" : "Show local AI chat"}
-              </button>
-              {showLocalChat ? (
-                <div style={{ minHeight: 480, position: "relative" }}>
-                  <HomeChat workspace={selectedWorkspace} modelHub={modelHub} currentFile={currentFile} selection={selection} errors={errors} onModelHubChange={onModelHubChange} />
-                </div>
-              ) : null}
-            </section>
+        <div className="home-center-content razed-home-start">
+          <div className="razed-home-intro">
+            <span className="section-kicker">RazedTunnel</span>
+            <h1>Ready to work</h1>
+            <p>{selectedWorkspace ? `Continue with ${selectedWorkspace.name}, or choose another project from the drawer.` : "Select a project from the drawer to begin, or add a new one."}</p>
+          </div>
+          <div className="razed-home-primary-actions">
+            <button type="button" className="primary-button" onClick={() => onNavigate("projects")} disabled={!hasProject}>
+              <NavIcon name="folder" size={16} /> {selectedWorkspace ? "Open selected project" : "Browse projects"}
+            </button>
+            <button type="button" className="secondary-button" onClick={onAddProject} disabled={adding}>
+              <NavIcon name="plus" size={16} /> {adding ? "Opening…" : "Add project"}
+            </button>
+            <button type="button" className="secondary-button" onClick={onCreateProject} disabled={adding}>New project</button>
+          </div>
+          <div className="razed-home-summary">
+            <span>{workspaces.length} approved project{workspaces.length === 1 ? "" : "s"}</span>
+            <span>{gateway.running ? "Gateway online" : "Gateway offline"}</span>
+            <span>{aiAccessPaused ? "AI access paused" : remoteReady ? "Remote ready" : "Remote disconnected"}</span>
+          </div>
+          <div className="razed-home-chat-toggle">
+            <button type="button" className="secondary-button" aria-expanded={showLocalChat} onClick={() => setShowLocalChat((value) => !value)}>
+              <NavIcon name="model" size={16} /> {showLocalChat ? "Hide local AI chat" : "Local AI chat"}
+            </button>
+            {showLocalChat ? <div className="razed-home-chat-panel">
+              <HomeChat workspace={selectedWorkspace} modelHub={modelHub} currentFile={currentFile} selection={selection} errors={errors} onModelHubChange={onModelHubChange} />
+            </div> : null}
           </div>
         </div>
 
       </section>
 
       <aside className="home-right-rail">
-        <section className="rail-card connection-card">
-          <div className="rail-card-title"><NavIcon name="gateway" size={16} /><strong>Gateway</strong></div>
-          <div className={`rail-status ${gateway.running ? "online" : "offline"}`}>
-            <span className="rail-status-dot" />
-            <strong>{gateway.running ? "Online" : "Offline"}</strong>
-          </div>
-          <small>{gateway.running && gateway.port ? `127.0.0.1:${gateway.port}` : "Local MCP endpoint"}</small>
-          <button type="button" onClick={onToggleGateway} disabled={gatewayBusy}>
-            <NavIcon name={gateway.running ? "stop" : "play"} size={16} />
-            {gatewayBusy ? "Working..." : gateway.running ? "Stop gateway" : "Start gateway"}
-          </button>
-        </section>
-
-        <section className="rail-card connection-card">
-          <div className="rail-card-title"><NavIcon name="remote" size={16} /><strong>Remote</strong></div>
-          <div className={`rail-status ${remoteReady ? "online" : "neutral"}`}>
-            <span className="rail-status-dot" />
-            <strong>{remoteTitle}</strong>
-          </div>
-          <small>{remoteDetail}</small>
-          <button type="button" onClick={() => onNavigate("connections")}>
-            <NavIcon name="link" size={16} />
-            {remoteReady ? "Manage remote" : "Connect remote"}
-          </button>
-        </section>
-
-        <section className="rail-card connection-card">
-          <div className="rail-card-title"><NavIcon name="folder" size={16} /><strong>Projects</strong></div>
-          <div className="rail-status neutral">
-            <strong>{workspaces.length} approved workspace{workspaces.length === 1 ? "" : "s"}</strong>
-          </div>
-          <small>
-            {selectedWorkspace
-              ? `Selected: ${selectedWorkspace.name} · ${selectedWorkspace.accessMode === "readOnly" ? "Read only" : "Read/write"}`
-              : "No project selected"}
-          </small>
-          <button type="button" onClick={() => onNavigate("projects")}>
-            <NavIcon name="folder" size={16} />
-            Manage projects
-          </button>
-        </section>
-
         <section className="rail-card quick-actions-card">
           <div className="rail-card-heading-row">
             <strong>Quick Actions</strong>
