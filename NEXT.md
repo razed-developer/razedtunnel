@@ -1,8 +1,13 @@
 # RazedTunnel — NEXT
 
 Updated: 2026-10-12
-Current branch: `main` (Team Mode cleanup merged via PR #2)
+Current branch: `cleanup/legacy-docs` (branched from `main`; not merged)
 Purpose: durable handoff between ChatGPT conversations. **Read this file first** before changing code. Keep it updated after each validated stage, before switching chats, and after merges.
+
+## Current stage: legacy documentation cleanup
+- Branch `cleanup/legacy-docs` created from `main` after Team Mode PR #2 merged.
+- Commit `83f34f9`: removed retired Android Phone, Video Production, and Team Mode feature claims and links from README, including architecture and security sections. This is documentation-only; no runtime changes.
+- Next: inspect and handle outdated dedicated docs (`docs/team-mode.md`, `docs/phone-access.md`, `docs/video.md`) and cross-links carefully. Then review diff and merge after validation.
 
 ## Goal and boundaries
 RazedTunnel is a compact Windows/Tauri Rust MCP gateway for approved local workspaces, files, terminal, Git/GitHub, and related development tools. Keep modules focused and remove legacy RepoTunnel features that do not serve the gateway. Do not break ordinary workspace permissions, MCP access, or file operations. Prefer small commits and local validation; do not merge before user approval/validation.
