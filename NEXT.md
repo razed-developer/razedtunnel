@@ -1,3 +1,8 @@
+## UI layout regression fix (awaiting validation)
+- User screenshot after removing ProjectRail showed severely compressed Projects content, overlapping permission controls and clipped header. This is a regression; do not proceed with more deletion until layout is confirmed.
+- Commit `61e1c96`: targeted gateway-only CSS for two-column shell, content sizing, wrapping permission actions and narrow-window responsive sidebar. No backend changes.
+- Validate `git pull --ff-only && npm run check && npm run build`; launch and visually inspect Projects and Connections at normal window width and when narrowed. If still compressed, inspect computed widths / old CSS overrides before further cleanup.
+
 # RazedTunnel — NEXT
 
 Updated: 2026-10-12
