@@ -8,6 +8,16 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+fn background_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    let mut command = Command::new(program);
+    #[cfg(target_os = "windows")]
+    command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    command
+}
+
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tauri::{path::BaseDirectory, AppHandle, Manager};
@@ -203,7 +213,7 @@ fn workspace_root(workspace: &Workspace) -> Result<PathBuf, String> {
     }
 
     let binary = git_binary()?;
-    let output = Command::new(&binary)
+    let output = background_command(&binary)
         .current_dir(&root)
         .args(["rev-parse", "--show-toplevel"])
         .env("GIT_TERMINAL_PROMPT", "0")
@@ -221,7 +231,7 @@ fn workspace_root(workspace: &Workspace) -> Result<PathBuf, String> {
         );
     }
 
-    let git_dir_output = Command::new(binary)
+    let git_dir_output = background_command(binary)
         .current_dir(&root)
         .args(["rev-parse", "--absolute-git-dir"])
         .env("GIT_TERMINAL_PROMPT", "0")
@@ -246,7 +256,7 @@ fn workspace_root(workspace: &Workspace) -> Result<PathBuf, String> {
 fn base_git_command(workspace: &Workspace) -> Result<Command, String> {
     let root = workspace_root(workspace)?;
     let binary = git_binary()?;
-    let mut command = Command::new(binary);
+    let mut command = background_command(binary);
     command
         .current_dir(root)
         .arg("--no-pager")
@@ -1459,7 +1469,7 @@ mod tests {
         let git = git_binary().expect("git binary");
 
         let run = |args: &[&str]| {
-            let output = Command::new(&git)
+            let output = background_command(&git)
                 .current_dir(&root)
                 .args(args)
                 .output()
@@ -1532,7 +1542,7 @@ mod tests {
         let git = git_binary().expect("git binary");
 
         let run = |cwd: &Path, args: &[&str]| {
-            let output = Command::new(&git)
+            let output = background_command(&git)
                 .current_dir(cwd)
                 .args(args)
                 .output()
@@ -1581,7 +1591,7 @@ mod tests {
         let result = push(&workspace, None, None, true, false).expect("native push");
         assert_eq!(result.get("pushed").and_then(Value::as_bool), Some(true));
 
-        let verify = Command::new(&git)
+        let verify = background_command(&git)
             .args([
                 "--git-dir",
                 remote.to_string_lossy().as_ref(),
