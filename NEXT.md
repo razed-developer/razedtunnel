@@ -1,3 +1,10 @@
+## Rust IPC audit: editor and file explorer registration cleanup (awaiting validation)
+- User confirmed previous 15-command history/checkpoint/safety desktop IPC removal passed.
+- Reviewed mounted `App.tsx`, `WorkspaceList`, `ChatConnectionPanel`, and `GatewayPanel`: none invoke removed editor/file-explorer desktop IPC. Commit `738579b` unregisters 9 Tauri commands: `filesystem_commands` list/read/search (3), `editor_commands` save/create file/create directory/rename/delete/image preview (6).
+- This is *only* Tauri IPC registration removal. `filesystem`, `filesystem_commands`, `editor_commands`, and all MCP tool modules remain compiled; no changes to MCP routes, permissions, project CRUD, or gateway lifecycle. Do not confuse removal of desktop IPC with removal of MCP filesystem tools.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml` plus Projects/Connections/tray/MCP file access. Assistant has not compiled locally.
+- Next review old desktop project lifecycle and diagnostics registrations against mounted UI, and audit actual Rust dependencies before deleting implementations.
+
 ## Rust IPC audit: history/checkpoint/safety registrations (awaiting validation)
 - User confirmed prior Rust Model Hub/Home registration cleanup passed, including cargo check and app behavior.
 - Inspected `lib.rs` Tauri invoke handler groups and mounted `App.tsx`/Projects UI dependencies. Commit `8facb67` unregisters 15 desktop-only IPC entries: history (6), checkpoints (8), safety scan (1). These are unreachable from the mounted two-page desktop interface. This change does **not** remove modules, MCP tool handlers, storage, permission checks, or gateway services. Changes and approval IPC remain registered pending MCP/control review.
