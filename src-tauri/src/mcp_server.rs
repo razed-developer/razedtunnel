@@ -1,4 +1,4 @@
-use axum::http::{request::Parts, HeaderMap};
+use axum::http::request::Parts;
 use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Extension, wrapper::Parameters},
@@ -14,7 +14,7 @@ use rmcp::{
 };
 use crate::mcp_git_helpers::compact_git_action_for_ai;
 use crate::mcp_observation::{record_observation, monitoring_file_detail};
-use crate::mcp_ai_workspace_helpers::{resolve_ai_workspace_app_session, resolve_ai_workspace_visible_path, ai_workspace_type_text, ai_workspace_terminal_browser_launch, ensure_ai_workspace_terminal_text_allowed, ai_workspace_session_payload, require_ai_workspace_session_match};
+use crate::mcp_ai_workspace_helpers::{resolve_ai_workspace_app_session, ai_workspace_type_text, ai_workspace_terminal_browser_launch, ensure_ai_workspace_terminal_text_allowed, ai_workspace_session_payload, require_ai_workspace_session_match};
 use crate::mcp_browser_access::{browser_scope_for_request, require_google_tab_access, require_ai_browser_tab_access};
 use crate::mcp_continuation_fallback::{ensure_chatgpt_work_fallback, ensure_chatgpt_work_fallback_with_identities};
 use crate::mcp_request_identity::{request_edit_group_id, openai_conversation_session, continuation_identity_keys_from, continuation_identity_keys, request_client_key, request_resource_owner_key};
@@ -39,7 +39,6 @@ use std::{
 use tauri::{AppHandle, Manager};
 
 use crate::{
-    access::{resolve_workspace_path, AccessOperation},
     activity, ai_resources,
     app_state::AppState,
     browser, changes, chatgpt_bridge, continuity, desktop_control, environment, execution,
@@ -7917,11 +7916,12 @@ mod tests {
     use axum::http::HeaderMap;
 
     use crate::models::{GitActionKind, GitActionRecord, GitActionStatus};
+    use crate::mcp_request_identity::trace_edit_group_id;
 
     use super::{
         ai_workspace_terminal_browser_launch, compact_git_action_for_ai,
         continuation_identity_keys_from, is_self_continuation_resource_uri,
-        repotunnel_server_capabilities, self_continuation_resource_meta, trace_edit_group_id,
+        repotunnel_server_capabilities, self_continuation_resource_meta,
         RepoTunnelMcp, LEGACY_SELF_CONTINUATION_RESOURCE_URI,
         LEGACY_V1_SELF_CONTINUATION_RESOURCE_URI, LEGACY_V2_SELF_CONTINUATION_RESOURCE_URI,
         LEGACY_V5_SELF_CONTINUATION_RESOURCE_URI, LEGACY_V6_SELF_CONTINUATION_RESOURCE_URI,
