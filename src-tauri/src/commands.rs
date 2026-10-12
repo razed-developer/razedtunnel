@@ -251,6 +251,56 @@ pub fn add_workspace(app: AppHandle, path: String) -> Result<Workspace, String> 
 }
 
 #[tauri::command]
+pub async fn clone_git_workspace(
+    app: AppHandle,
+    url: String,
+    parent_path: String,
+) -> Result<Workspace, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let url = url.trim();
+        if !url.starts_with("https://") || url.chars().any(char::is_whitespace) {
+            return Err("Enter an HTTPS Git repository URL.".to_string());
+        }
+        let parsed = url::Url::parse(url).map_err(|_| "Invalid repository URL.".to_string())?;
+        if parsed.host_str().is_none() || !parsed.username().is_empty() || parsed.password().is_some()
+            || parsed.query().is_some() || parsed.fragment().is_some() || parsed.port().is_some()
+        {
+            return Err("Repository URL must not contain credentials, ports, queries, or fragments.".to_string());
+        }
+        let repo_name = parsed.path_segments()
+            .and_then(|segments| segments.filter(|part| !part.is_empty()).last())
+            .unwrap_or("")
+            .trim_end_matches(".git");
+        if repo_name.is_empty() || repo_name == "." || repo_name == ".."
+            || !repo_name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.')
+        {
+            return Err("Repository URL must end in a valid repository name.".to_string());
+        }
+        let parent = canonical_workspace_path(&parent_path)?;
+        let destination = parent.join(repo_name);
+        if destination.exists() {
+            return Err("Destination already exists. Choose another parent folder or register the existing checkout.".to_string());
+        }
+        let mut command = std::process::Command::new("git");
+        command.args(["-c", "credential.interactive=never", "clone", "--", url])
+            .arg(&destination)
+            .env("GIT_TERMINAL_PROMPT", "0")
+            .env("GCM_INTERACTIVE", "Never")
+            .current_dir(&parent);
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            command.creation_flags(0x0800_0000);
+        }
+        let output = command.output().map_err(|e| format!("Could not launch Git: {e}"))?;
+        if !output.status.success() {
+            return Err(format!("Git clone failed: {}", String::from_utf8_lossy(&output.stderr).chars().take(600).collect::<String>()));
+        }
+        register_workspace_path(&app, destination.to_string_lossy().into_owned())
+    }).await.map_err(|e| format!("Clone task failed: {e}"))?
+}
+
+#[tauri::command]
 pub fn create_project(app: AppHandle, name: String) -> Result<Workspace, String> {
     repository::create_and_register(&app, &name)
 }
