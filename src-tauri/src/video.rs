@@ -430,72 +430,6 @@ pub(crate) fn tools_status(app: &AppHandle) -> Result<VideoToolsStatus, String> 
     })
 }
 
-fn download_client() -> Result<Client, String> {
-    Client::builder()
-        .connect_timeout(Duration::from_secs(15))
-        .timeout(Duration::from_secs(180))
-        .redirect(reqwest::redirect::Policy::custom(|attempt| {
-            if attempt.url().host_str().is_some_and(crate::media_tools::trusted_helper_host) {
-                attempt.follow()
-            } else {
-                attempt.stop()
-            }
-        }))
-        .user_agent("RepoTunnel/0.3.1 Video Intelligence")
-        .build()
-        .map_err(|error| format!("Could not initialize the video helper downloader: {error}"))
-}
-
-fn download_bytes(
-    client: &Client,
-    url: &str,
-    limit: u64,
-    cancel: Option<&AtomicBool>,
-) -> Result<Vec<u8>, String> {
-    let parsed =
-        Url::parse(url).map_err(|_| "Video helper download URL is invalid.".to_string())?;
-    if parsed.scheme() != "https" {
-        return Err("Video helpers may only be downloaded over HTTPS.".to_string());
-    }
-    let host = parsed.host_str().unwrap_or_default();
-    if !crate::media_tools::trusted_helper_host(host) {
-        return Err("Video helper download host is not allowlisted.".to_string());
-    }
-
-    let mut response = client
-        .get(url)
-        .send()
-        .map_err(|error| format!("Could not download a video helper: {error}"))?;
-    if !response.status().is_success() {
-        return Err(format!(
-            "Video helper download failed with HTTP {}.",
-            response.status()
-        ));
-    }
-    if response.content_length().is_some_and(|size| size > limit) {
-        return Err("Video helper download exceeds RepoTunnel's safety limit.".to_string());
-    }
-
-    let mut bytes = Vec::new();
-    let mut buffer = [0_u8; 64 * 1024];
-    loop {
-        if cancel.is_some_and(|flag| flag.load(Ordering::Relaxed)) {
-            return Err("Video analysis cancelled.".to_string());
-        }
-        let read = response
-            .read(&mut buffer)
-            .map_err(|error| format!("Could not read a video helper download: {error}"))?;
-        if read == 0 {
-            break;
-        }
-        if bytes.len().saturating_add(read) > usize::try_from(limit).unwrap_or(usize::MAX) {
-            return Err("Video helper download exceeds RepoTunnel's safety limit.".to_string());
-        }
-        bytes.extend_from_slice(&buffer[..read]);
-    }
-    Ok(bytes)
-}
-
 fn yt_dlp_asset_name() -> Result<&'static str, String> {
     match (env::consts::OS, env::consts::ARCH) {
         ("linux", "x86_64") => Ok("yt-dlp_linux"),
@@ -519,8 +453,8 @@ fn install_yt_dlp(
         return Ok(());
     }
     let asset = yt_dlp_asset_name()?;
-    let client = download_client()?;
-    let sums = download_bytes(
+    let client = crate::media_tools::download_client()?;
+    let sums = crate::media_tools::download_bytes(
         &client,
         "https://github.com/yt-dlp/yt-dlp/releases/latest/download/SHA2-256SUMS",
         2 * 1024 * 1024,
@@ -541,7 +475,7 @@ fn install_yt_dlp(
             "yt-dlp checksum manifest did not contain the required platform binary.".to_string()
         })?;
     let url = format!("https://github.com/yt-dlp/yt-dlp/releases/latest/download/{asset}");
-    let bytes = download_bytes(&client, &url, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
+    let bytes = crate::media_tools::download_bytes(&client, &url, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
     let actual = crate::media_tools::sha256_hex(&bytes);
     if actual != expected {
         return Err(
@@ -565,8 +499,8 @@ fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), St
     if program_path(app, "ffmpeg").is_some() {
         return Ok(());
     }
-    let client = download_client()?;
-    let metadata = download_bytes(
+    let client = crate::media_tools::download_client()?;
+    let metadata = crate::media_tools::download_bytes(
         &client,
         "https://pypi.org/pypi/imageio-ffmpeg/json",
         4 * 1024 * 1024,
@@ -611,7 +545,7 @@ fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), St
         return Err("FFmpeg package URL did not use the expected PyPI file host.".to_string());
     }
 
-    let wheel = download_bytes(&client, &selected.1, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
+    let wheel = crate::media_tools::download_bytes(&client, &selected.1, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
     if crate::media_tools::sha256_hex(&wheel) != selected.2 {
         return Err(
             "FFmpeg package checksum verification failed; RepoTunnel refused to install it."
