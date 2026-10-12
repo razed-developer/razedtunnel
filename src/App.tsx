@@ -206,46 +206,6 @@ function App() {
     [changes],
   );
 
-  const activeEditorDocument = useMemo(
-    () => editorTabs.find((tab) => tab.key === activeEditorKey) ?? null,
-    [editorTabs, activeEditorKey],
-  );
-
-  const homeCurrentFile = useMemo<HomeContextTextInput | null>(() => {
-    if (!activeEditorDocument || activeEditorDocument.workspaceId !== selectedWorkspaceId || activeEditorDocument.kind !== "text") return null;
-    return { path: activeEditorDocument.path, content: activeEditorDocument.content };
-  }, [activeEditorDocument, selectedWorkspaceId]);
-
-  const homeSelection = useMemo<HomeContextTextInput | null>(() => {
-    if (!editorSelectionContext || editorSelectionContext.workspaceId !== selectedWorkspaceId) return null;
-    if (!activeEditorDocument || activeEditorDocument.path !== editorSelectionContext.path) return null;
-    return { path: editorSelectionContext.path, content: editorSelectionContext.content };
-  }, [editorSelectionContext, selectedWorkspaceId, activeEditorDocument?.path]);
-
-  const homeErrors = useMemo<HomeContextErrorInput[]>(() => {
-    if (!activeEditorDocument || activeEditorDocument.workspaceId !== selectedWorkspaceId) return [];
-    return editorProblems.slice(0, 30).map((problem) => ({
-      path: problem.path || null,
-      line: problem.line || null,
-      column: problem.column || null,
-      message: problem.message,
-      source: problem.source,
-    }));
-  }, [editorProblems, activeEditorDocument?.workspaceId, selectedWorkspaceId]);
-
-  const workspacePathById = useMemo(
-    () => Object.fromEntries(workspaces.map((workspace) => [workspace.id, workspace.path])),
-    [workspaces],
-  );
-
-  useEffect(() => {
-    editorTabsRef.current = editorTabs;
-  }, [editorTabs]);
-
-  useEffect(() => {
-    editorSavingKeyRef.current = editorSavingKey;
-  }, [editorSavingKey]);
-
   const handleExecutionError = useCallback((message: string) => {
     setNotice(`Command execution: ${message}`);
   }, []);
@@ -323,71 +283,6 @@ function App() {
       setGitStatus(null);
     }
   }, [selectedWorkspaceId]);
-
-  const syncEditorFiles = useCallback(async () => {
-    const tabs = editorTabsRef.current;
-    if (tabs.length === 0) return;
-
-    const updates = await Promise.all(tabs.map(async (tab): Promise<EditorDocument> => {
-      if (editorSavingKeyRef.current === tab.key) return tab;
-      try {
-        const info = await getFileInfo(tab.workspaceId, tab.path);
-        if (info.kind !== "file") return { ...tab, externalDeleted: true };
-        if (info.modifiedAt === tab.modifiedAt && !tab.externalDeleted) return tab;
-
-        if (tab.kind === "image") {
-          const image = await previewWorkspaceImage(tab.workspaceId, tab.path);
-          return {
-            ...tab,
-            size: image.size,
-            modifiedAt: info.modifiedAt,
-            imageDataUrl: `data:${image.mimeType};base64,${image.dataBase64}`,
-            externalDeleted: false,
-            updatedExternally: true,
-          };
-        }
-        if (tab.kind === "binary") {
-          return { ...tab, size: info.size ?? tab.size, modifiedAt: info.modifiedAt, externalDeleted: false };
-        }
-
-        const remote = await readFile(tab.workspaceId, tab.path);
-        if (remote.content === tab.savedContent) {
-          return { ...tab, size: remote.size, modifiedAt: remote.modifiedAt, externalDeleted: false };
-        }
-        if (tab.dirty && remote.content !== tab.content) {
-          return {
-            ...tab,
-            size: remote.size,
-            modifiedAt: remote.modifiedAt,
-            externalContent: remote.content,
-            externalModifiedAt: remote.modifiedAt,
-            conflict: true,
-            externalDeleted: false,
-          };
-        }
-        return {
-          ...tab,
-          content: remote.content,
-          savedContent: remote.content,
-          size: remote.size,
-          modifiedAt: remote.modifiedAt,
-          dirty: false,
-          externalContent: null,
-          externalModifiedAt: null,
-          conflict: false,
-          externalDeleted: false,
-          updatedExternally: true,
-        };
-      } catch {
-        return { ...tab, externalDeleted: true };
-      }
-    }));
-
-    setEditorTabs((current) => {
-      const byKey = new Map(updates.map((tab) => [tab.key, tab]));
-      return current.map((tab) => byKey.get(tab.key) ?? tab);
-    });
-  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -545,13 +440,9 @@ function App() {
             setActivityTimeline(activities);
           }).catch(() => undefined);
         }
-        if (editorTabsRef.current.length > 0) {
-          await syncEditorFiles().catch(() => undefined);
-        }
         if (activeView === "git" || activeView === "editor") {
           await refreshGitStatus().catch(() => undefined);
         }
-        setProjectTreeRefreshToken((current) => current + 1);
       } finally {
         refreshRunning = false;
         if (refreshQueued && !disposed) {
@@ -583,7 +474,7 @@ function App() {
       if (timer !== null) window.clearTimeout(timer);
       unlisten?.();
     };
-  }, [activeView, selectedWorkspaceId, refreshPendingChanges, syncEditorFiles, refreshGitStatus]);
+  }, [activeView, selectedWorkspaceId, refreshPendingChanges, refreshGitStatus]);
 
   useEffect(() => {
     let disposed = false;
