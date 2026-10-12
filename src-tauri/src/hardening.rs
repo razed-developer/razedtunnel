@@ -27,7 +27,7 @@ fn now_millis() -> u64 {
 pub(crate) fn log_path(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .resolve(LOG_RELATIVE_PATH, BaseDirectory::AppData)
-        .map_err(|error| format!("Could not resolve the RepoTunnel log path: {error}"))
+        .map_err(|error| format!("Could not resolve the RazedTunnel log path: {error}"))
 }
 
 fn data_directory(app: &AppHandle) -> Result<PathBuf, String> {
@@ -112,7 +112,7 @@ fn rotate_logs(path: &Path) -> Result<(), String> {
 fn append_log(path: &Path, level: &str, event: &str, detail: &str) -> Result<(), String> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
-            .map_err(|error| format!("Could not create the RepoTunnel log directory: {error}"))?;
+            .map_err(|error| format!("Could not create the RazedTunnel log directory: {error}"))?;
     }
     rotate_logs(path)?;
 
@@ -126,7 +126,7 @@ fn append_log(path: &Path, level: &str, event: &str, detail: &str) -> Result<(),
 
     let mut file = options
         .open(path)
-        .map_err(|error| format!("Could not open the RepoTunnel log: {error}"))?;
+        .map_err(|error| format!("Could not open the RazedTunnel log: {error}"))?;
     writeln!(
         file,
         "{} [{}] {} {}",
@@ -135,7 +135,7 @@ fn append_log(path: &Path, level: &str, event: &str, detail: &str) -> Result<(),
         event,
         redact_sensitive(detail)
     )
-    .map_err(|error| format!("Could not write the RepoTunnel log: {error}"))
+    .map_err(|error| format!("Could not write the RazedTunnel log: {error}"))
 }
 
 pub(crate) fn log_event(app: &AppHandle, level: &str, event: &str, detail: &str) {
