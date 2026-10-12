@@ -594,7 +594,6 @@ function App() {
       <div className={`desktop-shell ${focusMode ? "focus-mode" : ""}`}>
         <AppSidebar
           activeView={activeView}
-          pendingCount={pendingCount}
           onNavigate={setActiveView}
         />
 
