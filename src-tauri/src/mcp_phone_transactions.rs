@@ -1,4 +1,6 @@
 use tauri::AppHandle;
+use std::collections::BTreeMap;
+use crate::mcp_phone_helpers::parse_phone_key;
 use crate::{app_state::AppState, phone, semantic, mcp_phone_params::PhoneTransactionStepParam};
 
 pub(crate) fn valid_phone_transaction_alias(value: &str) -> bool {
@@ -52,9 +54,9 @@ pub(crate) fn phone_transaction_has_selector(step: &PhoneTransactionStepParam) -
 }
 
 #[derive(Debug, Clone)]
-struct PhoneTransactionAliasTarget {
-    snapshot_id: String,
-    ref_id: String,
+pub(crate) struct PhoneTransactionAliasTarget {
+    pub(crate) snapshot_id: String,
+    pub(crate) ref_id: String,
 }
 
 pub(crate) fn phone_transaction_find_unique(
