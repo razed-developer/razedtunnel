@@ -121,7 +121,7 @@ function AppSidebar({
               <button
                 key={item.id}
                 type="button"
-                className={`sidebar-nav-item ${activeView === item.id || (item.id === "projects" && activeView === "editor") ? "active" : ""}`}
+                className={`sidebar-nav-item ${activeView === item.id ? "active" : ""}`}
                 onClick={() => onNavigate(item.id)}
               >
                 <NavIcon name={item.icon} />
