@@ -11,6 +11,18 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+fn hide_background_console(command: &mut Command) -> &mut Command {
+    #[cfg(target_os = "windows")]
+    command.creation_flags(CREATE_NO_WINDOW);
+    command
+}
+
 use ngrok::{
     config::{ForwarderBuilder, Scheme},
     prelude::{EndpointInfo, TunnelCloser},
@@ -274,7 +286,7 @@ pub(crate) fn clear_config(app: &AppHandle) -> Result<(), String> {
 }
 
 pub(crate) fn cloudflared_version() -> Option<String> {
-    let output = Command::new("cloudflared").arg("--version").output().ok()?;
+    let output = hide_background_console(&mut Command::new("cloudflared")).arg("--version").output().ok()?;
     if !output.status.success() {
         return None;
     }
@@ -304,7 +316,7 @@ pub(crate) fn cached_cloudflared_version() -> Option<String> {
 
 fn probe_public_health(public_url: &str) -> Option<bool> {
     let health_url = format!("{}/health", public_url.trim_end_matches('/'));
-    let output = match Command::new("curl")
+    let output = match hide_background_console(&mut Command::new("curl"))
         .args([
             "-fsS",
             "--connect-timeout",
@@ -610,7 +622,7 @@ fn spawn_cloudflare(
                     return;
                 }
 
-                let mut child = match Command::new("cloudflared")
+                let mut child = match hide_background_console(&mut Command::new("cloudflared"))
                     .args(["tunnel", "--no-autoupdate", "run"])
                     .env("TUNNEL_TOKEN", &token)
                     .stdin(Stdio::null())
