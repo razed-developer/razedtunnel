@@ -19,6 +19,7 @@ mod editor_commands;
 mod execution;
 mod external_access;
 mod filesystem;
+mod filesystem_commands;
 mod gateway;
 mod git;
 mod github;
@@ -199,9 +200,9 @@ pub fn run() {
                 commands::update_workspace_change_policy,
                 commands::update_workspace_command_policy,
                 commands::check_workspace_access,
-                commands::list_directory,
-                commands::read_file,
-                commands::search_files,
+                filesystem_commands::list_directory,
+                filesystem_commands::read_file,
+                filesystem_commands::search_files,
                 editor_commands::editor_save_file,
                 editor_commands::editor_create_file,
                 editor_commands::editor_create_directory,
