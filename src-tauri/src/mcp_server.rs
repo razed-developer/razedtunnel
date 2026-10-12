@@ -13,6 +13,7 @@ use rmcp::{
     tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler,
 };
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_workspace_params::{CloneRepositoryParams, CreateProjectParams, ProjectMemoryUpdateParams, ExternalFileActionParam, ExternalFileAccessParams, WorkspaceIdParams, CreateTempWorkspaceParams, TempWorkspaceParams, PreserveTempWorkspaceParams, CleanupTempWorkspaceParams, TempWorkspaceFileActionParam, TempWorkspaceFileActionParams};
 use serde::Serialize;
 use std::{
     collections::BTreeMap,
@@ -314,115 +315,6 @@ struct GitDiffView {
     stats: crate::models::GitDiffStats,
     content: Option<String>,
     content_truncated: bool,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct CloneRepositoryParams {
-    /// GitHub repository explicitly provided by the human, as owner/repository or https://github.com/owner/repository.
-    repository: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct CreateProjectParams {
-    /// New local project name explicitly requested by the human. RepoTunnel creates it inside ~/Projects.
-    name: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct ProjectMemoryUpdateParams {
-    /// Approved workspace whose persistent project memory should be updated.
-    workspace_id: String,
-    /// Concise current project description/context.
-    summary: String,
-    /// Current user/product goals worth carrying into later AI sessions.
-    goals: Vec<String>,
-    /// Important architecture/product decisions already made.
-    decisions: Vec<String>,
-    /// Stable user preferences or constraints for this project.
-    preferences: Vec<String>,
-    /// Useful unfinished work or next steps.
-    next_steps: Vec<String>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum ExternalFileActionParam {
-    Read,
-    Import,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct ExternalFileAccessParams {
-    /// Approved project that needs the external file.
-    workspace_id: String,
-    /// read opens a user picker and returns UTF-8 content once; import copies the selected file into destination_path.
-    action: ExternalFileActionParam,
-    /// Short explanation shown in the native approval picker.
-    reason: Option<String>,
-    /// Workspace-relative destination required for action=import. RepoTunnel never overwrites an existing entry.
-    destination_path: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct WorkspaceIdParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct CreateTempWorkspaceParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Stable task identifier containing only letters, digits, '-' or '_'.
-    task_id: String,
-    /// Human-readable purpose of this temporary workspace.
-    label: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct TempWorkspaceParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Task identifier returned by create_temp_workspace/list_temp_workspaces.
-    task_id: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct PreserveTempWorkspaceParams {
-    workspace_id: String,
-    task_id: String,
-    /// True to preserve this task across cleanup decisions; false to make it disposable again.
-    preserved: bool,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct CleanupTempWorkspaceParams {
-    workspace_id: String,
-    task_id: String,
-    /// Explicitly allow deletion of a task currently marked preserved.
-    force_preserved: Option<bool>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum TempWorkspaceFileActionParam {
-    CopyToWorkspace,
-    MoveToWorkspace,
-    Rename,
-    Delete,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct TempWorkspaceFileActionParams {
-    workspace_id: String,
-    task_id: String,
-    action: TempWorkspaceFileActionParam,
-    /// File path relative to the temporary task root.
-    source_relative: String,
-    /// For copy/move: normal approved project path outside .repotunnel-tmp. For rename: path relative to the same temporary task. Omit for delete.
-    destination_relative: Option<String>,
-    /// Replace an existing regular destination file when true. Defaults to false.
-    overwrite: Option<bool>,
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
