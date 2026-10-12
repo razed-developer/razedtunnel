@@ -1,3 +1,9 @@
+## Obsolete selected-project session cleanup (awaiting local validation)
+- User confirmed previous shell polling cleanup passed.
+- Commits `b2386e2`, `80b233d`: removed hidden selectedWorkspaceId/startupProjectRestored React state and last-workspace localStorage restoration effect left over from editor; simplified error-boundary reset to current visible page; removed editor alias in Projects nav highlighting. Project approval/listing/health and all MCP/tray controls unchanged. App.tsx ~669 lines.
+- Run `git pull --ff-only && npm run check && npm run build`; test Projects, Connections and tray. No local build performed by assistant.
+- Next: audit AppView and AppHeader unused views with dependency check, then Rust backend command/dependency inventory. Avoid removing MCP tools just because their UI was deleted.
+
 ## Shell polling cleanup (awaiting local validation)
 - User confirmed prior Home/History removal passed.
 - Commits `7839150`, `344fa3e`, `6de1cca`: removed unused pending-change history polling, listChanges startup fetch, obsolete background update notification pointing to removed Settings, and unused pendingCount sidebar property. App.tsx ~689 lines. Projects, Connections, tray navigation, project-health polling, public tunnel/chat connection status polling, and gateway controls remain intact. Rust MCP untouched.
