@@ -22,6 +22,17 @@ pub(crate) fn wheel_matches_platform(filename: &str) -> bool {
     }
 }
 
+pub(crate) fn trusted_helper_host(host: &str) -> bool {
+    matches!(
+        host,
+        "github.com"
+            | "release-assets.githubusercontent.com"
+            | "objects.githubusercontent.com"
+            | "pypi.org"
+            | "files.pythonhosted.org"
+    )
+}
+
 fn executable_name(name: &str) -> String {
     if cfg!(windows) { format!("{name}.exe") } else { name.to_string() }
 }
