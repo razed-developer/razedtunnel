@@ -54,6 +54,7 @@ mod storage;
 mod system_resources;
 mod team;
 mod temp_workspace;
+mod temp_workspace_commands;
 mod terminal;
 mod updates;
 mod versioning;
@@ -232,12 +233,12 @@ pub fn run() {
                 phone_commands::phone_key_event,
                 phone_commands::phone_type_text,
                 commands::get_system_resource_snapshot,
-                commands::create_temp_workspace,
-                commands::list_temp_workspaces,
-                commands::inspect_temp_workspace,
-                commands::set_temp_workspace_preserved,
-                commands::cleanup_temp_workspace,
-                commands::temp_workspace_file_action,
+                temp_workspace_commands::create_temp_workspace,
+                temp_workspace_commands::list_temp_workspaces,
+                temp_workspace_commands::inspect_temp_workspace,
+                temp_workspace_commands::set_temp_workspace_preserved,
+                temp_workspace_commands::cleanup_temp_workspace,
+                temp_workspace_commands::temp_workspace_file_action,
                 commands::create_file,
                 commands::write_file,
                 commands::patch_file,
