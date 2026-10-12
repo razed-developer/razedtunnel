@@ -3879,7 +3879,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             browser::configure_context(
                 &app,
                 &scope,
@@ -3908,7 +3907,6 @@ impl RepoTunnelMcp {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             let outcome = match params.action {
                 BrowserActionParam::Start => {
                     if let Some(client_key) = client_key.as_deref() {
@@ -4075,7 +4073,6 @@ impl RepoTunnelMcp {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             let outcome = match params.action {
@@ -4129,7 +4126,6 @@ impl RepoTunnelMcp {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             let steps = params
@@ -4213,7 +4209,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             let result = browser::cancel_semantic_sequence(&app, &scope, &params.sequence_id)?;
             record_observation(
                 &app,
@@ -4249,7 +4244,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             if let Some(client_key) = client_key.as_deref() {
@@ -4333,7 +4327,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             let known = browser::list_downloads(&app, &scope)?
                 .into_iter()
                 .find(|download| download.guid == params.guid)
@@ -4375,7 +4368,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             let result = browser::upload_file(
