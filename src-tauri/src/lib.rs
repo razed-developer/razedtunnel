@@ -14,6 +14,7 @@ mod conversation;
 mod desktop_control;
 mod direct_https;
 mod environment;
+mod editor_commands;
 mod execution;
 mod external_access;
 mod filesystem;
