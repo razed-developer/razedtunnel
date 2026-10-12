@@ -74,6 +74,7 @@ mod temp_workspace_commands;
 mod terminal;
 mod terminal_commands;
 mod updates;
+mod runtime_commands;
 mod versioning;
 #[cfg(feature = "legacy_video")]
 mod video;
@@ -405,13 +406,13 @@ pub fn run() {
                 conversation_commands::list_home_context_files,
                 conversation_commands::begin_home_chat,
                 conversation_commands::cancel_home_chat,
-                commands::get_runtime_diagnostics,
-                commands::set_launch_at_login,
-                commands::get_update_status,
-                commands::check_for_updates,
-                commands::set_auto_update_checks,
-                commands::defer_update,
-                commands::install_update_and_restart,
+                runtime_commands::get_runtime_diagnostics,
+                runtime_commands::set_launch_at_login,
+                runtime_commands::get_update_status,
+                runtime_commands::check_for_updates,
+                runtime_commands::set_auto_update_checks,
+                runtime_commands::defer_update,
+                runtime_commands::install_update_and_restart,
                 commands::list_team_sessions,
                 commands::get_team_session,
                 commands::create_team_session,
