@@ -16,8 +16,9 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
   const mcpEndpoint = status.running && status.port ? `http://127.0.0.1:${status.port}/mcp` : null;
   const remoteReady = publicTunnel.ready || connection.ready;
   const managedClientState = publicTunnel.ready ? "Endpoint ready; client not confirmed" : connection.ready ? "Tunnel ready; client not confirmed" : connection.running ? "Starting" : "Not connected";
-  const requestObserved = publicTunnel.requestCount > 0;
-  const verifiedClient = false; // Transport counters do not prove authenticated MCP access.
+  // The backend increments this counter only after verifying an OAuth bearer token
+  // on a forwarded HTTPS MCP request. It does not identify the client or prove tool success.
+  const authenticatedRequestObserved = publicTunnel.requestCount > 0;
 
   async function copyEndpoint() {
     if (!mcpEndpoint) return;
@@ -67,9 +68,9 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
             <small>{remoteReady ? "Tunnel reports ready; external reachability not proven" : "No ready remote tunnel"}</small>
           </div>
           <div>
-            <span>3. Authenticated MCP client</span>
-            <strong>{verifiedClient ? "Verified" : "Not verified"}</strong>
-            <small>{requestObserved ? `${publicTunnel.requestCount} remote request(s) observed; authentication not confirmed` : "No authenticated MCP session evidence available"}</small>
+            <span>3. Authenticated MCP access</span>
+            <strong>{authenticatedRequestObserved ? "Observed" : "Not observed"}</strong>
+            <small>{authenticatedRequestObserved ? `${publicTunnel.requestCount} OAuth-authenticated remote MCP request(s) this launch; tool execution not confirmed` : "No OAuth-authenticated remote MCP requests recorded this launch"}</small>
           </div>
         </div>
 
