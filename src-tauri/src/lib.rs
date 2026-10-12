@@ -4,6 +4,7 @@ mod ai_resources;
 mod ai_workspace;
 mod ai_workspace_commands;
 mod app_state;
+mod ai_access_commands;
 mod browser;
 mod browser_commands;
 mod changes;
@@ -374,8 +375,8 @@ pub fn run() {
                 checkpoint_commands::set_checkpoint_pinned,
                 checkpoint_commands::clear_checkpoints,
                 commands::run_safety_scan,
-                commands::get_ai_access_status,
-                commands::set_ai_access_paused,
+                ai_access_commands::get_ai_access_status,
+                ai_access_commands::set_ai_access_paused,
                 commands::get_gateway_status,
                 commands::start_gateway,
                 commands::stop_gateway,
