@@ -37,9 +37,13 @@ use crate::{
     monitoring, phone, project_index, project_memory, project_setup, repository, secret_guard,
     self_continuation, semantic,
     storage::load_workspaces,
-    system_resources, team, temp_workspace, terminal, video, video_assets, video_director,
-    video_html, video_narration, video_production, video_qa, video_render, video_scene,
-    video_story_render, workflow,
+    system_resources, team, temp_workspace, terminal, workflow,
+};
+
+#[cfg(feature = "legacy_video")]
+use crate::{
+    video, video_assets, video_director, video_html, video_narration, video_production,
+    video_qa, video_render, video_scene, video_story_render,
 };
 
 const SELF_CONTINUATION_RESOURCE_URI: &str = "ui://widget/repotunnel-self-continuation-v8.html";
