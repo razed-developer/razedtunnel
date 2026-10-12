@@ -13,6 +13,7 @@ use rmcp::{
     tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler,
 };
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_launch_params::{LaunchTargetKindParam, LaunchTargetParams, IntegrationActionParams, AiWorkspaceSessionParams};
 use crate::mcp_execution_params::{WorkspaceCommandParams, ListCommandsParams, TerminalCommandParams, ManagedProcessStartParams, ListProcessesParams, WorkspaceRuntimeStatusParams, ProcessIdParams, ProcessOutputParams, ProcessWaitParams, StopProcessParams};
 use crate::mcp_filesystem_params::{ProjectSnapshotParams, WorkspacePathParams, SearchFilesParams, FastSearchFilesParams, ReadFileRangeParams, ListDirectoryPageParams, InspectProjectPageParams, FileContentParams, PatchFileParams, CreateDirectoryParams, RenameEntryParams, MoveEntryParams, DeleteEntryParams};
 use crate::mcp_continuation_params::{ArmSelfContinuationParams, SelfContinuationModeParam, UpdateSelfContinuationParams, SelfContinuationWatchParams, SelfContinuationAttemptParams, SelfContinuationDeliveryParams};
@@ -318,58 +319,6 @@ struct GitDiffView {
     stats: crate::models::GitDiffStats,
     content: Option<String>,
     content_truncated: bool,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum LaunchTargetKindParam {
-    Url,
-    WorkspacePath,
-    Application,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct LaunchTargetParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Target type: url, workspace_path, or application.
-    kind: LaunchTargetKindParam,
-    /// URL, workspace-relative path, or application ID depending on kind. Use an empty string for the project root when kind=workspace_path.
-    target: String,
-    /// Optional application ID returned by list_launchable_applications when opening a URL or workspace path with a specific app. Omit to use the desktop default.
-    application_id: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct IntegrationActionParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// One of: android-studio, unity, blender, godot, docker.
-    integration_id: String,
-    /// Exact allowlisted action returned by list_deep_integrations for this integration.
-    action: String,
-    /// Optional workspace-relative target. Android Studio accepts a project folder; Blender run_script/render accepts the required file.
-    target: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct AiWorkspaceSessionParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// One of status, start, reclaim, or stop.
-    action: String,
-    /// Application ID returned by list_launchable_applications. Required only for action=start.
-    application_id: Option<String>,
-    /// Optional workspace-relative project file or folder opened inside the isolated app session. Productivity files can be opened directly in a detected Word/Excel/PowerPoint, Writer/Calc/Impress, or Pages/Numbers/Keynote app.
-    target: Option<String>,
-    /// Durable shared-desktop session_id returned by start/status. Retained for backward-compatible stale desktop recovery.
-    session_id: Option<String>,
-    /// Per-application appSessionId returned in status.applications and as lastStartedAppSessionId. Use this to address one AI's app without affecting other apps on the shared desktop.
-    app_session_id: Option<String>,
-    /// For action=start only: explicitly request a separate additional instance even when the same application is already running. Defaults false so repeated/reconnected AI calls reuse or stop safely instead of spawning duplicate Terminals/editors.
-    new_instance: Option<bool>,
-    /// For action=stop, allow cleanup only when a different owner is stale. Requires the matching app_session_id for multi-app sessions.
-    stale_only: Option<bool>,
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
