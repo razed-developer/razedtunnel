@@ -23,6 +23,11 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - `ProductionPanel` is actually system/runtime settings, update controls and history retention; do not mistake it for removed Video Production.
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
 
+## Tray-first navigation stage (awaiting validation)
+- Commits `825a0d9`, `4cb7cbf`: tray menu now opens Projects or Connections directly, retaining Open and Quit; Rust emits `razedtunnel:open-page` after showing window, React listens and switches the active page. No backend MCP changes.
+- Validate `npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, then `npm run tauri dev` and test each tray menu entry, close-to-tray, and Quit. Unset `REPOTUNNEL_WINDOWS_TEST_MANIFEST` before launching normally.
+- Next: replace legacy App.tsx composition and eliminate editor/home imports and compiled chunks, preserving the two required pages and gateway state.
+
 ## Validated milestone: Windows tray (2026-10-12)
 - User confirmed `npm run tauri dev` launches and window close-to-tray and explicit Quit both work correctly. Tray milestone complete.
 - Previous link error CVT1100/LNK1123 was caused by duplicate Windows manifest while `REPOTUNNEL_WINDOWS_TEST_MANIFEST` remained set; clearing that session variable allowed launch. Keep the variable unset for normal app builds.
