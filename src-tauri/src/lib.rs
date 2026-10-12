@@ -477,10 +477,9 @@ pub fn run() {
                 #[cfg(feature = "legacy_background_services")]
                 {
                     chatgpt_bridge::shutdown();
-                    let state = app_handle.state::<AppState>();
-                    state.ai_workspace.shutdown(app_handle);
+                    app_handle.state::<AppState>().ai_workspace.shutdown(app_handle);
                 }
-                let _ = state.stop_gateway();
+                let _ = app_handle.state::<AppState>().stop_gateway();
                 hardening::shutdown(app_handle);
             }
         });
