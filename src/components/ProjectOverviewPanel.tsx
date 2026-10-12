@@ -4,6 +4,7 @@ import type { ProjectSnapshot, Workspace } from "../types";
 
 type ProjectOverviewPanelProps = {
   workspaces: Workspace[];
+  selectedWorkspaceId?: string | null;
 };
 
 function formatBytes(bytes: number): string {
@@ -13,11 +14,18 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
-function ProjectOverviewPanel({ workspaces }: ProjectOverviewPanelProps) {
-  const [workspaceId, setWorkspaceId] = useState(workspaces[0]?.id ?? "");
+function ProjectOverviewPanel({ workspaces, selectedWorkspaceId }: ProjectOverviewPanelProps) {
+  const [workspaceId, setWorkspaceId] = useState(selectedWorkspaceId ?? workspaces[0]?.id ?? "");
   const [snapshot, setSnapshot] = useState<ProjectSnapshot | null>(null);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedWorkspaceId && workspaces.some((workspace) => workspace.id === selectedWorkspaceId)) {
+      setWorkspaceId(selectedWorkspaceId);
+      setSnapshot(null);
+    }
+  }, [selectedWorkspaceId, workspaces]);
 
   useEffect(() => {
     if (!workspaces.some((workspace) => workspace.id === workspaceId)) {
@@ -90,7 +98,7 @@ function ProjectOverviewPanel({ workspaces }: ProjectOverviewPanelProps) {
         <div className="project-index-empty">
           <strong>{selected ? `Ready to inspect ${selected.name}` : "Add a project first"}</strong>
           <p>
-            RepoTunnel will use .gitignore/.ignore rules, security filters, generated-folder rules,
+            RazedTunnel will use .gitignore/.ignore rules, security filters, generated-folder rules,
             binary detection, and bounded tree limits.
           </p>
         </div>
