@@ -34,6 +34,7 @@ mod integrations;
 mod integration_commands;
 mod large_project_read;
 mod launcher;
+mod launcher_commands;
 #[cfg(any(target_os = "macos", test))]
 mod macos_ax;
 mod mcp_auth;
@@ -302,12 +303,12 @@ pub fn run() {
                 ai_workspace_commands::get_ai_workspace_frame,
                 ai_workspace_commands::ai_workspace_action,
                 ai_workspace_commands::ai_workspace_sequence,
-                commands::open_url,
-                commands::open_workspace_path,
-                commands::launch_application,
-                commands::list_launch_history,
-                commands::approve_launch_action,
-                commands::reject_launch_action,
+                launcher_commands::open_url,
+                launcher_commands::open_workspace_path,
+                launcher_commands::launch_application,
+                launcher_commands::list_launch_history,
+                launcher_commands::approve_launch_action,
+                launcher_commands::reject_launch_action,
                 commands::list_automation_browsers,
                 commands::get_browser_automation_status,
                 commands::start_browser_automation,
