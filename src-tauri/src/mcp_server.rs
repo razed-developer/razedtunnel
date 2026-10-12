@@ -11353,6 +11353,38 @@ impl ServerHandler for RepoTunnelMcp {
 }
 
 #[cfg(test)]
+mod task_outcome_tests {
+    use serde::{ser::Error as _, Serialize, Serializer};
+
+    use super::serialize_success_payload;
+
+    struct CannotSerialize;
+
+    impl Serialize for CannotSerialize {
+        fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            Err(S::Error::custom("intentional serialization failure"))
+        }
+    }
+
+    #[test]
+    fn successful_payload_preserves_result_envelope() {
+        let serialized = serialize_success_payload(42_u32).expect("serializable result");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&serialized).expect("valid JSON");
+        assert_eq!(parsed["ok"], true);
+        assert_eq!(parsed["result"], 42);
+    }
+
+    #[test]
+    fn serialization_failure_is_reported_to_caller() {
+        assert!(serialize_success_payload(CannotSerialize).is_err());
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use axum::http::HeaderMap;
 
