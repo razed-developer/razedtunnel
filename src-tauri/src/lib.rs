@@ -54,8 +54,7 @@ mod temp_workspace;
 mod terminal;
 mod updates;
 mod versioning;
-// Shared media inspection and phone helpers still depend on video::FFmpeg utilities.
-// Keep this module compiled until those helpers are extracted.
+#[cfg(feature = "legacy_video")]
 mod video;
 #[cfg(feature = "legacy_video")]
 mod video_assets;
