@@ -14,7 +14,7 @@ use crate::{
     models::{
         MediaDecodeValidation, MediaFrameExtraction, MediaInspection, MediaStreamInfo, Workspace,
     },
-    temp_workspace, video,
+    temp_workspace, media_tools,
 };
 
 static FRAME_SEQUENCE: AtomicU64 = AtomicU64::new(1);
@@ -167,7 +167,7 @@ pub(crate) fn inspect(
     relative_path: &str,
 ) -> Result<MediaInspection, String> {
     let (path, size_bytes) = regular_workspace_file(workspace, relative_path)?;
-    let ffprobe = video::available_ffprobe_program(app).ok_or_else(|| {
+    let ffprobe = media_tools::available_ffprobe_program(app).ok_or_else(|| {
         "FFprobe is not currently available. RepoTunnel will not install it automatically for generic media inspection."
             .to_string()
     })?;
@@ -261,7 +261,7 @@ pub(crate) fn extract_frame(
         return Err("Frame timestamp must be a finite value >= 0 seconds.".to_string());
     }
     let (source, _) = regular_workspace_file(workspace, relative_path)?;
-    let ffmpeg = video::available_ffmpeg_program(app).ok_or_else(|| {
+    let ffmpeg = media_tools::available_ffmpeg_program(app).ok_or_else(|| {
         "FFmpeg is not currently available. RepoTunnel will not install it automatically for generic frame extraction."
             .to_string()
     })?;
@@ -311,7 +311,7 @@ pub(crate) fn validate_decode(
     check_seconds: Option<f64>,
 ) -> Result<MediaDecodeValidation, String> {
     let (path, _) = regular_workspace_file(workspace, relative_path)?;
-    let ffmpeg = video::available_ffmpeg_program(app).ok_or_else(|| {
+    let ffmpeg = media_tools::available_ffmpeg_program(app).ok_or_else(|| {
         "FFmpeg is not currently available. RepoTunnel will not install it automatically for generic decode validation."
             .to_string()
     })?;
