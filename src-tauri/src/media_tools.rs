@@ -335,5 +335,11 @@ pub(crate) fn available_ffprobe_program(app: &AppHandle) -> Option<PathBuf> {
 }
 
 pub(crate) fn ensure_ffmpeg_program(app: &AppHandle) -> Result<PathBuf, String> {
-    crate::video::ensure_ffmpeg_program(app)
+    if let Some(path) = available_ffmpeg_program(app) {
+        return Ok(path);
+    }
+    let cancel = AtomicBool::new(false);
+    install_ffmpeg(app, Some(&cancel))?;
+    available_ffmpeg_program(app)
+        .ok_or_else(|| "ffmpeg is still unavailable after provisioning.".to_string())
 }
