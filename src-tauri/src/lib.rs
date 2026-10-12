@@ -15,6 +15,7 @@ mod commands;
 mod connection;
 mod continuity;
 mod conversation;
+mod conversation_commands;
 mod desktop_control;
 mod direct_https;
 mod environment;
@@ -397,13 +398,13 @@ pub fn run() {
                 model_trial_commands::get_model_trial,
                 model_trial_commands::run_model_trial,
                 model_trial_commands::cancel_model_trial,
-                commands::list_home_conversations,
-                commands::get_home_conversation,
-                commands::create_home_conversation,
-                commands::delete_home_conversation,
-                commands::list_home_context_files,
-                commands::begin_home_chat,
-                commands::cancel_home_chat,
+                conversation_commands::list_home_conversations,
+                conversation_commands::get_home_conversation,
+                conversation_commands::create_home_conversation,
+                conversation_commands::delete_home_conversation,
+                conversation_commands::list_home_context_files,
+                conversation_commands::begin_home_chat,
+                conversation_commands::cancel_home_chat,
                 commands::get_runtime_diagnostics,
                 commands::set_launch_at_login,
                 commands::get_update_status,
