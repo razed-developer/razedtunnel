@@ -4,6 +4,7 @@ mod ai_resources;
 mod ai_workspace;
 mod ai_workspace_commands;
 mod app_state;
+mod gateway_commands;
 mod ai_access_commands;
 mod browser;
 mod browser_commands;
@@ -377,9 +378,9 @@ pub fn run() {
                 commands::run_safety_scan,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
-                commands::get_gateway_status,
-                commands::start_gateway,
-                commands::stop_gateway,
+                gateway_commands::get_gateway_status,
+                gateway_commands::start_gateway,
+                gateway_commands::stop_gateway,
                 commands::get_public_tunnel_status,
                 commands::configure_public_tunnel,
                 commands::restart_public_tunnel,
