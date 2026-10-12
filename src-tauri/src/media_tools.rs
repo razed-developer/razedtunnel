@@ -1,7 +1,8 @@
 //! Shared FFmpeg/FFprobe discovery for media inspection and phone workflows.
 //! Provisioning remains delegated to legacy video code until safely extracted.
 
-use std::{env, fs, io::{Cursor, Read}, path::{Path, PathBuf}, process::{Command, Stdio}, sync::atomic::{AtomicBool, Ordering}, time::Duration};
+use std::{env, fs::{self, OpenOptions}, io::{Cursor, Read, Write}, path::{Path, PathBuf}, process::{Command, Stdio}, sync::atomic::{AtomicBool, AtomicU64, Ordering}, time::Duration};
+static PRIVATE_WRITE_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 use zip::ZipArchive;
 use reqwest::blocking::Client;
 use url::Url;
@@ -163,6 +164,51 @@ pub(crate) fn program_version(path: &Path, name: &str) -> Option<String> {
         String::from_utf8_lossy(&output.stdout)
     };
     text.lines().next().map(|line| line.trim().to_string())
+}
+
+pub(crate) fn private_write(path: &Path, bytes: &[u8], executable: bool) -> Result<(), String> {
+    #[cfg(not(unix))]
+    let _ = executable;
+
+    let parent = path
+        .parent()
+        .ok_or_else(|| "Could not resolve RepoTunnel video helper directory.".to_string())?;
+    fs::create_dir_all(parent).map_err(|error| format!("Could not create RepoTunnel video directory: {error}"))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(parent, fs::Permissions::from_mode(0o700))
+            .map_err(|error| format!("Could not protect RepoTunnel video directory: {error}"))?;
+    }
+    let temporary = parent.join(format!(
+        ".video-write-{:x}-{:x}.tmp",
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis(),
+        PRIVATE_WRITE_SEQUENCE.fetch_add(1, Ordering::Relaxed)
+    ));
+    let mut options = OpenOptions::new();
+    options.create_new(true).write(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(if executable { 0o700 } else { 0o600 });
+    }
+    let mut file = options
+        .open(&temporary)
+        .map_err(|error| format!("Could not create a private video helper file: {error}"))?;
+    file.write_all(bytes)
+        .and_then(|_| file.sync_all())
+        .map_err(|error| format!("Could not save a video helper: {error}"))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(
+            &temporary,
+            fs::Permissions::from_mode(if executable { 0o700 } else { 0o600 }),
+        )
+        .map_err(|error| format!("Could not protect a video helper: {error}"))?;
+    }
+    fs::rename(&temporary, path)
+        .map_err(|error| format!("Could not install a video helper: {error}"))
 }
 
 fn executable_name(name: &str) -> String {
