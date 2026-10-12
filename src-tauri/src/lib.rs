@@ -4,6 +4,7 @@ mod ai_resources;
 mod ai_workspace;
 mod ai_workspace_commands;
 mod app_state;
+mod workspace_management_commands;
 mod workspace_policy_commands;
 mod safety_commands;
 mod workspace_diagnostics_commands;
@@ -213,14 +214,14 @@ pub fn run() {
         .manage(AppState::default())
         .invoke_handler({
             let handler: fn(tauri::ipc::Invoke<tauri::Wry>) -> bool = tauri::generate_handler![
-                commands::select_workspace,
-                commands::list_workspaces,
-                commands::get_workspace_health,
-                commands::relocate_workspace,
-                commands::add_workspace,
-                commands::clone_git_workspace,
-                commands::create_project,
-                commands::remove_workspace,
+                workspace_management_commands::select_workspace,
+                workspace_management_commands::list_workspaces,
+                workspace_management_commands::get_workspace_health,
+                workspace_management_commands::relocate_workspace,
+                workspace_management_commands::add_workspace,
+                workspace_management_commands::clone_git_workspace,
+                workspace_management_commands::create_project,
+                workspace_management_commands::remove_workspace,
                 workspace_policy_commands::update_workspace_access,
                 workspace_policy_commands::update_workspace_change_policy,
                 workspace_policy_commands::update_workspace_command_policy,
