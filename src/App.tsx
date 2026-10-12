@@ -263,6 +263,7 @@ async function loadEditorDocument(workspace: Workspace, entry: DirectoryEntry): 
 
 function App() {
   const [activeView, setActiveView] = useState<AppView>("overview");
+  const [startupProjectRestored, setStartupProjectRestored] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [changes, setChanges] = useState<ChangeRecord[]>([]);
@@ -582,12 +583,19 @@ function App() {
   useEffect(() => {
     if (workspaces.length === 0) {
       setSelectedWorkspaceId(null);
+      if (!loading) setStartupProjectRestored(true);
       return;
     }
 
-    setSelectedWorkspaceId((current) =>
-      current && workspaces.some((workspace) => workspace.id === current) ? current : null,
-    );
+    setSelectedWorkspaceId((current) => {
+      if (current && workspaces.some((workspace) => workspace.id === current)) return current;
+      if (!startupProjectRestored) {
+        const saved = window.localStorage.getItem("razedtunnel-last-workspace");
+        if (saved && workspaces.some((workspace) => workspace.id === saved)) return saved;
+      }
+      return null;
+    });
+    if (!loading) setStartupProjectRestored(true);
   }, [workspaces]);
 
   useEffect(() => {
@@ -1424,6 +1432,16 @@ function App() {
     }
     setSelectedWorkspaceId(workspaceId);
   }
+
+  useEffect(() => {
+    if (!startupProjectRestored) return;
+    if (selectedWorkspaceId) {
+      window.localStorage.setItem("razedtunnel-last-workspace", selectedWorkspaceId);
+      setActiveView((view) => view === "overview" ? "projects" : view);
+    } else {
+      window.localStorage.removeItem("razedtunnel-last-workspace");
+    }
+  }, [selectedWorkspaceId, startupProjectRestored]);
 
   async function handleEditorOpenExternal(key: string) {
     const tab = editorTabsRef.current.find((item) => item.key === key);
