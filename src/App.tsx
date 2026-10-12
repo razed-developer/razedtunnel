@@ -116,9 +116,7 @@ function App() {
       unlisten?.();
     };
   }, []);
-  const [startupProjectRestored, setStartupProjectRestored] = useState(false);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>(initialStatus);
   const [connectionStatus, setConnectionStatus] = useState<ChatConnectionStatus>(
     initialConnectionStatus,
@@ -215,24 +213,6 @@ function App() {
     const timer = window.setInterval(() => void refreshWorkspaceHealth(), 30_000);
     return () => window.clearInterval(timer);
   }, [workspaces.length, refreshWorkspaceHealth]);
-
-  useEffect(() => {
-    if (workspaces.length === 0) {
-      setSelectedWorkspaceId(null);
-      if (!loading) setStartupProjectRestored(true);
-      return;
-    }
-
-    setSelectedWorkspaceId((current) => {
-      if (current && workspaces.some((workspace) => workspace.id === current)) return current;
-      if (!startupProjectRestored) {
-        const saved = window.localStorage.getItem("razedtunnel-last-workspace");
-        if (saved && workspaces.some((workspace) => workspace.id === saved)) return saved;
-      }
-      return null;
-    });
-    if (!loading) setStartupProjectRestored(true);
-  }, [workspaces]);
 
   useEffect(() => {
     if (!connectionStatus.running) return;
@@ -616,7 +596,7 @@ function App() {
           ) : null}
 
           <AppErrorBoundary
-            resetKey={`${activeView}:${selectedWorkspaceId ?? "none"}`}
+            resetKey={activeView}
             onGoHome={() => setActiveView("projects")}
           >
           {loading ? (
