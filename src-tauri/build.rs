@@ -14,7 +14,7 @@ fn main() {
         .join("windows-test.manifest");
 
         println!("cargo:rerun-if-changed={}", manifest.display());
-        println!("cargo:rustc-link-arg=/MANIFEST:EMBED");
-        println!("cargo:rustc-link-arg=/MANIFESTINPUT:{}", manifest.display());
+        println!("cargo:rustc-link-arg-tests=/MANIFEST:EMBED");
+        println!("cargo:rustc-link-arg-tests=/MANIFESTINPUT:{}", manifest.display());
     }
 }
