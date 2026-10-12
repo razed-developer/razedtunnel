@@ -1,5 +1,4 @@
 import RepoTunnelLogo from "./RepoTunnelLogo";
-import { useEffect, useState } from "react";
 
 export type AppView =
   | "overview"
@@ -17,7 +16,6 @@ export type AppView =
 
 type AppSidebarProps = {
   activeView: AppView;
-  pendingCount: number;
   onNavigate: (view: AppView) => void;
 };
 
@@ -103,14 +101,8 @@ export function NavIcon({ name, size = 17 }: { name: IconName; size?: number }) 
 
 function AppSidebar({
   activeView,
-  pendingCount,
   onNavigate,
 }: AppSidebarProps) {
-  const [lightTheme, setLightTheme] = useState(() => localStorage.getItem("razedtunnel-theme") === "light");
-  useEffect(() => {
-    document.documentElement.dataset.theme = lightTheme ? "light" : "dark";
-    localStorage.setItem("razedtunnel-theme", lightTheme ? "light" : "dark");
-  }, [lightTheme]);
   return (
     <aside className="app-sidebar">
       <div className="sidebar-brand">
@@ -134,34 +126,12 @@ function AppSidebar({
               >
                 <NavIcon name={item.icon} />
                 <span>{item.label}</span>
-                {item.id === "changes" && pendingCount > 0 ? <span className="sidebar-count">{pendingCount}</span> : null}
               </button>
             ))}
           </div>
         ))}
       </nav>
 
-      <div className="sidebar-spacer" />
-      <button type="button" className="sidebar-nav-item system-item" onClick={() => setLightTheme((value) => !value)} aria-label={lightTheme ? "Switch to dark theme" : "Switch to light theme"}>
-        <NavIcon name="settings" /><span>{lightTheme ? "Dark theme" : "Light theme"}</span>
-      </button>
-
-      <button
-        type="button"
-        className={`sidebar-nav-item system-item ${activeView === "system" ? "active" : ""}`}
-        onClick={() => onNavigate("system")}
-      >
-        <NavIcon name="settings" />
-        <span>Settings</span>
-      </button>
-      <button
-        type="button"
-        className={`sidebar-nav-item system-item ${activeView === "help" ? "active" : ""}`}
-        onClick={() => onNavigate("help")}
-      >
-        <NavIcon name="help" />
-        <span>Help</span>
-      </button>
 
     </aside>
   );
