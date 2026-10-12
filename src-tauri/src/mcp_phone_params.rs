@@ -139,7 +139,7 @@ pub(crate) struct PhoneFileWriteParams {
     /// Absolute Android destination file path.
     pub(crate) path: String,
     /// Base64-encoded file bytes. Raw file data is limited to 8 MiB per request.
-    data_base64: String,
+    pub(crate) data_base64: String,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, schemars::JsonSchema)]
