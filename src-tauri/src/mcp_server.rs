@@ -11267,6 +11267,18 @@ impl RepoTunnelMcp {
                 route.attr.meta = Some(tool_meta(None, &["app"]));
             }
         }
+        // Remove legacy video-analysis tools from both MCP discovery and dispatch.
+        // Keep their implementations compiled until the video module split is complete.
+        #[cfg(not(feature = "legacy_video"))]
+        for name in [
+            "start_video_analysis",
+            "get_video_analysis",
+            "list_video_analyses",
+            "get_video_analysis_content",
+            "cancel_video_analysis",
+        ] {
+            router.map.remove(name);
+        }
         router
     }
 }
