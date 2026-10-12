@@ -11,7 +11,8 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - Commits `f802b4a`, `e3e72de`, `721f995`: deleted obsolete feature guides `docs/team-mode.md`, `docs/phone-access.md`, and `docs/video.md`.
 - Commit `a22bdcf`: removed retired Team/Phone/Video feature descriptions and related limitations from `docs/product.md`.
 - Commits `7260fba` and `6cd6584`: removed obsolete Android/Video/Team architecture and MCP tool contract claims, preserving Continuity and Project Memory sections.
-- Remaining audit: `docs/security.md`, `docs/acceptance.md`, `docs/release.md`; preserve unrelated security boundaries and current capabilities. Then review diff and merge after validation. Do not touch unrelated local edits to `src-tauri/Cargo.lock` or `src-tauri/src/github.rs`.
+- Commits `cf8b69c`, `41e7893`, `b43698d`: removed retired Phone security text, retired Team/Video/Phone acceptance scenarios (renumbered remaining sections), and stale Team update blocker claim in release guide.
+- Next: final repository-wide reference audit and diff review; documentation-only changes need `git diff --check main...HEAD`. Create PR and merge after user approval. No runtime code changed. Do not touch unrelated local edits to `src-tauri/Cargo.lock` or `src-tauri/src/github.rs`.
 
 ## Goal and boundaries
 RazedTunnel is a compact Windows/Tauri Rust MCP gateway for approved local workspaces, files, terminal, Git/GitHub, and related development tools. Keep modules focused and remove legacy RepoTunnel features that do not serve the gateway. Do not break ordinary workspace permissions, MCP access, or file operations. Prefer small commits and local validation; do not merge before user approval/validation.
