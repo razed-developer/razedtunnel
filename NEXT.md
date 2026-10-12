@@ -1,11 +1,11 @@
 # RazedTunnel — NEXT
 
 Updated: 2026-10-12
-Current branch: `cleanup/legacy-docs` (branched from `main`; not merged)
+Current branch: `main` (documentation cleanup merged via PR #3)
 Purpose: durable handoff between ChatGPT conversations. **Read this file first** before changing code. Keep it updated after each validated stage, before switching chats, and after merges.
 
-## Current stage: legacy documentation cleanup
-- Branch `cleanup/legacy-docs` created from `main` after Team Mode PR #2 merged.
+## Completed stage: legacy documentation cleanup
+- Branch `cleanup/legacy-docs` created from `main` after Team Mode PR #2 merged; merged as PR #3, merge commit `b5d3f91`.
 - Commit `83f34f9`: removed retired Android Phone, Video Production, and Team Mode feature claims and links from README, including architecture and security sections. This is documentation-only; no runtime changes.
 - Commit `0548ec6`: fixed README grammar introduced by prior deletion.
 - Commits `f802b4a`, `e3e72de`, `721f995`: deleted obsolete feature guides `docs/team-mode.md`, `docs/phone-access.md`, and `docs/video.md`.
@@ -13,7 +13,8 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - Commits `7260fba` and `6cd6584`: removed obsolete Android/Video/Team architecture and MCP tool contract claims, preserving Continuity and Project Memory sections.
 - Commits `cf8b69c`, `41e7893`, `b43698d`: removed retired Phone security text, retired Team/Video/Phone acceptance scenarios (renumbered remaining sections), and stale Team update blocker claim in release guide.
 - Final audit of primary/root docs found and fixed stale security/semantic references in commits `00083d7` and `a81ab05`. `AI_CONTINUITY.md` retains historical Video test results as a dated record, not a current feature claim.
-- Branch diff is documentation-only (13 files after root-doc fixes); no runtime changes. Next: user `git pull --ff-only && git diff --check main...HEAD`, then PR and merge after approval. Do not touch unrelated local edits to `src-tauri/Cargo.lock` or `src-tauri/src/github.rs`.
+- Branch diff was documentation-only (13 files); user confirmed `git diff --check main...HEAD` passed. PR #3 merged into `main` as `b5d3f91`.
+- Next: return to oversized Rust module decomposition, after reviewing current file sizes and choosing one focused refactor. Keep unrelated local edits to `src-tauri/Cargo.lock` and `src-tauri/src/github.rs` intact. Do not touch unrelated local edits to `src-tauri/Cargo.lock` or `src-tauri/src/github.rs`.
 
 ## Goal and boundaries
 RazedTunnel is a compact Windows/Tauri Rust MCP gateway for approved local workspaces, files, terminal, Git/GitHub, and related development tools. Keep modules focused and remove legacy RepoTunnel features that do not serve the gateway. Do not break ordinary workspace permissions, MCP access, or file operations. Prefer small commits and local validation; do not merge before user approval/validation.
