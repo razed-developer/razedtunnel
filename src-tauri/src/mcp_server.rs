@@ -1635,6 +1635,7 @@ struct MediaDecodeParams {
     full_decode: Option<bool>,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoStartParams {
     /// ID returned by list_workspaces for the approved project. Local media paths are resolved only inside this project.
@@ -1651,12 +1652,14 @@ struct VideoStartParams {
     max_frames: Option<usize>,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoJobParams {
     /// Video analysis job ID returned by start_video_analysis.
     job_id: String,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoListJobsParams {
     /// Optional approved workspace ID. Omit to list recent video jobs across approved projects.
@@ -1665,6 +1668,7 @@ struct VideoListJobsParams {
     limit: Option<usize>,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectCreateParams {
     /// Approved workspace that will own the Video Project.
@@ -1683,6 +1687,7 @@ struct VideoProjectCreateParams {
     fps: Option<u32>,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectParams {
     /// Approved workspace that owns the Video Project.
@@ -1691,6 +1696,7 @@ struct VideoProjectParams {
     project_id: String,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoStoryDirectorParams {
     /// Approved workspace that owns the story-mode Video Project.
@@ -1701,6 +1707,7 @@ struct VideoStoryDirectorParams {
     input: video_director::StoryDirectorInput,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoStoryShotRenderParams {
     /// Approved workspace that owns the story-mode Video Project.
@@ -1711,6 +1718,7 @@ struct VideoStoryShotRenderParams {
     input: video_director::StoryShotRenderInput,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoStoryShotStartParams {
     /// Approved workspace that owns the story-mode Video Project.
@@ -1724,6 +1732,7 @@ struct VideoStoryShotStartParams {
     force: bool,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoStoryShotJobParams {
     /// Approved workspace that owns the story-mode Video Project.
@@ -1734,6 +1743,7 @@ struct VideoStoryShotJobParams {
     job_id: String,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectResourcePolicyParams {
     /// Approved workspace that owns the Video Project.
@@ -1744,6 +1754,7 @@ struct VideoProjectResourcePolicyParams {
     policy: video_production::VideoProductionResourcePolicy,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectSceneRecordParams {
     /// Approved workspace that owns the Video Project.
@@ -1754,6 +1765,7 @@ struct VideoProjectSceneRecordParams {
     scene: video_production::VideoProductionSceneInput,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectSceneIdParams {
     /// Approved workspace that owns the Video Project.
@@ -1764,6 +1776,7 @@ struct VideoProjectSceneIdParams {
     scene_id: String,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectDocumentParams {
     /// Approved workspace that owns the Video Project.
@@ -1776,6 +1789,7 @@ struct VideoProjectDocumentParams {
     content: String,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectRecordingParams {
     /// Approved workspace that owns the Video Project.
@@ -1792,6 +1806,7 @@ struct VideoProjectRecordingParams {
     max_seconds: Option<u32>,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectAiWorkspaceParams {
     /// Approved workspace that owns the Video Project.
@@ -1808,6 +1823,7 @@ struct VideoProjectAiWorkspaceParams {
     stale_only: Option<bool>,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectSceneParams {
     /// Approved workspace that owns the Video Project.
@@ -1818,6 +1834,7 @@ struct VideoProjectSceneParams {
     scene: video_scene::VideoSceneSpec,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectDiagramParams {
     /// Approved workspace that owns the Video Project.
@@ -1828,6 +1845,7 @@ struct VideoProjectDiagramParams {
     diagram: video_scene::VideoDiagramSpec,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectHtmlSceneParams {
     /// Approved workspace that owns the Video Project.
@@ -1838,6 +1856,7 @@ struct VideoProjectHtmlSceneParams {
     scene: video_html::VideoHtmlSceneSpec,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectWorkflowCheckpointParams {
     /// Approved workspace that owns the Video Project.
@@ -1852,6 +1871,7 @@ struct VideoProjectWorkflowCheckpointParams {
     detail: String,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectSubtitlesParams {
     /// Approved workspace that owns the Video Project.
@@ -1866,6 +1886,7 @@ struct VideoProjectSubtitlesParams {
     duration_seconds: Option<f64>,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectNarrationParams {
     /// Approved workspace that owns the Video Project.
@@ -1876,6 +1897,7 @@ struct VideoProjectNarrationParams {
     request: video_narration::NarrationRequest,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectAssetLicenseParams {
     /// Approved workspace that owns the Video Project.
@@ -1886,6 +1908,7 @@ struct VideoProjectAssetLicenseParams {
     input: video_assets::VideoAssetLicenseInput,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectRenderParams {
     /// Approved workspace that owns the Video Project.
@@ -1896,6 +1919,7 @@ struct VideoProjectRenderParams {
     request: video_render::VideoRenderRequest,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectRenderJobParams {
     /// Approved workspace that owns the Video Project.
@@ -1906,6 +1930,7 @@ struct VideoProjectRenderJobParams {
     job_id: String,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectCleanupParams {
     /// Approved workspace that owns the Video Project.
@@ -1916,6 +1941,7 @@ struct VideoProjectCleanupParams {
     request: video_render::VideoCleanupRequest,
 }
 
+#[cfg(feature = "legacy_video")]
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 struct VideoProjectQaParams {
     /// Approved workspace that owns the Video Project.
