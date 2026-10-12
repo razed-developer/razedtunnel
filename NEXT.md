@@ -1,3 +1,9 @@
+## Editor background effects removal (awaiting validation)
+- User confirmed previous dialog cleanup passed checks and both pages work.
+- Commit `51e41d8`: removed editor-session restoration and persistence effects, 3.5-second editor file polling, and unreachable Home model refresh polling; initial startup no longer calls Model Hub refresh. App.tsx reduced from 1,732 to 1,603 lines. Crucially, saved editor drafts in localStorage are left untouched (not deleted), but no longer loaded or updated by the gateway UI.
+- Existing unused editor callbacks/state remain for next phase. Change event handler still has conditional editor sync and history logic; simplify only after tests. MCP backend and permissions untouched.
+- Validate `git pull --ff-only && npm run check && npm run build`, then verify Projects/Connections/tray; report any TS errors before proceeding.
+
 ## Gateway shell dialog cleanup (awaiting validation)
 - Commit `95d5020`: removed unreachable HomeFeatureDialog, NewProjectDialog, old editor-switch confirmation, and unused ProjectSetupPanel/ProjectMemoryPanel imports from the two-page UI. Retained project removal and gateway credential confirmation dialogs. No MCP/backend changes.
 - The legacy editor/home state and callbacks remain in `App.tsx` despite being unreachable; remove incrementally after validation rather than deleting dependent hooks blindly. Existing create-project path is currently inaccessible from the two-page shell (it was only on Home); adding approved local folders remains available on Projects.
