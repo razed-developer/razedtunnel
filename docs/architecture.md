@@ -29,9 +29,7 @@ MCP capability router
    |
    +----> Managed browser runtime
    +----> Desktop / isolated AI Workspace
-   +----> Android Phone runtime + capability broker
-   +----> Video Intelligence / Video Production
-   +----> Team Mode / Continuity / Project Memory
+   +----> Continuity / Project Memory
 ```
 
 ## Desktop application
@@ -40,10 +38,10 @@ The Tauri desktop application is responsible for:
 
 - native workspace selection
 - gateway/provider lifecycle and connection status
-- workspace, Desktop, Phone, and AI-mode permission surfaces
+- workspace, Desktop, and AI-mode permission surfaces
 - change review, version history, checkpoints, and undo/restore surfaces
 - Git/GitHub status and validated repository workflows
-- managed browser, AI Workspace, Video, Team Mode, Phone, and system settings surfaces
+- managed browser, AI Workspace, and system settings surfaces
 - security, diagnostics, update, and continuity information
 
 React and TypeScript are used for the interface. Rust owns privileged local operations, MCP serving, and persistent workspace metadata.
@@ -79,7 +77,7 @@ The MCP transport is stateless for legacy protocol versions as well as the curre
 
 ## MCP server
 
-`src-tauri/src/mcp_server.rs` registers the capability-oriented MCP surface for approved project, terminal/process, Git/GitHub, browser, desktop/AI Workspace, Video, Phone, Team Mode, media/temp-workspace, and continuity workflows. It does not turn those subsystems into unrestricted host APIs.
+`src-tauri/src/mcp_server.rs` registers the capability-oriented MCP surface for approved project, terminal/process, Git/GitHub, browser, desktop/AI Workspace, media/temp-workspace, and continuity workflows. It does not turn those subsystems into unrestricted host APIs.
 
 The protocol layer does not implement filesystem access itself. Every tool:
 
@@ -154,29 +152,7 @@ RepoTunnel's Desktop layer exposes explicit user-permitted application control a
 
 AI Workspace provides an isolated virtual desktop with per-application ownership/session controls so multiple AI-owned app sessions can coexist without taking over the user's ordinary desktop.
 
-## Android Phone Access
-
-`src-tauri/src/phone.rs` owns Phone discovery, transport selection, the persistent live video/control runtime, central Off/Limited/Full capability enforcement, files/apps/settings/shell/log/network operations, and semantic Phone Helper integration.
-
-The AI-facing target is an opaque selected device identity. Wireless ADB is preferred with authorized USB fallback for the same device. Payment-sensitive foreground apps keep the helper Accessibility service enabled but block AI observation/control until the user leaves the app.
-
-## Video Intelligence
-
-`src-tauri/src/video.rs` owns optional media understanding as a separate product capability. It accepts public HTTP/HTTPS media URLs and workspace-relative local media, prefers existing captions, extracts bounded smart visual frames when needed, and prepares compact audio only when captions are unavailable. Work runs as cancellable background jobs so media processing never blocks the MCP gateway or desktop UI.
-
-RepoTunnel reuses host `yt-dlp` and `ffmpeg` when present. Missing helpers can be provisioned privately under application data with HTTPS, fixed trusted download hosts, published SHA-256 verification, private file permissions, and no PATH/admin changes. Video results are cached under a bounded application-data cache; no media artifacts are written into the user's project.
-
-MCP receives transcript text plus actual image/audio content for model grounding. Video Intelligence never interprets media instructions as execution authorization: installs, edits, browser actions, Git operations and desktop actions continue through their existing policy/security layers.
-
-## Video Production
-
-Video Production persists durable Video Projects with script/storyboard/scene/timeline state, recordings, generated assets, narration/subtitles, previews/renders, QA evidence, and license provenance. Rendering runs as durable jobs with content-state deduplication and final QA gates.
-
-Tutorial/explainer generation can use deterministic HTML/CSS/GSAP frame capture or the native renderer. Story-animation routing can use RepoTunnel's native motion pipeline and supported installed engines such as Godot/Blender/Rhubarb without making those external engines mandatory.
-
-## Team Mode and continuity
-
-Team Mode stores persistent two-engineer coordination outside the project and enforces task ownership, path claims, cross-review, and evidence-based completion.
+## Continuity and Project Memory
 
 Continuity/Resume v2, factual activity history, Project Memory, and MCP App self-continuation provide recovery context without treating stale saved intent as current fact or claiming that RepoTunnel can detect every external chat interruption.
 
