@@ -1,4 +1,5 @@
 import RepoTunnelLogo from "./RepoTunnelLogo";
+import { useEffect, useState } from "react";
 
 export type AppView =
   | "overview"
@@ -139,6 +140,11 @@ function AppSidebar({
   pendingCount,
   onNavigate,
 }: AppSidebarProps) {
+  const [lightTheme, setLightTheme] = useState(() => localStorage.getItem("razedtunnel-theme") === "light");
+  useEffect(() => {
+    document.documentElement.dataset.theme = lightTheme ? "light" : "dark";
+    localStorage.setItem("razedtunnel-theme", lightTheme ? "light" : "dark");
+  }, [lightTheme]);
   return (
     <aside className="app-sidebar">
       <div className="sidebar-brand">
@@ -170,6 +176,9 @@ function AppSidebar({
       </nav>
 
       <div className="sidebar-spacer" />
+      <button type="button" className="sidebar-nav-item system-item" onClick={() => setLightTheme((value) => !value)} aria-label={lightTheme ? "Switch to dark theme" : "Switch to light theme"}>
+        <NavIcon name="settings" /><span>{lightTheme ? "Dark theme" : "Light theme"}</span>
+      </button>
 
       <button
         type="button"
