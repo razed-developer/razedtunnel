@@ -69,7 +69,7 @@ AI coding tools are useful when they can work with the real project — but hand
 RepoTunnel puts a **permissioned local gateway** between the AI and your machine:
 
 - **Explicit project access** — the AI works with approved workspaces, not arbitrary host paths.
-- **Local-first control** — permissions, approvals, history, checkpoints, connection state, stay in the desktop app.
+- **Local-first control** — permissions, approvals, history, checkpoints, and connection state stay in the desktop app.
 - **Safe execution** — AI commands run through platform-specific sandboxing instead of silently falling back to unrestricted host execution.
 - **Verifiable mutations** — edits, Git actions, browser actions, and long-running work expose state that can be reviewed and checked.
 - **Human-owned publishing** — pushing Git history, publishing releases, uploading artifacts, and other external side effects still require an explicit user request.
