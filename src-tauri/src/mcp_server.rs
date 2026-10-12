@@ -11404,6 +11404,39 @@ impl ServerHandler for RepoTunnelMcp {
     }
 }
 
+#[cfg(all(test, not(feature = "legacy_video")))]
+mod lean_gateway_video_tests {
+    use super::RepoTunnelMcp;
+
+    #[test]
+    fn video_tools_are_not_discoverable_or_dispatchable() {
+        let router = RepoTunnelMcp::tool_router();
+        let forbidden = [
+            "start_video_analysis",
+            "get_video_analysis",
+            "cancel_video_analysis",
+            "create_video_project",
+            "compile_video_story_plan",
+            "render_video_story_animatic",
+            "start_video_project_render",
+            "render_video_project_timeline",
+            "synthesize_video_project_narration",
+        ];
+
+        for name in forbidden {
+            assert!(
+                !router.map.contains_key(name),
+                "legacy video MCP route should be absent in lean mode: {name}"
+            );
+        }
+
+        assert!(
+            router.map.contains_key("capabilities"),
+            "core MCP tools must remain available"
+        );
+    }
+}
+
 #[cfg(test)]
 mod task_outcome_tests {
     use serde::{ser::Error as _, Serialize, Serializer};
