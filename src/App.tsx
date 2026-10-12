@@ -21,10 +21,8 @@ import {
   getAiAccessStatus,
   getChatConnectionStatus,
   getGatewayStatus,
-  getModelHub,
   getWorkspaceHealth,
   getActivityTimeline,
-  getGitStatus,
   getPublicTunnelStatus,
   getVersionTimeline,
   listChanges,
@@ -57,10 +55,8 @@ import type {
   CommandPolicy,
   DirectoryEntry,
   GatewayStatus,
-  GitRepositoryStatus,
   HomeContextErrorInput,
   HomeContextTextInput,
-  ModelHubSnapshot,
   PublicTunnelProvider,
   PublicTunnelStatus,
   SafetyScanResult,
@@ -151,8 +147,6 @@ function App() {
     initialConnectionStatus,
   );
   const [publicTunnelStatus, setPublicTunnelStatus] = useState<PublicTunnelStatus>(initialPublicTunnelStatus);
-  const [modelHub, setModelHub] = useState<ModelHubSnapshot | null>(null);
-  const [modelHubLoading, setModelHubLoading] = useState(true);
   const [publicTunnelBusy, setPublicTunnelBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -178,8 +172,6 @@ function App() {
   const [aiAccessBusy, setAiAccessBusy] = useState(false);
   const [checkpointResult, setCheckpointResult] = useState<CheckpointSummary | null>(null);
   const [safetyScanResult, setSafetyScanResult] = useState<SafetyScanResult | null>(null);
-  const [projectTreeRefreshToken, setProjectTreeRefreshToken] = useState(0);
-  const [gitStatus, setGitStatus] = useState<GitRepositoryStatus | null>(null);
 
   const pendingCount = useMemo(
     () => changes.filter((change) => change.status === "pending").length,
@@ -226,17 +218,6 @@ function App() {
     setAiAccessPausedState(aiStatus.paused);
   }, []);
 
-  const refreshModelHub = useCallback(async (showLoading = true) => {
-    if (showLoading) setModelHubLoading(true);
-    try {
-      setModelHub(await getModelHub());
-    } catch {
-      // Keep the last known local-model snapshot during a transient runtime restart.
-    } finally {
-      if (showLoading) setModelHubLoading(false);
-    }
-  }, []);
-
   const refreshWorkspaceHealth = useCallback(async () => {
     if (workspaces.length === 0) {
       setWorkspaceHealth({});
@@ -251,18 +232,6 @@ function App() {
     }));
     setWorkspaceHealth(Object.fromEntries(entries));
   }, [workspaces]);
-
-  const refreshGitStatus = useCallback(async () => {
-    if (!selectedWorkspaceId) {
-      setGitStatus(null);
-      return;
-    }
-    try {
-      setGitStatus(await getGitStatus(selectedWorkspaceId));
-    } catch {
-      setGitStatus(null);
-    }
-  }, [selectedWorkspaceId]);
 
   useEffect(() => {
     setLoading(true);
@@ -362,15 +331,6 @@ function App() {
   }, [activeView, selectedWorkspaceId]);
 
   useEffect(() => {
-    if (activeView !== "git" && activeView !== "editor") return;
-    void refreshGitStatus();
-    if (!selectedWorkspaceId) return;
-    const intervalMs = activeView === "git" ? 3000 : 10_000;
-    const timer = window.setInterval(() => void refreshGitStatus(), intervalMs);
-    return () => window.clearInterval(timer);
-  }, [activeView, selectedWorkspaceId, refreshGitStatus]);
-
-  useEffect(() => {
     if (!connectionStatus.running) return;
 
     const timer = window.setInterval(() => {
@@ -420,9 +380,6 @@ function App() {
             setActivityTimeline(activities);
           }).catch(() => undefined);
         }
-        if (activeView === "git" || activeView === "editor") {
-          await refreshGitStatus().catch(() => undefined);
-        }
       } finally {
         refreshRunning = false;
         if (refreshQueued && !disposed) {
@@ -454,7 +411,7 @@ function App() {
       if (timer !== null) window.clearTimeout(timer);
       unlisten?.();
     };
-  }, [activeView, selectedWorkspaceId, refreshPendingChanges, refreshGitStatus]);
+  }, [activeView, selectedWorkspaceId, refreshPendingChanges]);
 
   useEffect(() => {
     let disposed = false;
@@ -565,7 +522,6 @@ function App() {
       if (!selected) return;
       const updated = await relocateWorkspace(workspace.id, selected);
       replaceWorkspace(updated);
-      setProjectTreeRefreshToken((current) => current + 1);
       setNotice(`Project path repaired: ${updated.name}.`);
       await refreshWorkspaceHealth();
     } catch (error) {
@@ -580,7 +536,6 @@ function App() {
       const health = await getWorkspaceHealth(workspaceId);
       setWorkspaceHealth((current) => ({ ...current, [workspaceId]: health }));
       setNotice(health.available ? "Project folder is available again." : (health.message ?? "Project folder is still unavailable."));
-      if (health.available) setProjectTreeRefreshToken((current) => current + 1);
     } catch (error) {
       setNotice(`Could not recheck that project: ${errorMessage(error)}`);
     }
