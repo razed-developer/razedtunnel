@@ -64,6 +64,7 @@ mod project_index;
 mod project_memory;
 mod project_setup;
 mod public_tunnel;
+mod public_tunnel_commands;
 mod repository;
 mod secret_guard;
 mod self_continuation;
@@ -381,16 +382,16 @@ pub fn run() {
                 gateway_commands::get_gateway_status,
                 gateway_commands::start_gateway,
                 gateway_commands::stop_gateway,
-                commands::get_public_tunnel_status,
-                commands::configure_public_tunnel,
-                commands::restart_public_tunnel,
-                commands::provision_direct_https_certificate,
+                public_tunnel_commands::get_public_tunnel_status,
+                public_tunnel_commands::configure_public_tunnel,
+                public_tunnel_commands::restart_public_tunnel,
+                public_tunnel_commands::provision_direct_https_certificate,
                 https_setup::get_https_setup_readiness,
                 https_setup::install_https_setup_wireguard_config,
                 https_setup::open_https_setup_resource,
                 https_setup::verify_https_setup_hostname,
-                commands::clear_public_tunnel,
-                commands::revoke_mcp_access,
+                public_tunnel_commands::clear_public_tunnel,
+                public_tunnel_commands::revoke_mcp_access,
                 commands::get_chat_connection_status,
                 commands::start_chat_connection,
                 commands::stop_chat_connection,
