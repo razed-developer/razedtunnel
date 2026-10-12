@@ -10,8 +10,8 @@ use tauri::{path::BaseDirectory, AppHandle, Manager};
 use crate::{
     app_state::AppState,
     browser, conversation, hardening, model_trial,
-    models::{ManagedProcessStatus, TeamSessionStatus, TerminalCommandStatus},
-    public_tunnel, storage, team, terminal,
+    models::{ManagedProcessStatus, TerminalCommandStatus},
+    public_tunnel, storage, terminal,
 };
 
 const UPDATE_STATE_FILE: &str = "update-state.json";
@@ -397,17 +397,6 @@ fn active_work_reason(app: &AppHandle, app_state: &AppState) -> Option<String> {
     {
         return Some(
             "A terminal command is still running or awaiting review. Finish it before updating."
-                .to_string(),
-        );
-    }
-
-    if team::list_sessions(app, None).ok().is_some_and(|sessions| {
-        sessions.iter().any(|session| {
-            session.status == TeamSessionStatus::Active && session.open_task_count > 0
-        })
-    }) {
-        return Some(
-            "A Team Mode task is still active. Finish or pause that work before updating."
                 .to_string(),
         );
     }

@@ -13,7 +13,6 @@ type AppHeaderProps = {
 const titles: Record<AppView, string> = {
   overview: "Home",
   projects: "Projects",
-  team: "Team",
   models: "Model Hub",
   editor: "Editor",
   changes: "Review",
@@ -30,7 +29,6 @@ const titles: Record<AppView, string> = {
 const icons: Record<AppView, Parameters<typeof NavIcon>[0]["name"]> = {
   overview: "home",
   projects: "folder",
-  team: "team",
   models: "model",
   editor: "folder",
   changes: "changes",

@@ -81,8 +81,6 @@ import type {
   UpdateInstallResult,
   ResumeSnapshot,
   SafetyScanResult,
-  TeamSessionSummary,
-  TeamSnapshot,
   VideoAnalysisJob,
   VideoAnalysisMode,
   VideoAnalysisResult,
@@ -1633,56 +1631,4 @@ export async function deferUpdate(version: string): Promise<UpdateStatus> {
 
 export async function installUpdateAndRestart(): Promise<UpdateInstallResult> {
   return invoke<UpdateInstallResult>("install_update_and_restart");
-}
-
-export async function listTeamSessions(workspaceId?: string): Promise<TeamSessionSummary[]> {
-  return invoke<TeamSessionSummary[]>("list_team_sessions", { workspaceId: workspaceId ?? null });
-}
-
-export async function getTeamSession(sessionId: string): Promise<TeamSnapshot> {
-  return invoke<TeamSnapshot>("get_team_session", { sessionId });
-}
-
-export async function createTeamSession(
-  workspaceId: string,
-  goal: string,
-  successCriteria: string[],
-  agentAName: string,
-  agentARole: string,
-  agentBName: string,
-  agentBRole: string,
-): Promise<TeamSnapshot> {
-  return invoke<TeamSnapshot>("create_team_session", {
-    workspaceId,
-    goal,
-    successCriteria,
-    agentAName,
-    agentARole,
-    agentBName,
-    agentBRole,
-  });
-}
-
-export async function postTeamUserMessage(sessionId: string, text: string): Promise<TeamSnapshot> {
-  return invoke<TeamSnapshot>("post_team_user_message", { sessionId, text });
-}
-
-export async function pauseTeamSession(sessionId: string): Promise<TeamSnapshot> {
-  return invoke<TeamSnapshot>("pause_team_session", { sessionId });
-}
-
-export async function resumeTeamSession(sessionId: string): Promise<TeamSnapshot> {
-  return invoke<TeamSnapshot>("resume_team_session", { sessionId });
-}
-
-export async function cancelTeamSession(sessionId: string, summary?: string): Promise<TeamSnapshot> {
-  return invoke<TeamSnapshot>("cancel_team_session", { sessionId, summary: summary ?? null });
-}
-
-export async function completeTeamSession(sessionId: string, summary: string): Promise<TeamSnapshot> {
-  return invoke<TeamSnapshot>("complete_team_session", { sessionId, summary });
-}
-
-export async function deleteTeamSession(sessionId: string): Promise<void> {
-  return invoke<void>("delete_team_session", { sessionId });
 }

@@ -21,7 +21,6 @@ import NewProjectDialog from "./components/NewProjectDialog";
 import ProjectSetupPanel from "./components/ProjectSetupPanel";
 import ProjectMemoryPanel from "./components/ProjectMemoryPanel";
 import ProjectRail from "./components/ProjectRail";
-import TeamPanel from "./components/TeamPanel";
 
 import WindowChrome from "./components/WindowChrome";
 import ProjectOverviewPanel from "./components/ProjectOverviewPanel";
@@ -1593,17 +1592,6 @@ function App() {
       );
     }
 
-    if (activeView === "team") {
-      return (
-        <TeamPanel
-          workspaces={workspaces}
-          selectedWorkspaceId={selectedWorkspaceId}
-          onSelectWorkspace={handleSelectWorkspaceSafe}
-          onNotice={setNotice}
-        />
-      );
-    }
-
     if (activeView === "models") {
       return (
         <ModelHub
@@ -1912,7 +1900,7 @@ function App() {
       {confirmStopGateway ? (
         <ConfirmationDialog
           title="Stop the MCP gateway?"
-          message="This cleanly stops the local MCP gateway and managed remote connections. Your projects, Team sessions, History, and saved public setup remain unchanged."
+          message="This cleanly stops the local MCP gateway and managed remote connections. Your projects, History, and saved public setup remain unchanged."
           confirmLabel="Stop gateway"
           busy={gatewayBusy}
           busyLabel="Stopping…"

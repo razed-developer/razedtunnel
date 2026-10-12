@@ -231,7 +231,6 @@ export default function WorkspaceProductivity({
       { id: "refresh", label: "Refresh Project", detail: "Refresh explorer and Git state", keywords: "refresh reload files git", disabled: !selectedWorkspace, run: () => { close(); onRefreshProject(); } },
       { id: "home", label: "Go to Home", detail: "Show the RepoTunnel dashboard", keywords: "dashboard home", run: () => { close(); onNavigate("overview"); } },
       { id: "projects", label: "Go to Projects", detail: "Manage approved projects", keywords: "projects workspace", run: () => { close(); onNavigate("projects"); } },
-      { id: "team", label: "Go to Team", detail: "Open two-AI Team Mode coordination", keywords: "team multi ai agents collaborate tasks review", run: () => { close(); onNavigate("team"); } },
       { id: "history", label: "Go to History", detail: "Open Changes & History", keywords: "history changes restore checkpoint", run: () => { close(); onNavigate("changes"); } },
       { id: "commands", label: "Go to Commands", detail: "Open commands and automation controls", keywords: "terminal browser process commands", run: () => { close(); onNavigate("commands"); } },
       { id: "settings", label: "Go to Settings", detail: "Open RepoTunnel settings", keywords: "settings configuration", run: () => { close(); onNavigate("system"); } },

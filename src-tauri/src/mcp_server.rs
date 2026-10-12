@@ -1,5 +1,4 @@
 use axum::http::request::Parts;
-use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Extension, wrapper::Parameters},
     model::{
@@ -28,10 +27,8 @@ use crate::mcp_continuation_params::{ArmSelfContinuationParams, SelfContinuation
 use crate::mcp_workspace_params::{CloneRepositoryParams, CreateProjectParams, ProjectMemoryUpdateParams, ExternalFileActionParam, ExternalFileAccessParams, WorkspaceIdParams, CreateTempWorkspaceParams, TempWorkspaceParams, PreserveTempWorkspaceParams, CleanupTempWorkspaceParams, TempWorkspaceFileActionParam, TempWorkspaceFileActionParams};
 use serde::Serialize;
 use std::{
-    collections::BTreeMap,
     path::Path,
     sync::atomic::{AtomicU64, Ordering},
-    time::Instant,
 };
 use tauri::{AppHandle, Manager};
 
@@ -44,13 +41,12 @@ use crate::{
     media_inspection,
     models::{
         ActivityKind, ActivityStatus, BrowserScreenshot, CommandPolicy,
-        GitRepositoryStatus, ManagedProcessRecord, TeamMessageKind, TeamPhase,
-        TeamTaskStatus, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy,
+        GitRepositoryStatus, ManagedProcessRecord, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy,
     },
     monitoring, project_index, project_memory, project_setup, repository, secret_guard,
-    self_continuation, semantic,
+    self_continuation,
     storage::load_workspaces,
-    system_resources, team, temp_workspace, terminal, workflow,
+    system_resources, temp_workspace, terminal, workflow,
 };
 
 
@@ -355,131 +351,6 @@ struct ListChangesParams {
     workspace_id: Option<String>,
     /// Maximum records to return. RepoTunnel clamps this to 1..100.
     limit: Option<usize>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct TeamStatusParams {
-    /// Team session ID returned by team_action action=create_session or the RepoTunnel Team UI. Omit only when workspace_id is supplied to load the latest session for that project.
-    session_id: Option<String>,
-    /// Approved workspace ID. Used to find the latest Team Mode session when session_id is omitted.
-    workspace_id: Option<String>,
-    /// Optional assigned Team Mode agent ID. Supplying it makes the snapshot include a role-specific recommended next action.
-    agent_id: Option<String>,
-    /// Optional revision already seen by the caller. With wait_seconds, team_status waits until the session revision becomes newer or the wait expires.
-    after_revision: Option<u64>,
-    /// Optional long-poll wait in seconds, clamped to 0..30. Useful while an active agent is waiting for the other AI to post a handoff/review/update without ending its collaboration loop.
-    wait_seconds: Option<u64>,
-}
-
-#[derive(Clone, Copy, Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum TeamActionParam {
-    CreateSession,
-    Join,
-    Heartbeat,
-    PostMessage,
-    CreateTask,
-    ClaimTask,
-    HandoffTask,
-    UpdateTask,
-    VerifyCriterion,
-    LockPaths,
-    ReleasePaths,
-    SetPhase,
-    Complete,
-}
-
-#[derive(Clone, Copy, Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum TeamMessageKindParam {
-    Plan,
-    Progress,
-    Question,
-    Review,
-    Decision,
-    Handoff,
-}
-
-#[derive(Clone, Copy, Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum TeamTaskStatusParam {
-    Todo,
-    InProgress,
-    Review,
-    Blocked,
-    Done,
-    Cancelled,
-}
-
-#[derive(Clone, Copy, Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum TeamPhaseParam {
-    Planning,
-    Executing,
-    Reviewing,
-    Verifying,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct TeamActionParams {
-    /// Coordination mutation to perform. Fields unrelated to the selected action are ignored.
-    action: TeamActionParam,
-    /// Approved workspace ID. Required only for create_session.
-    workspace_id: Option<String>,
-    /// Team session ID. Required for every action except create_session.
-    session_id: Option<String>,
-    /// Assigned Team Mode agent ID. Required for agent-originated actions such as join, heartbeat, messages, tasks, claims, locks, and phase changes.
-    agent_id: Option<String>,
-    /// Optional label describing the connected client/model, used only when joining (for example "ChatGPT" or "Gemini CLI").
-    client_label: Option<String>,
-    /// High-level project goal. Required for create_session.
-    goal: Option<String>,
-    /// Explicit completion criteria. Required for create_session; agents must verify these before completing the session.
-    success_criteria: Option<Vec<String>>,
-    /// Display name for agent A when creating a session.
-    agent_a_name: Option<String>,
-    /// Persistent role/instructions for agent A when creating a session.
-    agent_a_role: Option<String>,
-    /// Display name for agent B when creating a session.
-    agent_b_name: Option<String>,
-    /// Persistent role/instructions for agent B when creating a session.
-    agent_b_role: Option<String>,
-    /// Message category for post_message.
-    message_kind: Option<TeamMessageKindParam>,
-    /// Shared-board message text for post_message, or optional ownership-transfer context for handoff_task.
-    message: Option<String>,
-    /// Existing task ID for claim_task/handoff_task/update_task, or optional task association for post_message/lock_paths.
-    task_id: Option<String>,
-    /// Other joined agent ID that receives primary ownership for handoff_task.
-    target_agent_id: Option<String>,
-    /// Task title for create_task.
-    title: Option<String>,
-    /// Task description for create_task.
-    description: Option<String>,
-    /// Task priority from 1 (low) to 5 (high). Defaults to 3.
-    priority: Option<u8>,
-    /// Task IDs that must be done before a new task can be claimed.
-    depends_on: Option<Vec<String>>,
-    /// New task state for update_task.
-    task_status: Option<TeamTaskStatusParam>,
-    /// Implementation/review result attached to update_task.
-    result: Option<String>,
-    /// Zero-based success-criterion index for verify_criterion.
-    criterion_index: Option<usize>,
-    /// Concrete build/test/browser/manual evidence proving the selected success criterion for verify_criterion.
-    evidence: Option<String>,
-    /// Explanation attached when task_status=blocked.
-    blocked_reason: Option<String>,
-    /// Optional other-agent ID assigned as reviewer when moving a task to review.
-    reviewer_agent_id: Option<String>,
-    /// Workspace-relative files/folders to claim/release. claim_task requires at least one path. lock_paths requires task_id and only extends claims for the caller's owned in-progress task.
-    paths: Option<Vec<String>>,
-    /// Lock lifetime in seconds. RepoTunnel clamps this to 30..3600 seconds.
-    lock_ttl_seconds: Option<u64>,
-    /// New collaboration phase for set_phase.
-    phase: Option<TeamPhaseParam>,
-    /// Required evidence-oriented summary for complete.
-    completion_summary: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, serde::Deserialize, Serialize, schemars::JsonSchema)]
@@ -908,7 +779,7 @@ impl RepoTunnelMcp {
     }
 
     #[tool(
-        description = "Request access to one file outside the approved workspace without exposing the rest of the host filesystem. RepoTunnel always opens a native local file picker: the user must explicitly select the file, and cancelling denies access. action=read returns bounded UTF-8 content once without revealing the absolute host path. action=import copies the selected regular file to an explicit workspace-relative destination after secret scanning; the AI can then work on it using normal workspace tools. Sensitive credential files and symlinks remain blocked. Works in normal mode and Team Mode."
+        description = "Request access to one file outside the approved workspace without exposing the rest of the host filesystem. RepoTunnel always opens a native local file picker: the user must explicitly select the file, and cancelling denies access. action=read returns bounded UTF-8 content once without revealing the absolute host path. action=import copies the selected regular file to an explicit workspace-relative destination after secret scanning; the AI can then work on it using normal workspace tools. Sensitive credential files and symlinks remain blocked. Works in normal mode."
     )]
     async fn request_external_file(
         &self,
@@ -917,22 +788,15 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let trace_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         run_filesystem_task(move || {
             ensure_ai_access(&app)?;
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let action = match params.action {
                 ExternalFileActionParam::Read => ExternalFileAction::Read,
                 ExternalFileActionParam::Import => {
-                    let destination = params.destination_path.as_deref().ok_or_else(|| {
+                    params.destination_path.as_deref().ok_or_else(|| {
                         "destination_path is required for action=import.".to_string()
                     })?;
-                    team::assert_paths_available(
-                        &app,
-                        &workspace.id,
-                        &[destination.to_string()],
-                        client_key.as_deref(),
-                    )?;
                     ExternalFileAction::Import
                 }
             };
@@ -1874,17 +1738,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::create_file(
                 &app,
                 &workspace,
@@ -1914,17 +1771,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::write_file(
                 &app,
                 &workspace,
@@ -1954,17 +1804,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::patch_file(
                 &app,
                 &workspace,
@@ -1995,17 +1838,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::create_directory(
                 &app,
                 &workspace,
@@ -2035,23 +1871,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            let destination = Path::new(&params.relative_path)
-                .parent()
-                .unwrap_or_else(|| Path::new(""))
-                .join(&params.new_name)
-                .to_string_lossy()
-                .replace('\\', "/");
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                &[params.relative_path.clone(), destination],
-                client_key.as_deref(),
-            )?;
             let outcome = changes::rename_entry(
                 &app,
                 &workspace,
@@ -2081,17 +1904,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                &[params.source_path.clone(), params.destination_path.clone()],
-                client_key.as_deref(),
-            )?;
             let outcome = changes::move_entry(
                 &app,
                 &workspace,
@@ -2121,17 +1937,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            team::assert_paths_available(
-                &app,
-                &workspace.id,
-                std::slice::from_ref(&params.relative_path),
-                client_key.as_deref(),
-            )?;
             let outcome = changes::delete_entry(
                 &app,
                 &workspace,
@@ -4053,7 +3862,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             browser::configure_context(
                 &app,
                 &scope,
@@ -4082,7 +3890,6 @@ impl RepoTunnelMcp {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             let outcome = match params.action {
                 BrowserActionParam::Start => {
                     if let Some(client_key) = client_key.as_deref() {
@@ -4249,7 +4056,6 @@ impl RepoTunnelMcp {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             let outcome = match params.action {
@@ -4303,7 +4109,6 @@ impl RepoTunnelMcp {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             let steps = params
@@ -4387,7 +4192,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             let result = browser::cancel_semantic_sequence(&app, &scope, &params.sequence_id)?;
             record_observation(
                 &app,
@@ -4423,7 +4227,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             if let Some(client_key) = client_key.as_deref() {
@@ -4507,7 +4310,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             let known = browser::list_downloads(&app, &scope)?
                 .into_iter()
                 .find(|download| download.guid == params.guid)
@@ -4549,7 +4351,6 @@ impl RepoTunnelMcp {
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let scope = browser_scope_for_request(&workspace, client_key.as_deref());
-            team::assert_browser_mutation_available(&app, &scope.id, client_key.as_deref())?;
             require_ai_browser_tab_access(&scope, client_key.as_deref(), &params.tab_id)?;
             require_google_tab_access(&app, &scope, &params.tab_id)?;
             let result = browser::upload_file(
@@ -5142,317 +4943,6 @@ impl RepoTunnelMcp {
                 }
             }
             Ok(events)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Read the shared RepoTunnel Team Mode state for two-AI collaboration. Supply session_id to inspect a known team, or workspace_id to get the latest team session for that approved project. The snapshot includes assigned agent IDs/roles, goal and success criteria, task ownership/dependencies/review state, discussion messages, expiring file/folder claims, progress, and a recommended next action. Call this before team project work and after the other agent may have changed shared state. An active agent can pass after_revision plus wait_seconds to wait up to 30 seconds for the other AI to change the shared state instead of ending its turn immediately.",
-        annotations(read_only_hint = true)
-    )]
-    async fn team_status(
-        &self,
-        Parameters(params): Parameters<TeamStatusParams>,
-        Extension(parts): Extension<Parts>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let trace_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-            if let Some(session_id) = params.session_id.as_deref() {
-                let snapshot = if let Some(after_revision) = params.after_revision {
-                    team::wait_for_snapshot(
-                        &app,
-                        session_id,
-                        params.agent_id.as_deref(),
-                        after_revision,
-                        params.wait_seconds.unwrap_or(0),
-                    )?
-                } else {
-                    team::get_snapshot(&app, session_id, params.agent_id.as_deref())?
-                };
-                let workspace = approved_workspace(&app, &snapshot.session.workspace_id)?;
-                let mut snapshot = snapshot;
-                if let (Some(client_key), Some(agent_id)) =
-                    (client_key.as_deref(), params.agent_id.as_deref())
-                {
-                    team::bind_client(&app, client_key, session_id, agent_id)?;
-                    if snapshot
-                        .session
-                        .agents
-                        .iter()
-                        .any(|agent| agent.id == agent_id && agent.joined_at.is_some())
-                    {
-                        snapshot = team::heartbeat(&app, session_id, agent_id)?;
-                    }
-                }
-                if params.after_revision.is_none() || params.wait_seconds.unwrap_or(0) == 0 {
-                    record_observation(
-                        &app,
-                        &workspace,
-                        trace_group_id.as_deref(),
-                        ActivityKind::Team,
-                        "teamStatus",
-                        format!(
-                            "Checked AI team · {:?} · {:?}",
-                            snapshot.session.status, snapshot.session.phase
-                        ),
-                        Some(format!(
-                            "{} open · {} done · {} blocked",
-                            snapshot.progress.open_task_count,
-                            snapshot.progress.done_task_count,
-                            snapshot.progress.blocked_task_count
-                        )),
-                    );
-                }
-                return Ok(Some(snapshot));
-            }
-
-            let workspace_id = params.workspace_id.as_deref().ok_or_else(|| {
-                "team_status requires either session_id or workspace_id.".to_string()
-            })?;
-            let workspace = approved_workspace(&app, workspace_id)?;
-            let mut snapshot = team::latest_snapshot_for_workspace(
-                &app,
-                workspace_id,
-                params.agent_id.as_deref(),
-            )?;
-            if let (Some(current), Some(client_key), Some(agent_id)) = (
-                snapshot.as_ref(),
-                client_key.as_deref(),
-                params.agent_id.as_deref(),
-            ) {
-                let session_id = current.session.id.clone();
-                let joined = current
-                    .session
-                    .agents
-                    .iter()
-                    .any(|agent| agent.id == agent_id && agent.joined_at.is_some());
-                team::bind_client(&app, client_key, &session_id, agent_id)?;
-                if joined {
-                    snapshot = Some(team::heartbeat(&app, &session_id, agent_id)?);
-                }
-            }
-            record_observation(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Team,
-                "teamStatus",
-                if snapshot.is_some() {
-                    "Checked latest AI team session"
-                } else {
-                    "Checked AI team status · no session yet"
-                },
-                None,
-            );
-            Ok(snapshot)
-        })
-        .await
-    }
-
-    #[tool(
-        description = "Coordinate two AIs through one persistent RepoTunnel Team attached to a project until the user explicitly ends it. create_session creates the A/B Team once; join/heartbeat keep stable agent identities. BOTH engineers must join before planning starts. During Planning each engineer posts one Plan message, each creates one distinct initial implementation task, then each posts a Decision confirming the split; RepoTunnel unlocks parallel implementation only after both confirmations. create_task/claim_task divide distinct work: one primary owner per implementation task, one active implementation task per agent, and duplicate open task titles are rejected. Both engineers must finish their own meaningful implementation contribution; review/testing alone cannot satisfy the two-engineer contribution requirement. handoff_task transfers ownership instead of allowing duplicate implementation. update_task enforces cross-review and requires concrete feedback when a reviewer sends work back for bugs/errors. verify_criterion records evidence. task-scoped path claims protect file edits; the reserved `@browser` claim serializes interactive managed-browser mutations so two AIs never type/click in the same shared browser simultaneously. After a completed work cycle, a new human request posted as `USER REQUEST:` reuses the SAME Team. complete closes only the CURRENT request; the Team stays active. MCP agents cannot end the Team itself; pause/end remain user-controlled in the desktop app."
-    )]
-    async fn team_action(
-        &self,
-        Parameters(params): Parameters<TeamActionParams>,
-        Extension(parts): Extension<Parts>,
-        context: RequestContext<RoleServer>,
-    ) -> Result<CallToolResult, McpError> {
-        let app = self.app.clone();
-        let conversation_session = openai_conversation_session(&context).map(str::to_string);
-        if let Some(workspace_id) = params.workspace_id.as_deref() {
-            ensure_chatgpt_work_fallback(&app, workspace_id, conversation_session.as_deref());
-        }
-        let trace_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
-        run_filesystem_task(move || {
-            ensure_ai_access(&app)?;
-
-            if matches!(params.action, TeamActionParam::CreateSession) {
-                let workspace_id = params.workspace_id.as_deref().ok_or_else(|| "workspace_id is required for create_session.".to_string())?;
-                let workspace = approved_workspace(&app, workspace_id)?;
-                let snapshot = team::create_session(
-                    &app,
-                    &workspace,
-                    params.goal.unwrap_or_default(),
-                    params.success_criteria.unwrap_or_default(),
-                    params.agent_a_name.unwrap_or_else(|| "Engineer A".to_string()),
-                    params.agent_a_role.unwrap_or_else(|| "Plan, implement, test, debug, and review distinct product work as Engineer A. Avoid duplicate implementation, coordinate explicit handoffs, and verify the other agent's work.".to_string()),
-                    params.agent_b_name.unwrap_or_else(|| "Engineer B".to_string()),
-                    params.agent_b_role.unwrap_or_else(|| "Plan, implement, test, debug, and review distinct product work as Engineer B. Avoid duplicate implementation, coordinate explicit handoffs, and verify the other agent's work.".to_string()),
-                )?;
-                let _ = activity::record(
-                    &app,
-                    &workspace,
-                    trace_group_id.as_deref(),
-                    ActivityKind::Team,
-                    "teamCreate",
-                    "Created a two-agent Team Mode session",
-                    Some(snapshot.session.goal.clone()),
-                    ActivityStatus::Succeeded,
-                    Some(snapshot.session.id.clone()),
-                );
-                return Ok(snapshot);
-            }
-
-            let session_id = params.session_id.as_deref().ok_or_else(|| "session_id is required for this Team Mode action.".to_string())?;
-            let before = team::get_snapshot(&app, session_id, params.agent_id.as_deref())?;
-            let workspace = approved_workspace(&app, &before.session.workspace_id)?;
-            if let (Some(client_key), Some(agent_id)) = (client_key.as_deref(), params.agent_id.as_deref()) {
-                team::bind_client(&app, client_key, session_id, agent_id)?;
-            }
-
-            let (snapshot, action_name, summary, status) = match params.action {
-                TeamActionParam::CreateSession => unreachable!(),
-                TeamActionParam::Join => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for join.".to_string())?;
-                    let snapshot = team::join_agent(&app, session_id, agent_id, params.client_label)?;
-                    let name = snapshot.session.agents.iter().find(|agent| agent.id == agent_id).map(|agent| agent.name.clone()).unwrap_or_else(|| "Agent".to_string());
-                    (snapshot, "teamJoin", format!("{name} joined the AI team"), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::Heartbeat => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for heartbeat.".to_string())?;
-                    let snapshot = team::heartbeat(&app, session_id, agent_id)?;
-                    return Ok(snapshot);
-                }
-                TeamActionParam::PostMessage => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for post_message.".to_string())?;
-                    let kind = match params.message_kind.ok_or_else(|| "message_kind is required for post_message.".to_string())? {
-                        TeamMessageKindParam::Plan => TeamMessageKind::Plan,
-                        TeamMessageKindParam::Progress => TeamMessageKind::Progress,
-                        TeamMessageKindParam::Question => TeamMessageKind::Question,
-                        TeamMessageKindParam::Review => TeamMessageKind::Review,
-                        TeamMessageKindParam::Decision => TeamMessageKind::Decision,
-                        TeamMessageKindParam::Handoff => TeamMessageKind::Handoff,
-                    };
-                    let message = params.message.ok_or_else(|| "message is required for post_message.".to_string())?;
-                    let snapshot = team::post_message(&app, session_id, agent_id, kind, message, params.task_id)?;
-                    (snapshot, "teamMessage", "Posted AI-to-AI team message".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::CreateTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for create_task.".to_string())?;
-                    let title = params.title.ok_or_else(|| "title is required for create_task.".to_string())?;
-                    let snapshot = team::create_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        title,
-                        params.description.unwrap_or_default(),
-                        params.priority,
-                        params.depends_on.unwrap_or_default(),
-                    )?;
-                    (snapshot, "teamCreateTask", "Created AI team task".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::ClaimTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for claim_task.".to_string())?;
-                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for claim_task.".to_string())?;
-                    let snapshot = team::claim_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        task_id,
-                        params.paths.unwrap_or_default(),
-                        params.lock_ttl_seconds,
-                    )?;
-                    (snapshot, "teamClaimTask", "Claimed distinct AI team implementation task".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::HandoffTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for handoff_task.".to_string())?;
-                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for handoff_task.".to_string())?;
-                    let target_agent_id = params.target_agent_id.as_deref().ok_or_else(|| "target_agent_id is required for handoff_task.".to_string())?;
-                    let snapshot = team::handoff_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        task_id,
-                        target_agent_id,
-                        params.message,
-                    )?;
-                    (snapshot, "teamHandoffTask", "Transferred AI team task ownership".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::UpdateTask => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for update_task.".to_string())?;
-                    let task_id = params.task_id.as_deref().ok_or_else(|| "task_id is required for update_task.".to_string())?;
-                    let task_status = match params.task_status.ok_or_else(|| "task_status is required for update_task.".to_string())? {
-                        TeamTaskStatusParam::Todo => TeamTaskStatus::Todo,
-                        TeamTaskStatusParam::InProgress => TeamTaskStatus::InProgress,
-                        TeamTaskStatusParam::Review => TeamTaskStatus::Review,
-                        TeamTaskStatusParam::Blocked => TeamTaskStatus::Blocked,
-                        TeamTaskStatusParam::Done => TeamTaskStatus::Done,
-                        TeamTaskStatusParam::Cancelled => TeamTaskStatus::Cancelled,
-                    };
-                    let snapshot = team::update_task(
-                        &app,
-                        session_id,
-                        agent_id,
-                        task_id,
-                        task_status,
-                        params.result,
-                        params.blocked_reason,
-                        params.reviewer_agent_id,
-                    )?;
-                    let activity_status = ActivityStatus::Succeeded;
-                    (snapshot, "teamUpdateTask", format!("Updated AI team task · {:?}", task_status), activity_status)
-                }
-                TeamActionParam::VerifyCriterion => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for verify_criterion.".to_string())?;
-                    let criterion_index = params.criterion_index.ok_or_else(|| "criterion_index is required for verify_criterion.".to_string())?;
-                    let evidence = params.evidence.ok_or_else(|| "evidence is required for verify_criterion.".to_string())?;
-                    let snapshot = team::verify_criterion(&app, session_id, agent_id, criterion_index, evidence)?;
-                    (snapshot, "teamVerifyCriterion", format!("Verified AI team success criterion {}", criterion_index + 1), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::LockPaths => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for lock_paths.".to_string())?;
-                    let snapshot = team::lock_paths(
-                        &app,
-                        session_id,
-                        agent_id,
-                        params.task_id,
-                        params.paths.unwrap_or_default(),
-                        params.lock_ttl_seconds,
-                    )?;
-                    (snapshot, "teamLockPaths", "Claimed project paths for AI team work".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::ReleasePaths => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for release_paths.".to_string())?;
-                    let snapshot = team::release_paths(&app, session_id, agent_id, params.paths.unwrap_or_default())?;
-                    (snapshot, "teamReleasePaths", "Released AI team path claims".to_string(), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::SetPhase => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for set_phase.".to_string())?;
-                    let phase = match params.phase.ok_or_else(|| "phase is required for set_phase.".to_string())? {
-                        TeamPhaseParam::Planning => TeamPhase::Planning,
-                        TeamPhaseParam::Executing => TeamPhase::Executing,
-                        TeamPhaseParam::Reviewing => TeamPhase::Reviewing,
-                        TeamPhaseParam::Verifying => TeamPhase::Verifying,
-                    };
-                    let snapshot = team::set_phase(&app, session_id, agent_id, phase)?;
-                    (snapshot, "teamPhase", format!("Moved AI team to {:?}", phase), ActivityStatus::Succeeded)
-                }
-                TeamActionParam::Complete => {
-                    let agent_id = params.agent_id.as_deref().ok_or_else(|| "agent_id is required for complete.".to_string())?;
-                    let summary_text = params.completion_summary.ok_or_else(|| "completion_summary is required for complete.".to_string())?;
-                    let snapshot = team::complete_work_cycle(&app, session_id, agent_id, summary_text)?;
-                    (snapshot, "teamComplete", "Completed current AI Team work request · persistent Team remains active".to_string(), ActivityStatus::Succeeded)
-                }
-            };
-
-            let detail = snapshot.recommended_action.clone();
-            let _ = activity::record(
-                &app,
-                &workspace,
-                trace_group_id.as_deref(),
-                ActivityKind::Team,
-                action_name,
-                summary,
-                detail,
-                status,
-                Some(snapshot.session.id.clone()),
-            );
-            Ok(snapshot)
         })
         .await
     }
