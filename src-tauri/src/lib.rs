@@ -54,6 +54,7 @@ mod mcp_auth;
 mod mcp_server;
 mod mcp_git_helpers;
 mod mcp_time;
+mod mcp_workspace_params;
 mod media_inspection;
 mod media_commands;
 mod media_tools;
