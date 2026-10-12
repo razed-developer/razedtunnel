@@ -1,3 +1,8 @@
+## Two-page navigation typecheck fix (awaiting validation)
+- User's `npm run check` reported four TS2345 errors in unmounted `WorkspaceProductivity.tsx` command palette: Home, History, Commands, Settings navigation no longer matches two-page AppView.
+- Commit `fe29008` removed four unsupported navigation actions and added Connections alongside Projects in that component. It remains unmounted; no runtime MCP changes.
+- Re-run `git pull --ff-only && npm run check && npm run build`. Do not proceed to Rust audit until passing.
+
 ## Two-page navigation type cleanup (awaiting local validation)
 - User confirmed stale clone setter fix passed.
 - Commits `5b5e129`, `4f7b634`: AppHeader now renders only Projects/Connections title/icon; AppSidebar AppView type narrowed to those two pages. No gateway, project or Rust MCP behavior changed. Header focus/status controls intentionally preserved.
