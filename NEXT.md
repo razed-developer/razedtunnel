@@ -23,6 +23,11 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - `ProductionPanel` is actually system/runtime settings, update controls and history retention; do not mistake it for removed Video Production.
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
 
+## Current stage: background system tray (awaiting local validation)
+- Commits `6095ed0`, `57725ef`: new `src-tauri/src/system_tray.rs` with Open RazedTunnel / Quit RazedTunnel menu and double-click-to-open; close of main window is intercepted and hides it, preserving gateway runtime. Explicit Quit invokes app exit and existing shutdown path.
+- No `Cargo.toml` or lockfile changes; existing default Tauri tray API used. User must validate Rust compilation and manually verify close-to-tray, reopening, Quit, and connection persistence.
+- Validation: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Run app afterward to test tray. Preserve user's local modifications in Cargo.lock and github.rs.
+
 ## Locked product scope (2026-10-12)
 - Two-page UI first pass: `8589a33` defaults launch to Projects; `d13d5b1` removes Settings, Help, and theme controls from sidebar, leaving Projects and Connections; `cdfbbe8` retains the existing sidebar props contract to avoid caller breakage. Backend, MCP tools, and non-navigation views are not yet removed.
 - Next: user validates `npm run check && npm run build`; then implement tray behavior as a separate patch and continue dependency-based pruning.
