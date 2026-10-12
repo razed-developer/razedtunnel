@@ -1,3 +1,9 @@
+## Unreachable Home/History cleanup (awaiting local validation)
+- User confirmed previous state pruning passed.
+- Commit `fe78aee`: removed unmounted Home/History/checkpoint/safety handlers, History-only activity event listener, change-history refresh branches, and associated React state and backend imports. `App.tsx` reduced from ~1,040 to ~738 lines.
+- Preserved project CRUD/permissions, project health, connection controls, MCP access pause status, tray navigation, and pending-change counter polling for now. Backend Rust untouched. The update-check notice still references removed Settings and can be cleaned later.
+- Run `git pull --ff-only && npm run check && npm run build`; verify Projects, Connections and tray. This was not locally compiled by the assistant; resolve any errors before next stage.
+
 ## Gateway-only state pruning (awaiting local validation)
 - User confirmed prior editor callback cleanup passed and app works.
 - Commits `dfd5b4a`, `cc1f13e`, `e45dbdd`, `ac8e91a`: removed editor sync callback and event handling, orphaned editor React state/refs, filesystem/editor type imports, and unreachable Git/Model Hub refresh/polling. Project relocation/removal no longer refer to removed editor tabs. App.tsx now ~1,040 lines, down from 1,217. Backend MCP and permissions unchanged.
