@@ -56,6 +56,7 @@ mod mcp_git_helpers;
 mod mcp_time;
 mod mcp_workspace_params;
 mod mcp_continuation_params;
+mod mcp_filesystem_params;
 mod media_inspection;
 mod media_commands;
 mod media_tools;
