@@ -1,4 +1,5 @@
-use tauri::AppHandle;
+use tauri::{AppHandle, State};
+use crate::app_state::AppState;
 use crate::{projects::approved_workspace, video, video_assets, video_director, video_narration, video_preview, video_production, video_qa, video_render, video_scene, video_story_render};
 
 #[cfg(feature = "legacy_video")]
