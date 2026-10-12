@@ -69,9 +69,9 @@ AI coding tools are useful when they can work with the real project — but hand
 RepoTunnel puts a **permissioned local gateway** between the AI and your machine:
 
 - **Explicit project access** — the AI works with approved workspaces, not arbitrary host paths.
-- **Local-first control** — permissions, approvals, history, checkpoints, connection state, and device access stay in the desktop app.
+- **Local-first control** — permissions, approvals, history, checkpoints, connection state, stay in the desktop app.
 - **Safe execution** — AI commands run through platform-specific sandboxing instead of silently falling back to unrestricted host execution.
-- **Verifiable mutations** — edits, Git actions, browser actions, Phone actions, and long-running work expose state that can be reviewed and checked.
+- **Verifiable mutations** — edits, Git actions, browser actions, and long-running work expose state that can be reviewed and checked.
 - **Human-owned publishing** — pushing Git history, publishing releases, uploading artifacts, and other external side effects still require an explicit user request.
 - **Long-work continuity** — Project Memory, live resume state, durable processes, and the optional ChatGPT Continuation extension help work survive reconnects and long sessions.
 
@@ -85,8 +85,6 @@ RepoTunnel puts a **permissioned local gateway** between the AI and your machine
 | **Terminal & processes** | Disposable network-disabled verification sandboxes plus guarded real-workspace commands and durable managed processes. |
 | **Git & GitHub** | Status, diff, log, validated staging, staged-only commits, safe restore, secret preflight, and use of RepoTunnel's connected GitHub credential without exposing it to the AI. |
 | **Browser & desktop** | Managed Chromium automation, screenshots, network/console diagnostics, semantic actions, desktop control, and isolated AI Workspace sessions. |
-| **Android Phone** | Wireless Debugging with USB fallback, live scrcpy control, apps/files/APKs/settings/logs/network tools, and optional semantic Phone Helper integration. |
-| **Video** | Video Intelligence plus durable Video Production projects with scripts, scenes, narration, subtitles, rendering, preview, QA, and asset provenance. |
 | **Continuity** | Continuity / Resume v2, Project Memory, factual recovery state, and exact-chat continuation through the optional Chromium extension. |
 
 ## Get started
@@ -105,7 +103,7 @@ Add or clone a project and choose its local access mode:
 Then choose how AI changes should behave:
 
 - **AI Review** — supported mutations wait for local approval.
-- **AI Auto** — supported mutations can apply automatically while workspace, secret, sandbox, Phone, browser, and publish boundaries remain enforced.
+- **AI Auto** — supported mutations can apply automatically while workspace, secret, sandbox, browser, and publish boundaries remain enforced.
 
 ### 3. Connect your AI client
 
@@ -164,24 +162,6 @@ The extension source is available on `main`. It is not a separate asset in the a
 
 [Extension guide](extensions/chatgpt-continuation/README.md) · [Privacy](extensions/chatgpt-continuation/PRIVACY.md)
 
-## Android Phone Access
-
-RepoTunnel can maintain a user-selected Android device connection with **Wireless Debugging preferred** and authorized USB fallback for the same device.
-
-The Phone surface supports:
-
-- **Off / Limited / Full** AI access plus a separate **Pause AI**
-- persistent live video and human control using the bundled scrcpy 4.1 server
-- guarded AI screen/touch/typing actions
-- app management, bounded files, APK install/remove, settings, shell, logs, and network diagnostics
-- short-lived semantic refs and bounded semantic transactions through the bundled **RepoTunnel Phone Helper**
-
-The helper is bundled with RepoTunnel; it is not a separate general-purpose Android app. Android Accessibility remains user-controlled and must be enabled by the user.
-
-When a payment-sensitive app is foreground, RepoTunnel blocks AI observation/control paths rather than trying to bypass the application's security model.
-
-[Phone Access details](docs/phone-access.md)
-
 ## Browser, Desktop & AI Workspace
 
 RepoTunnel's browser layer uses isolated/persistent Chromium-family profiles and returns document-aware navigation/action state.
@@ -189,14 +169,6 @@ RepoTunnel's browser layer uses isolated/persistent Chromium-family profiles and
 State-changing browser and semantic actions use bounded mutation receipts. If helper transport is lost after a mutation may already have happened, RepoTunnel reports the outcome as **ambiguous** and does not blindly replay the action.
 
 Desktop control requires explicit local permission and blocks AI control of RepoTunnel itself. **AI Workspace** provides an isolated virtual desktop for supported GUI workflows so AI-owned application sessions do not need to take over the user's normal desktop.
-
-## Video Intelligence & Production
-
-RepoTunnel can analyze supported public or approved local media and can maintain durable Video Production projects.
-
-Production workflows can include script/storyboard state, generated scenes, narration, subtitles, timeline/render jobs, preview, QA, cleanup, and license/provenance records. Tutorial/explainer scenes can use deterministic HTML/CSS/GSAP capture; story workflows can route suitable work through native motion or optional installed creative engines.
-
-[Video details](docs/video.md)
 
 ## Security by design
 
@@ -209,11 +181,10 @@ RepoTunnel is designed as a **controlled local gateway**, not as unrestricted re
 | **Review** | Remote MCP calls cannot approve/reject/undo their own locally queued Review actions. |
 | **Git** | Staging/commits are validated and secret-scanned; push requires a current explicit human publishing instruction. |
 | **Browser** | Sensitive semantic fields, stale refs, and uncertain mutations are guarded; ambiguous state-changing actions are not auto-replayed. |
-| **Phone** | MCP cannot pair/select a phone, raise access, change capability grants, or unpause Phone Access. |
 | **Network** | The raw MCP gateway remains loopback-only; public connection paths sit behind RepoTunnel's authenticated boundary. |
 | **Secrets** | Protected paths and credential-like output are filtered/redacted across the relevant RepoTunnel surfaces. |
 
-RepoTunnel does not attempt to bypass operating-system, Android, browser, application, or external-service security policies.
+RepoTunnel does not attempt to bypass operating-system, browser, application, or external-service security policies.
 
 [Technical security model](docs/security.md) · [Security policy](SECURITY.md)
 
@@ -241,7 +212,6 @@ RepoTunnel packages Linux, Windows, and both macOS architectures, but packaging 
 - **Linux** is the primary live-validated development platform. Full managed-process reattachment after a complete RepoTunnel restart is currently Linux-only.
 - **Windows** uses AppContainer + Job Object command isolation. Native UI Automation adapters exist and require native compatibility validation.
 - **macOS** uses the current Seatbelt `sandbox-exec` compatibility backend. Update discovery is supported, but in-app update installation is intentionally disabled pending verified replacement/restore safety.
-- **Android Phone Access** has been exercised on a real Android device; vendor/OS policy can still change capability availability.
 
 ## Architecture
 
@@ -263,8 +233,7 @@ ChatGPT / MCP-compatible AI client
       capability + policy router
           │       │       │
           │       │       ├── Browser / Desktop / AI Workspace
-          │       │       ├── Android Phone
-          │       │       ├── Video / Team / Continuity
+          │       │       ├── Continuity
           │       │
           │       └── Sandboxed commands / managed processes
           │
@@ -307,7 +276,6 @@ Platform-specific Tauri/native dependencies are required to build the desktop ap
 | Browser & semantic safety | [Semantic Interaction Layer](SEMANTIC_INTERACTION_LAYER.md) |
 | Continuity & recovery | [AI Continuity](AI_CONTINUITY.md) |
 | Connections | [Remote MCP](docs/connection.md) · [Direct HTTPS](docs/direct-https.md) |
-| Advanced workflows | [Phone](docs/phone-access.md) · [Video](docs/video.md) |
 | Security & releases | [Security](docs/security.md) · [Release / Auto Update](docs/release.md) · [Acceptance](docs/acceptance.md) |
 
 ## Contributing
