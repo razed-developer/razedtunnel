@@ -339,31 +339,12 @@ fn program_path(app: &AppHandle, name: &str) -> Option<(PathBuf, &'static str)> 
     find_on_path(name).map(|path| (path, "system"))
 }
 
-fn program_version(path: &Path, name: &str) -> Option<String> {
-    let arg = if name == "ffmpeg" {
-        "-version"
-    } else {
-        "--version"
-    };
-    let output = Command::new(path)
-        .arg(arg)
-        .stdin(Stdio::null())
-        .output()
-        .ok()?;
-    let text = if output.stdout.is_empty() {
-        String::from_utf8_lossy(&output.stderr)
-    } else {
-        String::from_utf8_lossy(&output.stdout)
-    };
-    text.lines().next().map(|line| line.trim().to_string())
-}
-
 fn tool_state(app: &AppHandle, name: &str) -> VideoToolState {
     if let Some((path, source)) = program_path(app, name) {
         VideoToolState {
             available: true,
             source: source.to_string(),
-            version: program_version(&path, name),
+            version: crate::media_tools::program_version(&path, name),
         }
     } else {
         VideoToolState {
@@ -488,7 +469,7 @@ fn install_yt_dlp(
             .map_err(|error| format!("Could not replace the managed yt-dlp helper: {error}"))?;
     }
     private_write(&destination, &bytes, true)?;
-    if program_version(&destination, "yt-dlp").is_none() {
+    if crate::media_tools::program_version(&destination, "yt-dlp").is_none() {
         let _ = fs::remove_file(&destination);
         return Err("Downloaded yt-dlp could not be verified by execution.".to_string());
     }
@@ -556,7 +537,7 @@ fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), St
     let bytes = crate::media_tools::extract_ffmpeg_wheel_binary(wheel, &selected.0)?;
     let destination = tools_root(app)?.join(executable_name("ffmpeg"));
     private_write(&destination, &bytes, true)?;
-    if program_version(&destination, "ffmpeg").is_none() {
+    if crate::media_tools::program_version(&destination, "ffmpeg").is_none() {
         let _ = fs::remove_file(&destination);
         return Err("Downloaded FFmpeg could not be verified by execution.".to_string());
     }
