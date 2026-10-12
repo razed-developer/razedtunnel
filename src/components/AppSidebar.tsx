@@ -12,7 +12,6 @@ export type AppView =
   | "connections"
   | "commands"
   | "httpsSetup"
-  | "video"
   | "system"
   | "help";
 
@@ -25,7 +24,6 @@ type AppSidebarProps = {
 export type IconName =
   | "home"
   | "folder"
-  | "team"
   | "model"
   | "changes"
   | "terminal"
