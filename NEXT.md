@@ -25,7 +25,7 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 
 ## Current stage: dead navigation cleanup
 - Branch `cleanup/dead-video-view` removes retired Video view routing, header mapping, and obsolete Team icon type. Commits: `8bbb7dd`, `b1b9d4d`, `26737af`.
-- No backend changes. Next: validate `npm run check && npm run build`, then inspect remaining obsolete UI references. Do not overwrite local Rust edits.
+- User reported TypeScript TS2367 on the last `activeView === "video"` comparison in `src/App.tsx`; fixed in `4781f3c`. No backend changes. Next: validate `npm run check && npm run build`, then inspect remaining obsolete UI references. Do not overwrite local Rust edits.
 
 ## Goal and boundaries
 RazedTunnel is a compact Windows/Tauri Rust MCP gateway for approved local workspaces, files, terminal, Git/GitHub, and related development tools. Keep modules focused and remove legacy RepoTunnel features that do not serve the gateway. Do not break ordinary workspace permissions, MCP access, or file operations. Prefer small commits and local validation; do not merge before user approval/validation.
