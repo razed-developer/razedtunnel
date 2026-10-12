@@ -3635,7 +3635,9 @@ pub fn set_ai_access_paused(
         state.set_ai_access_paused(true);
         terminal::stop_all_activity(&app);
         browser::stop_all_activity();
+        #[cfg(feature = "legacy_video")]
         video::stop_all_activity();
+        #[cfg(feature = "legacy_video")]
         video_production::stop_all_activity();
         save_ai_access_paused(&app, true).map_err(|error| {
             format!(
