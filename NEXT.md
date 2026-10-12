@@ -1,3 +1,8 @@
+## Shell polling cleanup (awaiting local validation)
+- User confirmed prior Home/History removal passed.
+- Commits `7839150`, `344fa3e`, `6de1cca`: removed unused pending-change history polling, listChanges startup fetch, obsolete background update notification pointing to removed Settings, and unused pendingCount sidebar property. App.tsx ~689 lines. Projects, Connections, tray navigation, project-health polling, public tunnel/chat connection status polling, and gateway controls remain intact. Rust MCP untouched.
+- Validate `git pull --ff-only && npm run check && npm run build` and smoke-test both pages/tray. No local test run by assistant. Next evaluate obsolete selected-workspace restoration and old focus-mode shell, then backend dependency audit.
+
 ## Unreachable Home/History cleanup (awaiting local validation)
 - User confirmed previous state pruning passed.
 - Commit `fe78aee`: removed unmounted Home/History/checkpoint/safety handlers, History-only activity event listener, change-history refresh branches, and associated React state and backend imports. `App.tsx` reduced from ~1,040 to ~738 lines.
