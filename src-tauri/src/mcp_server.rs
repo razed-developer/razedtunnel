@@ -13,6 +13,7 @@ use rmcp::{
     tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler,
 };
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_phone_helpers::{parse_phone_key, parse_phone_settings_namespace};
 use crate::mcp_browser_params::{BrowserActionParam, BrowserActionParams, BrowserContextParams, BrowserSemanticActionParam, BrowserSemanticActionParams, BrowserSemanticSequenceOperationParam, BrowserSemanticSequenceStepParam, BrowserSemanticSequenceParams, BrowserSemanticSequenceCancelParams, BrowserInspectParams, BrowserDownloadConfigureParams, BrowserDownloadCancelParams, BrowserUploadParams, BrowserSemanticSnapshotParams, BrowserSemanticFindParams, BrowserScreenshotParams, BrowserDiagnosticsParams};
 use crate::mcp_desktop_params::{DesktopInspectParams, DesktopSemanticSnapshotParams, UiSemanticActionParam, DesktopSemanticActionParams, AiWorkspaceSemanticActionParams, UiSemanticSequenceOperationParam, UiSemanticSequenceStepParam, DesktopSemanticSequenceParams, AiWorkspaceSemanticSequenceParams, DesktopActionParams, DesktopScreenshotParams};
 use crate::mcp_ai_workspace_params::{AiWorkspaceFrameParams, AiWorkspaceInspectParams, AiWorkspaceSemanticSnapshotParams, AiWorkspaceActionParams, AiWorkspaceSequenceStep, AiWorkspaceSequenceParams};
@@ -1701,35 +1702,6 @@ fn required_text(value: Option<String>, field: &str, action: &str) -> Result<Str
         Err(format!("{field} is required for browser action {action}."))
     } else {
         Ok(value)
-    }
-}
-
-fn parse_phone_key(value: &str) -> Result<phone::PhoneKey, String> {
-    match value.trim().to_ascii_lowercase().as_str() {
-        "back" => Ok(phone::PhoneKey::Back),
-        "home" => Ok(phone::PhoneKey::Home),
-        "enter" => Ok(phone::PhoneKey::Enter),
-        "recents" => Ok(phone::PhoneKey::Recents),
-        "escape" => Ok(phone::PhoneKey::Escape),
-        "tab" => Ok(phone::PhoneKey::Tab),
-        "delete" => Ok(phone::PhoneKey::Delete),
-        "dpad_up" => Ok(phone::PhoneKey::DpadUp),
-        "dpad_down" => Ok(phone::PhoneKey::DpadDown),
-        "dpad_left" => Ok(phone::PhoneKey::DpadLeft),
-        "dpad_right" => Ok(phone::PhoneKey::DpadRight),
-        _ => Err(
-            "Phone key must be one of back, home, enter, recents, escape, tab, delete, dpad_up, dpad_down, dpad_left, or dpad_right."
-                .to_string(),
-        ),
-    }
-}
-
-fn parse_phone_settings_namespace(value: &str) -> Result<phone::PhoneSettingsNamespace, String> {
-    match value.trim().to_ascii_lowercase().as_str() {
-        "system" => Ok(phone::PhoneSettingsNamespace::System),
-        "secure" => Ok(phone::PhoneSettingsNamespace::Secure),
-        "global" => Ok(phone::PhoneSettingsNamespace::Global),
-        _ => Err("Phone settings namespace must be system, secure, or global.".to_string()),
     }
 }
 
