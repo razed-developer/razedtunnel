@@ -1,13 +1,11 @@
 use std::{
-    error::Error as StdError,
     fs,
     path::PathBuf,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use serde::{Deserialize, Serialize};
 use tauri::{path::BaseDirectory, AppHandle, Manager};
-use tauri_plugin_updater::UpdaterExt;
 
 use crate::{
     app_state::AppState,
@@ -19,7 +17,6 @@ use crate::{
 const UPDATE_STATE_FILE: &str = "update-state.json";
 const AUTO_CHECK_INTERVAL_SECONDS: u64 = 6 * 60 * 60;
 const DEFER_SECONDS: u64 = 24 * 60 * 60;
-const INSTALL_DOWNLOAD_TIMEOUT_SECONDS: u64 = 10 * 60;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -105,23 +102,6 @@ fn now_seconds() -> u64 {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs())
         .unwrap_or(0)
-}
-
-fn updater_error_detail(error: &(dyn StdError + 'static)) -> String {
-    let mut parts = vec![error.to_string()];
-    let mut source = error.source();
-    while let Some(cause) = source {
-        let text = cause.to_string();
-        if !text.is_empty() && parts.last().is_none_or(|last| last != &text) {
-            parts.push(text);
-        }
-        source = cause.source();
-    }
-    parts.join(": ")
-}
-
-fn update_check_user_message() -> String {
-    "Could not check for updates. Check your internet connection and try again.".to_string()
 }
 
 fn state_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -548,9 +528,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn defaults_to_automatic_checks() {
+    fn defaults_to_disabled_automatic_checks() {
         let state = PersistedUpdateState::default();
-        assert!(state.auto_check);
+        assert!(!state.auto_check);
         assert!(state.cached_update.is_none());
     }
 
@@ -578,7 +558,7 @@ mod tests {
             cached_update: Some(update),
             ..PersistedUpdateState::default()
         };
-        assert!(notification_due(&state, 100));
+        assert!(!notification_due(&state, 100));
 
         state.auto_check = false;
         assert!(!notification_due(&state, 100));
