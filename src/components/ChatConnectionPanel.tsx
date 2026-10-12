@@ -55,7 +55,7 @@ function ChatConnectionPanel({
       {aiAccessPaused ? (
         <div className="connection-access-banner">
           <strong>AI workspace access is paused</strong>
-          <span>Gateway and remote connections may stay online, but MCP project tools are blocked until you resume access from Home.</span>
+          <span>Gateway and remote connections may stay online, but MCP project tools are blocked until you resume access.</span>
         </div>
       ) : null}
 
@@ -68,7 +68,7 @@ function ChatConnectionPanel({
         <div className="connection-callout warning-callout">
           <strong>OpenAI Secure Tunnel is unavailable</strong>
           <p>
-            tunnel-client is optional. RepoTunnel's managed public MCP connection above does not require this binary.
+            tunnel-client is optional. RazedTunnel's managed public MCP connection above does not require this binary.
           </p>
           <code>tunnel-client --version</code>
         </div>
@@ -102,8 +102,8 @@ function ChatConnectionPanel({
             <strong>{status.ready ? "Final ChatGPT step" : "Checking tunnel readiness"}</strong>
             <p>
               {status.ready
-                ? "In ChatGPT Developer mode, create/select a custom app with Connection: Tunnel and choose this same tunnel ID. Then enable RepoTunnel for the conversation."
-                : "RepoTunnel is waiting for tunnel-client to finish its local MCP and OpenAI control-plane checks."}
+                ? "In ChatGPT Developer mode, create/select a custom app with Connection: Tunnel and choose this same tunnel ID. Then enable RazedTunnel for the conversation."
+                : "RazedTunnel is waiting for tunnel-client to finish its local MCP and OpenAI control-plane checks."}
             </p>
           </div>
 
