@@ -4,6 +4,7 @@ mod ai_resources;
 mod ai_workspace;
 mod ai_workspace_commands;
 mod app_state;
+mod safety_commands;
 mod workspace_diagnostics_commands;
 mod project_lifecycle_commands;
 mod chat_connection_commands;
@@ -379,7 +380,7 @@ pub fn run() {
                 checkpoint_commands::rename_checkpoint,
                 checkpoint_commands::set_checkpoint_pinned,
                 checkpoint_commands::clear_checkpoints,
-                commands::run_safety_scan,
+                safety_commands::run_safety_scan,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
                 gateway_commands::get_gateway_status,
