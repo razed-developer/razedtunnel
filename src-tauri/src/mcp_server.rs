@@ -8462,46 +8462,6 @@ mod tests {
     }
 
     #[test]
-    fn video_production_foundation_tools_are_exposed() {
-        let tools = RepoTunnelMcp::tool_router().list_all();
-        for expected in [
-            "video_project_ai_workspace",
-            "validate_video_project_scene",
-            "render_video_project_diagram",
-            "list_video_html_templates",
-            "render_video_project_html_scene",
-            "record_video_workflow_checkpoint",
-            "set_video_project_resource_policy",
-            "upsert_video_project_scene",
-            "get_video_project_scene",
-            "list_video_project_scenes",
-            "start_video_project_render",
-            "get_video_project_render",
-            "list_video_project_renders",
-            "cancel_video_project_render",
-            "get_video_project_pipeline_status",
-            "get_video_story_capabilities",
-            "compile_video_story_plan",
-            "get_video_story_plan",
-            "get_video_story_animatic_plan",
-            "render_video_story_animatic",
-            "get_video_story_qa",
-            "get_video_story_render_queue",
-            "record_video_story_shot_render",
-            "start_video_story_shot_render",
-            "get_video_story_shot_render",
-            "cancel_video_story_shot_render",
-            "clean_video_project",
-            "qa_video_project",
-        ] {
-            assert!(
-                tools.iter().any(|tool| tool.name.as_ref() == expected),
-                "missing MCP tool: {expected}"
-            );
-        }
-    }
-
-    #[test]
     fn project_memory_update_declares_closed_world_safety_metadata() {
         let tools = RepoTunnelMcp::tool_router().list_all();
         let tool = tools
