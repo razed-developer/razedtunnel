@@ -98,7 +98,7 @@ RepoTunnel checks for updates on startup and at a bounded interval while the des
 
 When a newer version is available the user can review release notes, select **Later** (deferring reminders for 24 hours), or change automatic-check preferences. **Update & Restart** is offered only on platforms where RepoTunnel permits in-app installation; it is intentionally not available on macOS.
 
-RepoTunnel refuses to begin installation while work that would be interrupted is active, including Home generation, Model Trial, managed processes, running terminal commands, active Team Mode tasks, Browser Automation or AI Workspace sessions.
+RepoTunnel refuses to begin installation while work that would be interrupted is active, including Home generation, Model Trial, managed processes, running terminal commands, Browser Automation or AI Workspace sessions.
 
 Before installation RepoTunnel records the intended version transition. After restart it confirms that the expected version started and that core persisted state is still readable. A failed download, signature verification or install leaves the current application installed and records the failure instead of pretending the update succeeded.
 

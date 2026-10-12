@@ -133,51 +133,7 @@ On the target OS:
 
 Windows/macOS semantic/screenshot behavior must be validated on those native systems before making native-runtime claims.
 
-## 11. Team Mode
-
-- create/join both A/B engineers
-- complete the planning/task split gate
-- verify non-overlapping path claims
-- perform parallel implementation on distinct tasks
-- cross-review each task with the other engineer
-- verify success criteria with evidence
-- complete the current request and confirm the Team remains ready
-- confirm only the human can permanently End Team
-
-## 12. Video
-
-### Video Intelligence
-
-- run at least one supported local/public-media analysis path
-- verify bounded job progress/content and cancellation
-
-### Video Production
-
-- create/open a Video Project
-- verify script/storyboard/timeline persistence
-- run the relevant generated-scene/narration/render/preview path
-- verify final render remains gated until required QA passes
-- verify cleanup preserves current/final/source/license/QA-linked assets
-- verify external asset provenance rules
-- when story engines are claimed, validate the actual installed engine path rather than only structural tests
-
-## 13. Phone Access
-
-Using a non-sensitive test phone/workflow:
-
-- verify selected-device identity and Full/Limited/Off enforcement
-- verify wireless runtime and authorized USB fallback behavior when available
-- verify live screen and guarded input
-- verify rapid sequence and semantic transaction paths
-- verify app/file/APK/network/shell/log capabilities appropriate to the selected access mode
-- verify helper integrity/status
-- verify stale semantic refs and wrong-foreground guards fail closed
-- verify generic Phone shell cannot bypass dedicated UI/screen guards
-- verify Android device-policy denial is reported factually rather than treated as RepoTunnel success
-
-For payment-sensitive foreground protection, use only non-financial safety validation. Do **not** test balances, PINs, OTPs, cards, or real financial transactions.
-
-## 14. Continuity and recovery
+## 11. Continuity and recovery
 
 - verify `get_resume_snapshot` reflects live Git/process/activity state rather than stale saved intent
 - verify Project Memory survives restart/reconnect as designed
@@ -187,7 +143,7 @@ For payment-sensitive foreground protection, use only non-financial safety valid
 
 Do not claim RepoTunnel can detect every ChatGPT interruption/session end; the runtime does not advertise that guarantee.
 
-## 15. Final regression gates
+## 12. Final regression gates
 
 Run the repository's release validation plus applicable native/live tests.
 

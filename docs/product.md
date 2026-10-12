@@ -74,32 +74,6 @@ The product is designed for end-to-end AI work: inspect a project, edit it safel
 - isolated multi-application AI Workspace
 - RepoTunnel self-control protection
 
-### Team Mode
-
-- persistent two-engineer A/B teams
-- planning/task ownership and path claims
-- parallel non-overlapping implementation
-- cross-review and success-criterion verification
-- user-controlled pause/end behavior
-
-### Video
-
-- Video Intelligence for public media and approved local media
-- durable Video Projects
-- script/storyboard/timeline state
-- recording, generated scenes, narration/subtitles, rendering, QA, preview, cleanup, and license provenance
-- HTML/CSS/GSAP tutorial scene workflow
-- story-animation routing with native motion and optional installed Godot/Blender/Rhubarb engines
-
-### Android Phone Access
-
-- wireless ADB pairing/reconnect with USB fallback
-- Off/Limited/Full access and Pause AI
-- persistent live screen/control
-- apps, files, APK install, settings reads, shell, logs, and network diagnostics
-- semantic Phone Helper integration
-- payment-sensitive foreground blocking that leaves Accessibility enabled while denying AI inspection/control
-
 ### Connections, security, and lifecycle
 
 - loopback-only raw MCP gateway
@@ -117,8 +91,6 @@ These are product boundaries, not implied failures:
 - full managed-process reattachment across a complete RepoTunnel process restart is currently advertised on Linux only; Windows/macOS remain intentionally false until equivalent recovered-process identity/control is implemented and validated natively
 - browser response-body capture, WebSocket-frame capture, and a navigation scope allowlist are not currently exposed
 - Windows/macOS semantic adapters and platform packaging must be validated on their native operating systems; Linux is the current live development host
-- Android permissions/device policy can deny some operations even under Full Phone Access; settings write/delete availability is learned from the actual device
-- payment-sensitive apps intentionally block AI Phone inspection/control while foreground
 - external services, operating-system policy, and third-party application behavior remain authoritative outside RepoTunnel's own boundary
 
 ## Non-goals
@@ -126,10 +98,10 @@ These are product boundaries, not implied failures:
 RepoTunnel does not:
 
 - expose the whole computer by default
-- silently expand workspace, Phone, browser, or desktop permissions
+- silently expand workspace, browser, or desktop permissions
 - bypass operating-system or application security
 - expose the raw local MCP gateway directly to the Internet
 - treat arbitrary host shell access as equivalent to approved project access
 - allow remote MCP calls to self-approve local Review actions
-- silently publish Git history, releases, files, videos, or other external artifacts
+- silently publish Git history, releases, files, or other external artifacts
 - claim completion without a corresponding verified RepoTunnel result

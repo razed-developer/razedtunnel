@@ -90,33 +90,6 @@ AI Workspace is an isolated virtual desktop that can host multiple bounded app s
 
 RepoTunnel blocks AI control of RepoTunnel itself.
 
-## Team Mode
-
-Team Mode deliberately uses a compact coordination surface:
-
-- `team_status`
-- `team_action`
-
-The persistent A/B team model, task ownership, path claims, cross-review, and success-criterion evidence are enforced behind those tools. Do not hard-code a total RepoTunnel MCP tool count; the broader capability surface evolves independently.
-
-## Phone Access
-
-Phone tools are capability-gated and target an opaque selected device identity.
-
-The surface includes status, live screen/control, rapid sequences, semantic transactions, app/file/package operations, settings availability, shell/log/network diagnostics, and helper status/install actions.
-
-MCP cannot pair/select a phone, enable Full/Limited access, alter capability grants, or unpause Phone Access.
-
-Payment-sensitive foreground apps block AI Phone observation/control even while the accessibility service remains enabled.
-
-## Video
-
-RepoTunnel exposes both Video Intelligence and Video Production capabilities.
-
-Video Intelligence uses background jobs for transcript/visual/tutorial/full analysis.
-
-Video Production exposes durable Video Projects, assets/licenses, recording, narration/subtitles, generated scenes/diagrams, rendering jobs, pipeline status, QA, cleanup, and story-animation capabilities.
-
 ## Temporary and media middleware
 
 RepoTunnel-owned temporary workspaces provide a scoped place for downloads, extracted/generated media, frames, and intermediate artifacts. Cleanup is marker-owned and cannot target arbitrary project files.
@@ -133,7 +106,7 @@ MCP App self-continuation support exists, but RepoTunnel does not claim a genera
 
 ### AI Auto
 
-Compatible mutations and actions can execute without repeated RepoTunnel approval prompts while all workspace, secret, sandbox, Phone, browser, and publish boundaries remain active.
+Compatible mutations and actions can execute without repeated RepoTunnel approval prompts while all workspace, secret, sandbox, browser, and publish boundaries remain active.
 
 ### AI Review
 

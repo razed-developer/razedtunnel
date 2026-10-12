@@ -136,7 +136,7 @@ Paging/performance controls never replace the workspace access guard. User-facin
 
 Observation tools advertise read-only/idempotent annotations where their behavior supports those guarantees. Mutation tools remain actions, so client UI classification is an additional safety signal rather than a replacement for RepoTunnel's Rust-side authorization.
 
-Local review controls are intentionally not exposed as remote self-approval tools: an MCP caller cannot approve/reject/undo its own pending file, command, or Git Review action. Phone access escalation, device selection/pairing, and unpausing are likewise kept outside the AI MCP surface.
+Local review controls are intentionally not exposed as remote self-approval tools: an MCP caller cannot approve/reject/undo its own pending file, command, or Git Review action.
 
 ## Public MCP authentication and providers
 
@@ -167,16 +167,6 @@ Desktop control requires explicit RepoTunnel Desktop permission and blocks RepoT
 AI Workspace uses an isolated virtual desktop with per-application ownership/session identity. On Linux, its accessibility path uses a private D-Bus/AT-SPI environment rather than the human desktop accessibility bus. Sensitive-field rules and short-lived semantic refs remain active.
 
 Windows UIA and macOS AX adapters share the semantic policy model, but native-platform behavior must be validated on those operating systems before making platform-specific runtime claims.
-
-## Phone security
-
-Phone Access is controlled locally by the user through Off/Limited/Full plus Pause AI. MCP cannot pair/select a phone, enable access, change capability grants, or unpause it.
-
-The AI targets an opaque selected device identity rather than a raw ADB serial/address. Generic Phone shell is bounded and rejects direct UI/screen-capture primitives that would bypass dedicated guarded Phone tools.
-
-When a payment-sensitive application is foreground, RepoTunnel keeps its Accessibility service enabled by default but blocks AI Phone screen observation, semantic access, raw input, generic shell, and logs until the user leaves the app. Sensitive credential/payment fields remain protected independently.
-
-Android permissions/device policy remain authoritative even under Full Access. RepoTunnel reports learned capability unavailability instead of pretending a denied settings/write operation succeeded.
 
 ## Optional Secure MCP Tunnel credentials
 

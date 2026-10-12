@@ -18,7 +18,7 @@ Short resume instruction:
 - Known-good recovery baseline remains: `8c571da45f5ef4e32e716ed227dddf8553a61599`
 - Never reset, revert, reclone, recreate, or reinstall the project to implement this work.
 - Do not build/install a Debian package until implementation and real validation are complete.
-- Preserve Direct HTTPS, OAuth/DCR, project/workspace/account data, MCP gateway security, Video Project/video playback behavior, updates, Team Mode, AI Review, and all unrelated existing features.
+- Preserve Direct HTTPS, OAuth/DCR, project/workspace/account data, MCP gateway security, updates, AI Review, and all unrelated existing features.
 - `.scene_audio_summary.json` was an unrelated untracked file produced by another workflow during architecture testing. Treat it as foreign work: do not read, edit, delete, stage, commit, or otherwise modify it unless the user explicitly reassigns ownership.
 - Before every edit batch, re-check Git status. If another process/AI changed a file we plan to edit, re-read/reconcile it before proceeding. Never overwrite concurrent work.
 - Prefer targeted `patch_file` edits after reading the current file. Avoid broad rewrites.
