@@ -11267,8 +11267,8 @@ impl RepoTunnelMcp {
                 route.attr.meta = Some(tool_meta(None, &["app"]));
             }
         }
-        // Remove legacy video-analysis tools from both MCP discovery and dispatch.
-        // Keep their implementations compiled until the video module split is complete.
+        // Legacy video tools are absent from MCP discovery and dispatch in lean mode.
+        // Methods remain compiled until the feature modules can be isolated safely.
         #[cfg(not(feature = "legacy_video"))]
         for name in [
             "start_video_analysis",
@@ -11276,6 +11276,46 @@ impl RepoTunnelMcp {
             "list_video_analyses",
             "get_video_analysis_content",
             "cancel_video_analysis",
+            "create_video_project",
+            "list_video_projects",
+            "get_video_project",
+            "get_video_story_capabilities",
+            "compile_video_story_plan",
+            "get_video_story_plan",
+            "get_video_story_animatic_plan",
+            "render_video_story_animatic",
+            "get_video_story_qa",
+            "get_video_story_render_queue",
+            "record_video_story_shot_render",
+            "start_video_story_shot_render",
+            "get_video_story_shot_render",
+            "cancel_video_story_shot_render",
+            "set_video_project_resource_policy",
+            "upsert_video_project_scene",
+            "get_video_project_scene",
+            "list_video_project_scenes",
+            "write_video_project_document",
+            "video_project_ai_workspace",
+            "video_project_recording",
+            "validate_video_project_scene",
+            "render_video_project_scene",
+            "render_video_project_diagram",
+            "list_video_html_templates",
+            "render_video_project_html_scene",
+            "record_video_workflow_checkpoint",
+            "list_video_asset_sources",
+            "record_video_asset_license",
+            "create_video_project_subtitles",
+            "synthesize_video_project_narration",
+            "list_video_narration_providers",
+            "start_video_project_render",
+            "get_video_project_render",
+            "list_video_project_renders",
+            "cancel_video_project_render",
+            "get_video_project_pipeline_status",
+            "clean_video_project",
+            "qa_video_project",
+            "render_video_project_timeline",
         ] {
             router.map.remove(name);
         }
