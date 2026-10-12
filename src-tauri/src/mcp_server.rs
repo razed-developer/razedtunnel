@@ -12,6 +12,7 @@ use rmcp::{
     service::{NotificationContext, RequestContext},
     tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler,
 };
+use crate::mcp_git_helpers::compact_git_action_for_ai;
 use serde::Serialize;
 use std::{
     collections::BTreeMap,
