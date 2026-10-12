@@ -6,6 +6,7 @@ static PRIVATE_WRITE_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 use zip::ZipArchive;
 use reqwest::blocking::Client;
 use url::Url;
+const MAX_HELPER_DOWNLOAD_BYTES: u64 = 260 * 1024 * 1024;
 use sha2::{Digest, Sha256};
 use tauri::{path::BaseDirectory, AppHandle, Manager};
 
@@ -209,6 +210,88 @@ pub(crate) fn private_write(path: &Path, bytes: &[u8], executable: bool) -> Resu
     }
     fs::rename(&temporary, path)
         .map_err(|error| format!("Could not install a video helper: {error}"))
+}
+
+fn managed_tools_root(app: &AppHandle) -> Result<PathBuf, String> {
+    let path = app.path().resolve("video-tools", BaseDirectory::AppData)
+        .map_err(|error| format!("Could not resolve RepoTunnel video data: {error}"))?;
+    fs::create_dir_all(&path)
+        .map_err(|error| format!("Could not create RepoTunnel video directory: {error}"))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o700))
+            .map_err(|error| format!("Could not protect RepoTunnel video directory: {error}"))?;
+    }
+    Ok(path)
+}
+
+pub(crate) fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), String> {
+    if available_ffmpeg_program(app).is_some() {
+        return Ok(());
+    }
+    let client = download_client()?;
+    let metadata = download_bytes(
+        &client,
+        "https://pypi.org/pypi/imageio-ffmpeg/json",
+        4 * 1024 * 1024,
+        cancel,
+    )?;
+    let value: serde_json::Value = serde_json::from_slice(&metadata)
+        .map_err(|error| format!("Could not parse imageio-ffmpeg package metadata: {error}"))?;
+    let files = value
+        .get("urls")
+        .and_then(|item| item.as_array())
+        .ok_or_else(|| {
+            "imageio-ffmpeg package metadata did not include release files.".to_string()
+        })?;
+
+    let selected = files
+        .iter()
+        .filter_map(|item| {
+            let filename = item.get("filename")?.as_str()?;
+            if !wheel_matches_platform(filename) {
+                return None;
+            }
+            let url = item.get("url")?.as_str()?;
+            let sha256 = item.get("digests")?.get("sha256")?.as_str()?;
+            Some((
+                filename.to_string(),
+                url.to_string(),
+                sha256.to_ascii_lowercase(),
+            ))
+        })
+        .next()
+        .ok_or_else(|| {
+            format!(
+                "No managed FFmpeg build is available for {} {}.",
+                env::consts::OS,
+                env::consts::ARCH
+            )
+        })?;
+
+    let parsed =
+        Url::parse(&selected.1).map_err(|_| "FFmpeg package URL is invalid.".to_string())?;
+    if parsed.scheme() != "https" || parsed.host_str() != Some("files.pythonhosted.org") {
+        return Err("FFmpeg package URL did not use the expected PyPI file host.".to_string());
+    }
+
+    let wheel = download_bytes(&client, &selected.1, MAX_HELPER_DOWNLOAD_BYTES, cancel)?;
+    if sha256_hex(&wheel) != selected.2 {
+        return Err(
+            "FFmpeg package checksum verification failed; RepoTunnel refused to install it."
+                .to_string(),
+        );
+    }
+
+    let bytes = extract_ffmpeg_wheel_binary(wheel, &selected.0)?;
+    let destination = managed_tools_root(app)?.join(executable_name("ffmpeg"));
+    private_write(&destination, &bytes, true)?;
+    if program_version(&destination, "ffmpeg").is_none() {
+        let _ = fs::remove_file(&destination);
+        return Err("Downloaded FFmpeg could not be verified by execution.".to_string());
+    }
+    Ok(())
 }
 
 fn executable_name(name: &str) -> String {
