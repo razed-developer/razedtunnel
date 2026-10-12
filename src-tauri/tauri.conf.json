@@ -65,10 +65,6 @@
       "nsis"
     ],
     "category": "DeveloperTool",
-    "resources": {
-      "resources/phone/scrcpy-server-v4.1": "phone/scrcpy-server-v4.1",
-      "resources/phone/repotunnel-phone-helper.apk": "phone/repotunnel-phone-helper.apk"
-    },
     "shortDescription": "RazedTunnel local workspace gateway for AI development tools",
     "longDescription": "RazedTunnel is a maintained fork of RepoTunnel for permissioned local MCP development.",
     "icon": [
