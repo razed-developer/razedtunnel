@@ -1,6 +1,6 @@
 use tauri::{AppHandle, State};
 use tauri_plugin_dialog::DialogExt;
-use crate::{app_state::AppState, continuity, desktop_control, hardening, integrations, monitoring, project_memory, repository, semantic, team, access::validate_workspace_root, models::{Workspace, WorkspaceHealth}, projects::{approved_workspace, canonical_workspace_path, workspace_name, register_workspace_path, register_workspace_path_with_policy}, storage::{load_workspaces, mutate_workspaces}};
+use crate::{app_state::AppState, continuity, desktop_control, hardening, integrations, monitoring, project_memory, repository, semantic, access::validate_workspace_root, models::{Workspace, WorkspaceHealth}, projects::{approved_workspace, canonical_workspace_path, workspace_name, register_workspace_path, register_workspace_path_with_policy}, storage::{load_workspaces, mutate_workspaces}};
 
 #[tauri::command]
 pub async fn select_workspace(app: AppHandle) -> Result<Option<String>, String> {
@@ -161,7 +161,6 @@ pub fn remove_workspace(
     monitoring::forget_workspace(&app, &id);
     project_memory::forget(&app, &id);
     continuity::forget(&app, &id);
-    team::forget_workspace(&app, &id);
     integrations::forget_workspace(&app, &id);
     desktop_control::forget_workspace(&app, &id);
     state.ai_workspace.forget_workspace(&app, &id);
