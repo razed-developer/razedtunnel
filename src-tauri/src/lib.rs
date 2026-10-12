@@ -31,6 +31,7 @@ mod macos_ax;
 mod mcp_auth;
 mod mcp_server;
 mod media_inspection;
+mod media_tools;
 mod model_hub;
 mod model_trial;
 mod models;
