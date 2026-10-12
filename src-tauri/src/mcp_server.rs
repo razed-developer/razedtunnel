@@ -2837,6 +2837,16 @@ where
     })
 }
 
+// Shared outcome recording for instrumented task wrappers. This is not a
+// complete count of all MCP tools until instrumentation moves to dispatch.
+fn record_task_outcome(succeeded: bool) {
+    if succeeded {
+        TASK_TOOL_SUCCESSES.fetch_add(1, Ordering::Relaxed);
+    } else {
+        TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+    }
+}
+
 async fn run_filesystem_task<T, F>(task: F) -> Result<CallToolResult, McpError>
 where
     T: Serialize + Send + 'static,
@@ -2848,21 +2858,21 @@ where
             // Count the actual MCP result, not just the task closure outcome.
             match serialize_success_payload(value) {
                 Ok(content) => {
-                    TASK_TOOL_SUCCESSES.fetch_add(1, Ordering::Relaxed);
+                    record_task_outcome(true);
                     CallToolResult::success(vec![ContentBlock::text(content)])
                 }
                 Err(error) => {
-                    TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+                    record_task_outcome(false);
                     error_result(format!("RepoTunnel could not serialize the tool result: {error}"))
                 }
             }
         },
         Ok(Err(message)) => {
-            TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+            record_task_outcome(false);
             error_result(message)
         },
         Err(error) => {
-            TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+            record_task_outcome(false);
             error_result(format!("The local filesystem task could not complete: {error}"))
         },
     })
@@ -2876,20 +2886,20 @@ where
     Ok(match tokio::task::spawn_blocking(task).await {
         Ok(Ok(value)) => match serde_json::to_value(value) {
             Ok(value) => {
-                TASK_TOOL_SUCCESSES.fetch_add(1, Ordering::Relaxed);
+                record_task_outcome(true);
                 CallToolResult::structured(value)
             },
             Err(error) => {
-                TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+                record_task_outcome(false);
                 error_result(format!("RepoTunnel could not serialize the structured tool result: {error}"))
             },
         },
         Ok(Err(message)) => {
-            TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+            record_task_outcome(false);
             error_result(message)
         },
         Err(error) => {
-            TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+            record_task_outcome(false);
             error_result(format!("The local structured task could not complete: {error}"))
         },
     })
