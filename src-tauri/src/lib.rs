@@ -4,6 +4,7 @@ mod ai_resources;
 mod ai_workspace;
 mod ai_workspace_commands;
 mod app_state;
+mod project_lifecycle_commands;
 mod chat_connection_commands;
 mod gateway_commands;
 mod ai_access_commands;
@@ -231,15 +232,15 @@ pub fn run() {
                 editor_commands::editor_delete_entry,
                 editor_commands::preview_workspace_image,
                 commands::open_workspace_path_local,
-                commands::get_project_setup,
-                commands::prepare_project,
-                commands::get_project_memory,
-                commands::get_resume_snapshot,
-                commands::update_project_memory,
-                commands::inspect_project,
-                commands::get_workflow_readiness,
-                commands::get_environment_diagnostics,
-                commands::list_tool_capabilities,
+                project_lifecycle_commands::get_project_setup,
+                project_lifecycle_commands::prepare_project,
+                project_lifecycle_commands::get_project_memory,
+                project_lifecycle_commands::get_resume_snapshot,
+                project_lifecycle_commands::update_project_memory,
+                project_lifecycle_commands::inspect_project,
+                project_lifecycle_commands::get_workflow_readiness,
+                project_lifecycle_commands::get_environment_diagnostics,
+                project_lifecycle_commands::list_tool_capabilities,
                 phone_commands::get_phone_discovery,
                 phone_commands::pair_phone_wirelessly,
                 phone_commands::get_phone_access_status,
@@ -255,7 +256,7 @@ pub fn run() {
                 phone_commands::phone_swipe,
                 phone_commands::phone_key_event,
                 phone_commands::phone_type_text,
-                commands::get_system_resource_snapshot,
+                project_lifecycle_commands::get_system_resource_snapshot,
                 temp_workspace_commands::create_temp_workspace,
                 temp_workspace_commands::list_temp_workspaces,
                 temp_workspace_commands::inspect_temp_workspace,
@@ -299,7 +300,7 @@ pub fn run() {
                 terminal_commands::reject_managed_process,
                 terminal_commands::stop_managed_process,
                 terminal_commands::restart_managed_process,
-                commands::list_launchable_applications,
+                project_lifecycle_commands::list_launchable_applications,
                 github_commands::get_github_connection_status,
                 github_commands::connect_github,
                 github_commands::cancel_github_connection,
@@ -368,7 +369,7 @@ pub fn run() {
                 git_commands::approve_git_action,
                 git_commands::reject_git_action,
                 git_commands::request_git_restore_file,
-                commands::get_file_info,
+                project_lifecycle_commands::get_file_info,
                 checkpoint_commands::create_checkpoint,
                 checkpoint_commands::list_checkpoints,
                 checkpoint_commands::compare_checkpoint,
@@ -377,7 +378,7 @@ pub fn run() {
                 checkpoint_commands::rename_checkpoint,
                 checkpoint_commands::set_checkpoint_pinned,
                 checkpoint_commands::clear_checkpoints,
-                commands::run_safety_scan,
+                project_lifecycle_commands::run_safety_scan,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
                 gateway_commands::get_gateway_status,
