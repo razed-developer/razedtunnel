@@ -43,6 +43,7 @@ mod macos_ax;
 mod mcp_auth;
 mod mcp_server;
 mod media_inspection;
+mod media_commands;
 mod media_tools;
 mod model_hub;
 mod model_trial;
@@ -338,9 +339,9 @@ pub fn run() {
                 browser_commands::list_browser_history,
                 browser_commands::approve_browser_action,
                 browser_commands::reject_browser_action,
-                commands::inspect_media_file,
-                commands::extract_media_frame,
-                commands::validate_media_decode,
+                media_commands::inspect_media_file,
+                media_commands::extract_media_frame,
+                media_commands::validate_media_decode,
                 // Legacy video Tauri commands intentionally not registered in lean gateway.
                 // Their implementations remain for now; restore from Git history if needed.
                 monitoring_commands::get_monitoring_status,
