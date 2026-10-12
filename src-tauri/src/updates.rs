@@ -359,75 +359,7 @@ pub(crate) async fn check(
     app_state: Option<&AppState>,
 ) -> Result<UpdateStatus, String> {
     let _ = manual;
-    return status(app, app_state);
-    #[allow(unreachable_code)]
-    let state = load(app)?;
-    if !manual && !state.auto_check {
-        return Ok(status_from(app, state, app_state));
-    }
-
-    let now = now_seconds();
-    if !manual
-        && state
-            .last_checked_at
-            .is_some_and(|last| now.saturating_sub(last) < AUTO_CHECK_INTERVAL_SECONDS)
-    {
-        return Ok(status_from(app, state, app_state));
-    }
-
-    let updater = app
-        .updater_builder()
-        .timeout(Duration::from_secs(30))
-        .build()
-        .map_err(|error| format!("Could not initialize RepoTunnel updater: {error}"))?;
-
-    match updater.check().await {
-        Ok(Some(update)) => {
-            let cached = CachedUpdate {
-                version: update.version,
-                notes: update.body,
-                published_at: update.date.map(|date| date.to_string()),
-                target: update.target,
-            };
-            // Reload after the network wait so a user's update preference or deferral
-            // changed while the request was in flight is never overwritten by stale state.
-            let mut state = load(app)?;
-            if state.deferred_version.as_deref() != Some(cached.version.as_str()) {
-                state.deferred_version = None;
-                state.deferred_until = None;
-            }
-            state.cached_update = Some(cached);
-            state.last_checked_at = Some(now);
-            state.last_error = None;
-            save(app, &state)?;
-            Ok(status_from(app, state, app_state))
-        }
-        Ok(None) => {
-            let mut state = load(app)?;
-            state.cached_update = None;
-            state.deferred_version = None;
-            state.deferred_until = None;
-            state.last_checked_at = Some(now);
-            state.last_error = None;
-            save(app, &state)?;
-            Ok(status_from(app, state, app_state))
-        }
-        Err(error) => {
-            let detail = updater_error_detail(&error);
-            let message = update_check_user_message();
-            let mut state = load(app).unwrap_or_default();
-            state.last_checked_at = Some(now);
-            state.last_error = Some(message.clone());
-            let _ = save(app, &state);
-            hardening::log_event(
-                app,
-                "WARN",
-                "updates.check_failed",
-                &format!("Update transport failed: {detail}"),
-            );
-            Err(message)
-        }
-    }
+    status(app, app_state)
 }
 
 #[cfg(target_os = "macos")]
@@ -529,70 +461,8 @@ pub(crate) async fn install_and_restart(
     app: &AppHandle,
     app_state: &AppState,
 ) -> Result<UpdateInstallResult, String> {
-    return Err("RazedTunnel updates are unavailable until a fork-specific signed update feed is configured.".to_string());
-    #[allow(unreachable_code)]
-    if let Some(reason) = active_work_reason(app, app_state) {
-        return Err(reason);
-    }
-
-    let updater = app
-        .updater_builder()
-        .timeout(Duration::from_secs(INSTALL_DOWNLOAD_TIMEOUT_SECONDS))
-        .restart_after_install(true)
-        .build()
-        .map_err(|error| format!("Could not initialize RepoTunnel updater: {error}"))?;
-    let update = updater
-        .check()
-        .await
-        .map_err(|error| format!("Could not recheck the RepoTunnel update: {error}"))?
-        .ok_or_else(|| "RepoTunnel is already up to date.".to_string())?;
-
-    let from_version = app.package_info().version.to_string();
-    let to_version = update.version.clone();
-    let mut persisted = load(app)?;
-    persisted.pending_install = Some(PendingInstall {
-        from_version: from_version.clone(),
-        to_version: to_version.clone(),
-        started_at: now_seconds(),
-    });
-    persisted.last_error = None;
-    save(app, &persisted)?;
-
-    hardening::log_event(
-        app,
-        "INFO",
-        "updates.install_start",
-        &format!("Installing signed RepoTunnel update {from_version} -> {to_version}."),
-    );
-
-    if let Err(error) = update.download_and_install(|_, _| {}, || {}).await {
-        let mut failed = load(app).unwrap_or_default();
-        failed.pending_install = None;
-        failed.last_error = Some(format!("Update installation failed: {error}"));
-        let _ = save(app, &failed);
-        hardening::log_event(
-            app,
-            "WARN",
-            "updates.install_failed",
-            &format!("Signed update {to_version} was not installed: {error}"),
-        );
-        return Err(format!(
-            "RepoTunnel kept the current installation because the update could not be installed: {error}"
-        ));
-    }
-
-    hardening::log_event(
-        app,
-        "INFO",
-        "updates.install_complete",
-        &format!("Signed RepoTunnel update {to_version} installed; restart requested."),
-    );
-
-    app.request_restart();
-    Ok(UpdateInstallResult {
-        version: to_version,
-        restart_requested: true,
-    })
+    let _ = (app, app_state);
+    Err("RazedTunnel updates are unavailable until a fork-specific signed update feed is configured.".to_string())
 }
 
 pub(crate) fn complete_post_update_health_check(app: &AppHandle) {
