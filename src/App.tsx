@@ -588,7 +588,6 @@ function App() {
       setProjectTreeRefreshToken((current) => current + 1);
       setNotice(`Project path repaired: ${updated.name}.`);
       await refreshWorkspaceHealth();
-      await syncEditorFiles().catch(() => undefined);
     } catch (error) {
       setNotice(`Could not repair that project path: ${errorMessage(error)}`);
     } finally {
@@ -617,8 +616,6 @@ function App() {
       const removedWorkspaceId = workspaceToRemove.id;
       const updated = await removeWorkspace(removedWorkspaceId);
       setWorkspaces(updated);
-      setEditorTabs((current) => current.filter((tab) => tab.workspaceId !== removedWorkspaceId));
-      if (activeEditorDocument?.workspaceId === removedWorkspaceId) setActiveEditorKey(null);
       setGatewayStatus((current) => ({ ...current, workspaceCount: updated.length }));
       setWorkspaceToRemove(null);
     } catch (error) {
