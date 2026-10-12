@@ -1,5 +1,4 @@
 use axum::http::request::Parts;
-use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Extension, wrapper::Parameters},
     model::{
@@ -28,10 +27,8 @@ use crate::mcp_continuation_params::{ArmSelfContinuationParams, SelfContinuation
 use crate::mcp_workspace_params::{CloneRepositoryParams, CreateProjectParams, ProjectMemoryUpdateParams, ExternalFileActionParam, ExternalFileAccessParams, WorkspaceIdParams, CreateTempWorkspaceParams, TempWorkspaceParams, PreserveTempWorkspaceParams, CleanupTempWorkspaceParams, TempWorkspaceFileActionParam, TempWorkspaceFileActionParams};
 use serde::Serialize;
 use std::{
-    collections::BTreeMap,
     path::Path,
     sync::atomic::{AtomicU64, Ordering},
-    time::Instant,
 };
 use tauri::{AppHandle, Manager};
 
@@ -47,7 +44,7 @@ use crate::{
         GitRepositoryStatus, ManagedProcessRecord, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy,
     },
     monitoring, project_index, project_memory, project_setup, repository, secret_guard,
-    self_continuation, semantic,
+    self_continuation,
     storage::load_workspaces,
     system_resources, temp_workspace, terminal, workflow,
 };
@@ -782,7 +779,7 @@ impl RepoTunnelMcp {
     }
 
     #[tool(
-        description = "Request access to one file outside the approved workspace without exposing the rest of the host filesystem. RepoTunnel always opens a native local file picker: the user must explicitly select the file, and cancelling denies access. action=read returns bounded UTF-8 content once without revealing the absolute host path. action=import copies the selected regular file to an explicit workspace-relative destination after secret scanning; the AI can then work on it using normal workspace tools. Sensitive credential files and symlinks remain blocked. Works in normal mode and Team Mode."
+        description = "Request access to one file outside the approved workspace without exposing the rest of the host filesystem. RepoTunnel always opens a native local file picker: the user must explicitly select the file, and cancelling denies access. action=read returns bounded UTF-8 content once without revealing the absolute host path. action=import copies the selected regular file to an explicit workspace-relative destination after secret scanning; the AI can then work on it using normal workspace tools. Sensitive credential files and symlinks remain blocked. Works in normal mode."
     )]
     async fn request_external_file(
         &self,
@@ -791,14 +788,13 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let trace_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         run_filesystem_task(move || {
             ensure_ai_access(&app)?;
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             let action = match params.action {
                 ExternalFileActionParam::Read => ExternalFileAction::Read,
                 ExternalFileActionParam::Import => {
-                    let destination = params.destination_path.as_deref().ok_or_else(|| {
+                    params.destination_path.as_deref().ok_or_else(|| {
                         "destination_path is required for action=import.".to_string()
                     })?;
                     ExternalFileAction::Import
@@ -1742,7 +1738,6 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
@@ -1776,7 +1771,6 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
@@ -1810,7 +1804,6 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
@@ -1845,7 +1838,6 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
@@ -1879,17 +1871,10 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
             ensure_chatgpt_work_fallback(&app, &workspace.id, conversation_session.as_deref());
-            let destination = Path::new(&params.relative_path)
-                .parent()
-                .unwrap_or_else(|| Path::new(""))
-                .join(&params.new_name)
-                .to_string_lossy()
-                .replace('\\', "/");
             let outcome = changes::rename_entry(
                 &app,
                 &workspace,
@@ -1919,7 +1904,6 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
@@ -1953,7 +1937,6 @@ impl RepoTunnelMcp {
     ) -> Result<CallToolResult, McpError> {
         let app = self.app.clone();
         let edit_group_id = request_edit_group_id(&parts);
-        let client_key = request_client_key(&parts);
         let conversation_session = openai_conversation_session(&context).map(str::to_string);
         run_filesystem_task(move || {
             let workspace = approved_workspace(&app, &params.workspace_id)?;
