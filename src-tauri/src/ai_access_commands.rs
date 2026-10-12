@@ -1,7 +1,5 @@
 use tauri::{AppHandle, State};
 use crate::{app_state::AppState, browser, hardening, models::AiAccessStatus, storage::save_ai_access_paused, terminal};
-#[cfg(feature = "legacy_video")]
-use crate::{video, video_production};
 
 #[tauri::command]
 pub fn get_ai_access_status(state: State<'_, AppState>) -> Result<AiAccessStatus, String> {
@@ -21,10 +19,6 @@ pub fn set_ai_access_paused(
         state.set_ai_access_paused(true);
         terminal::stop_all_activity(&app);
         browser::stop_all_activity();
-        #[cfg(feature = "legacy_video")]
-        video::stop_all_activity();
-        #[cfg(feature = "legacy_video")]
-        video_production::stop_all_activity();
         save_ai_access_paused(&app, true).map_err(|error| {
             format!(
                 "AI access is paused for this session, but RepoTunnel could not save the paused state: {error}"
