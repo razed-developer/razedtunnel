@@ -10,7 +10,7 @@ fn manual_edit_group_id() -> String {
     format!("manual-{nanos:x}")
 }
 
-fn local_user_workspace(mut workspace: Workspace) -> Workspace {
+pub(crate) fn local_user_workspace(mut workspace: Workspace) -> Workspace {
     // These actions come from the user pressing controls in the desktop editor/explorer,
     // so they apply immediately even when AI-originated edits are configured for Review.
     // They still pass through normal workspace validation, backups, versioning and History.
