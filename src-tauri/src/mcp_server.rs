@@ -13,6 +13,7 @@ use rmcp::{
     tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler,
 };
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_continuation_params::{ArmSelfContinuationParams, SelfContinuationModeParam, UpdateSelfContinuationParams, SelfContinuationWatchParams, SelfContinuationAttemptParams, SelfContinuationDeliveryParams};
 use crate::mcp_workspace_params::{CloneRepositoryParams, CreateProjectParams, ProjectMemoryUpdateParams, ExternalFileActionParam, ExternalFileAccessParams, WorkspaceIdParams, CreateTempWorkspaceParams, TempWorkspaceParams, PreserveTempWorkspaceParams, CleanupTempWorkspaceParams, TempWorkspaceFileActionParam, TempWorkspaceFileActionParams};
 use serde::Serialize;
 use std::{
@@ -315,55 +316,6 @@ struct GitDiffView {
     stats: crate::models::GitDiffStats,
     content: Option<String>,
     content_truncated: bool,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct ArmSelfContinuationParams {
-    /// Approved workspace whose current AI work should be recoverable.
-    workspace_id: String,
-    /// One specific AI-written sentence describing the exact remaining work and what is already complete.
-    continuation_sentence: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum SelfContinuationModeParam {
-    Working,
-    WaitingUser,
-    Completed,
-    Disabled,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct UpdateSelfContinuationParams {
-    workspace_id: String,
-    watch_id: String,
-    /// Replace the one current sentence. Required when meaningful remaining work changes; omit when only changing state.
-    continuation_sentence: Option<String>,
-    state: SelfContinuationModeParam,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct SelfContinuationWatchParams {
-    workspace_id: String,
-    watch_id: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct SelfContinuationAttemptParams {
-    workspace_id: String,
-    watch_id: String,
-    /// Stable random ID for this mounted MCP App instance. Used only to prevent concurrent duplicate sends.
-    claimant_id: String,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct SelfContinuationDeliveryParams {
-    workspace_id: String,
-    watch_id: String,
-    recovery_id: String,
-    /// Stable random ID for this mounted MCP App instance. Used only to prevent concurrent duplicate sends.
-    claimant_id: String,
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
