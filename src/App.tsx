@@ -1568,9 +1568,7 @@ function App() {
             onRelocate={(workspace) => void handleRelocateWorkspace(workspace)}
             onRetryHealth={(workspaceId) => void handleWorkspaceHealthRetry(workspaceId)}
           />
-          <ProjectSetupPanel workspaces={workspaces} selectedWorkspaceId={selectedWorkspaceId} onNotice={setNotice} />
-          <ProjectMemoryPanel workspaces={workspaces} selectedWorkspaceId={selectedWorkspaceId} onNotice={setNotice} />
-          <ProjectOverviewPanel workspaces={workspaces} selectedWorkspaceId={selectedWorkspaceId} />
+          {/* Development-oriented project panels are preserved in source but not shown in the gateway UI. */}
         </div>
       );
     }
