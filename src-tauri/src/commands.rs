@@ -46,9 +46,14 @@ use crate::{
         load_history_settings, load_workspaces, mutate_workspaces, save_ai_access_paused,
         save_history_settings,
     },
-    system_resources, team, temp_workspace, terminal, updates, versioning, video, video_assets,
-    video_director, video_narration, video_preview, video_production, video_qa, video_render,
-    video_scene, video_story_render, workflow,
+    system_resources, team, temp_workspace, terminal, updates, versioning, workflow,
+};
+
+// Video-only imports must not pull legacy modules into the lean command layer.
+#[cfg(feature = "legacy_video")]
+use crate::{
+    video, video_assets, video_director, video_narration, video_preview, video_production,
+    video_qa, video_render, video_scene, video_story_render,
 };
 
 fn canonical_workspace_path(path: &str) -> Result<PathBuf, String> {
