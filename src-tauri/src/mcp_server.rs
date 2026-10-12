@@ -15,6 +15,7 @@ use rmcp::{
 #[cfg(feature = "legacy_video")]
 use rmcp::model::AudioContent;
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_observation::{record_observation, monitoring_file_detail};
 use crate::mcp_ai_workspace_helpers::{resolve_ai_workspace_app_session, resolve_ai_workspace_visible_path, ai_workspace_type_text, ai_workspace_terminal_browser_launch, ensure_ai_workspace_terminal_text_allowed, ai_workspace_session_payload, require_ai_workspace_session_match};
 use crate::mcp_browser_access::{browser_scope_for_request, require_google_tab_access, require_ai_browser_tab_access};
 use crate::mcp_continuation_fallback::{ensure_chatgpt_work_fallback, ensure_chatgpt_work_fallback_with_identities};
@@ -979,43 +980,6 @@ struct ListGitActionsParams {
     workspace_id: Option<String>,
     /// Maximum records to return. RepoTunnel clamps this to 1..100.
     limit: Option<usize>,
-}
-
-fn record_observation(
-    app: &AppHandle,
-    workspace: &Workspace,
-    trace_group_id: Option<&str>,
-    kind: ActivityKind,
-    action: &str,
-    summary: impl Into<String>,
-    detail: Option<String>,
-) {
-    let _ = activity::record(
-        app,
-        workspace,
-        trace_group_id,
-        kind,
-        action,
-        summary.into(),
-        detail,
-        ActivityStatus::Observed,
-        None,
-    );
-}
-
-fn monitoring_file_detail(events: &[crate::models::MonitoringFileEvent]) -> Option<String> {
-    if events.is_empty() {
-        return None;
-    }
-    let mut lines = events
-        .iter()
-        .take(20)
-        .map(|event| format!("{:?}: {}", event.kind, event.path))
-        .collect::<Vec<_>>();
-    if events.len() > lines.len() {
-        lines.push(format!("…and {} more", events.len() - lines.len()));
-    }
-    Some(lines.join("\n"))
 }
 
 fn ensure_ai_access(app: &AppHandle) -> Result<(), String> {
