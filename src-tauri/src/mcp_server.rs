@@ -2840,8 +2840,21 @@ where
 {
     Ok(match tokio::task::spawn_blocking(task).await {
         Ok(Ok(value)) => {
-            TASK_TOOL_SUCCESSES.fetch_add(1, Ordering::Relaxed);
-            success_result(value)
+            // Serialization can fail even when the filesystem operation succeeded.
+            // Count the actual MCP result, not just the task closure outcome.
+            match serde_json::to_string(&serde_json::json!({
+                "ok": true,
+                "result": value,
+            })) {
+                Ok(content) => {
+                    TASK_TOOL_SUCCESSES.fetch_add(1, Ordering::Relaxed);
+                    CallToolResult::success(vec![ContentBlock::text(content)])
+                }
+                Err(error) => {
+                    TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
+                    error_result(format!("RepoTunnel could not serialize the tool result: {error}"))
+                }
+            }
         },
         Ok(Err(message)) => {
             TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
