@@ -94,33 +94,40 @@ fn install_rustls_crypto_provider() {
 }
 
 fn initialize_local_runtime(app: &tauri::AppHandle) {
-    // GitHub CLI authentication is global RepoTunnel state, not a Commands-page
-    // feature. Prewarm it at application startup using the existing persistent
-    // human gh profile. This is read-only: it never logs out, refreshes, replaces,
-    // or copies the user's credential.
-    if let Err(error) = std::thread::Builder::new()
-        .name("repotunnel-github-status".to_string())
-        .spawn(|| {
-            let _ = github::status();
-        })
+    // Legacy background integrations are excluded from the lean gateway by default.
+    // Re-enable temporarily with --features legacy_background_services.
+    #[cfg(feature = "legacy_background_services")]
     {
-        eprintln!("RepoTunnel GitHub status prewarm warning: {error}");
+        // GitHub CLI authentication is global RepoTunnel state, not a Commands-page
+        // feature. Prewarm it at application startup using the existing persistent
+        // human gh profile. This is read-only: it never logs out, refreshes, replaces,
+        // or copies the user's credential.
+        if let Err(error) = std::thread::Builder::new()
+            .name("repotunnel-github-status".to_string())
+            .spawn(|| {
+                let _ = github::status();
+            })
+        {
+            eprintln!("RepoTunnel GitHub status prewarm warning: {error}");
+        }
+
+        let state = app.state::<AppState>();
+        match state.ai_workspace.initialize(app) {
+            Ok(true) => hardening::log_event(
+                app,
+                "INFO",
+                "ai_workspace.recover",
+                "Reattached the durable RepoTunnel AI Workspace session.",
+            ),
+            Ok(false) => {}
+            Err(error) => hardening::log_event(app, "WARN", "ai_workspace.recover", &error),
+        }
     }
 
-    let state = app.state::<AppState>();
-    match state.ai_workspace.initialize(app) {
-        Ok(true) => hardening::log_event(
-            app,
-            "INFO",
-            "ai_workspace.recover",
-            "Reattached the durable RepoTunnel AI Workspace session.",
-        ),
-        Ok(false) => {}
-        Err(error) => hardening::log_event(app, "WARN", "ai_workspace.recover", &error),
-    }
     if let Err(error) = terminal::initialize(app) {
         hardening::log_event(app, "WARN", "terminal.initialize", &error);
     }
+    #[cfg(feature = "legacy_background_services")]
     if let Err(error) = chatgpt_bridge::initialize(app) {
         hardening::log_event(app, "WARN", "chatgpt_bridge.initialize", &error);
     }
@@ -467,9 +474,12 @@ pub fn run() {
                 video_production::stop_all_activity();
                 video_preview::clear_all(app_handle);
                 model_hub::stop_owned_local_runtimes();
-                chatgpt_bridge::shutdown();
-                let state = app_handle.state::<AppState>();
-                state.ai_workspace.shutdown(app_handle);
+                #[cfg(feature = "legacy_background_services")]
+                {
+                    chatgpt_bridge::shutdown();
+                    let state = app_handle.state::<AppState>();
+                    state.ai_workspace.shutdown(app_handle);
+                }
                 let _ = state.stop_gateway();
                 hardening::shutdown(app_handle);
             }
