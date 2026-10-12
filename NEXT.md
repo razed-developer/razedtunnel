@@ -24,6 +24,8 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
 
 ## Locked product scope (2026-10-12)
+- Two-page UI first pass: `8589a33` defaults launch to Projects; `d13d5b1` removes Settings, Help, and theme controls from sidebar, leaving Projects and Connections; `cdfbbe8` retains the existing sidebar props contract to avoid caller breakage. Backend, MCP tools, and non-navigation views are not yet removed.
+- Next: user validates `npm run check && npm run build`; then implement tray behavior as a separate patch and continue dependency-based pruning.
 - User explicitly requires only: (1) add/manage projects and permissions, (2) connect MCP to ChatGPT, (3) background system tray with open/quit.
 - If functionality is not on Projects or Connections and not a dependency of those pages or tray, it is out of scope. Retain security/auth, persistence, runtime lifecycle, and required MCP tool handlers as dependencies, not separate UI features.
 - Current `src-tauri/src/lib.rs` setup/run handles runtime startup/shutdown but no system tray setup is visible there; implement and validate tray behavior explicitly, including close-to-tray and true Quit.
