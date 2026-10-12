@@ -67,6 +67,7 @@ mod mcp_phone_helpers;
 mod mcp_phone_transactions;
 mod mcp_request_identity;
 mod mcp_continuation_fallback;
+mod mcp_browser_access;
 mod media_inspection;
 mod media_commands;
 mod media_tools;
