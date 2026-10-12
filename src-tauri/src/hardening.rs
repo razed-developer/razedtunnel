@@ -11,11 +11,11 @@ use tauri::{path::BaseDirectory, AppHandle, Manager};
 
 use crate::{connection, execution, models::RuntimeDiagnostics};
 
-const LOG_RELATIVE_PATH: &str = "logs/repotunnel.log";
+const LOG_RELATIVE_PATH: &str = "logs/razedtunnel.log";
 const MAX_LOG_BYTES: u64 = 1024 * 1024;
 const ROTATED_LOGS: usize = 3;
 #[cfg(target_os = "linux")]
-const AUTOSTART_FILENAME: &str = "repotunnel.desktop";
+const AUTOSTART_FILENAME: &str = "razedtunnel.desktop";
 
 fn now_millis() -> u64 {
     SystemTime::now()
@@ -331,7 +331,7 @@ pub(crate) fn set_launch_at_login(app: &AppHandle, enabled: bool) -> Result<(), 
             .map_err(|error| format!("Could not create the Linux autostart directory: {error}"))?;
 
         let contents = format!(
-            "[Desktop Entry]\nType=Application\nName=RepoTunnel\nComment=Secure local workspace gateway for AI tools\nExec={}\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
+            "[Desktop Entry]\nType=Application\nName=RazedTunnel\nComment=RazedTunnel local workspace gateway\nExec={}\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
             desktop_exec_value(&executable)
         );
         fs::write(&path, contents)
