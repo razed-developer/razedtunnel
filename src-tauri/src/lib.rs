@@ -69,6 +69,7 @@ mod mcp_request_identity;
 mod mcp_continuation_fallback;
 mod mcp_browser_access;
 mod mcp_ai_workspace_helpers;
+mod mcp_observation;
 mod media_inspection;
 mod media_commands;
 mod media_tools;
