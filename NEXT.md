@@ -16,6 +16,13 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - Branch diff was documentation-only (13 files); user confirmed `git diff --check main...HEAD` passed. PR #3 merged into `main` as `b5d3f91`.
 - Next: return to oversized Rust module decomposition, after reviewing current file sizes and choosing one focused refactor. Keep unrelated local edits to `src-tauri/Cargo.lock` and `src-tauri/src/github.rs` intact. Do not touch unrelated local edits to `src-tauri/Cargo.lock` or `src-tauri/src/github.rs`.
 
+## Post-merge source inventory (2026-10-12)
+- Read-only audit of `main`: `src/App.tsx` ~1,949 lines, `src-tauri/src/mcp_server.rs` ~5,939 lines, `src-tauri/src/lib.rs` declares ~99 modules.
+- Sidebar currently exposes Projects and Connections in its main nav, with System and Help controls. Many other view handlers and feature modules remain compiled: Home Workspace, Model Hub, editor, change history, checks, terminal, Git, AI Workspace, monitoring, media inspection, Gmail, model trial.
+- `AppView` still includes `video` as a compatibility placeholder (not an active Video feature); `AppSidebar` icon union still includes `team` and `video`. These are cleanup candidates after confirming references.
+- `ProductionPanel` is actually system/runtime settings, update controls and history retention; do not mistake it for removed Video Production.
+- Next: audit actual reachable UI versus dormant components, check backend command registration and module dependencies, then propose a focused removal/refactor branch. No source files changed in this inventory stage.
+
 ## Goal and boundaries
 RazedTunnel is a compact Windows/Tauri Rust MCP gateway for approved local workspaces, files, terminal, Git/GitHub, and related development tools. Keep modules focused and remove legacy RepoTunnel features that do not serve the gateway. Do not break ordinary workspace permissions, MCP access, or file operations. Prefer small commits and local validation; do not merge before user approval/validation.
 
