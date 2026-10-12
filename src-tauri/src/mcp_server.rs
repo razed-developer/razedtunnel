@@ -14,7 +14,7 @@ use rmcp::{
 };
 use crate::mcp_git_helpers::compact_git_action_for_ai;
 use crate::mcp_phone_helpers::{parse_phone_key, parse_phone_settings_namespace};
-use crate::mcp_phone_transactions::{valid_phone_transaction_alias, phone_transaction_query, phone_transaction_focused_editable, phone_transaction_has_selector, phone_transaction_find_unique, phone_transaction_condition_met, validate_phone_transaction_steps};
+use crate::mcp_phone_transactions::{PhoneTransactionAliasTarget, phone_transaction_find_unique, phone_transaction_condition_met, validate_phone_transaction_steps};
 use crate::mcp_browser_params::{BrowserActionParam, BrowserActionParams, BrowserContextParams, BrowserSemanticActionParam, BrowserSemanticActionParams, BrowserSemanticSequenceOperationParam, BrowserSemanticSequenceStepParam, BrowserSemanticSequenceParams, BrowserSemanticSequenceCancelParams, BrowserInspectParams, BrowserDownloadConfigureParams, BrowserDownloadCancelParams, BrowserUploadParams, BrowserSemanticSnapshotParams, BrowserSemanticFindParams, BrowserScreenshotParams, BrowserDiagnosticsParams};
 use crate::mcp_desktop_params::{DesktopInspectParams, DesktopSemanticSnapshotParams, UiSemanticActionParam, DesktopSemanticActionParams, AiWorkspaceSemanticActionParams, UiSemanticSequenceOperationParam, UiSemanticSequenceStepParam, DesktopSemanticSequenceParams, AiWorkspaceSemanticSequenceParams, DesktopActionParams, DesktopScreenshotParams};
 use crate::mcp_ai_workspace_params::{AiWorkspaceFrameParams, AiWorkspaceInspectParams, AiWorkspaceSemanticSnapshotParams, AiWorkspaceActionParams, AiWorkspaceSequenceStep, AiWorkspaceSequenceParams};
