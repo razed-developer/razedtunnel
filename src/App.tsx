@@ -101,6 +101,8 @@ import type {
 } from "./types";
 
 const initialStatus: GatewayStatus = {
+  taskToolSuccesses: 0,
+  taskToolFailures: 0,
   running: false,
   port: null,
   workspaceCount: 0,
