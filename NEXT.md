@@ -1,3 +1,8 @@
+## Gateway-only state pruning (awaiting local validation)
+- User confirmed prior editor callback cleanup passed and app works.
+- Commits `dfd5b4a`, `cc1f13e`, `e45dbdd`, `ac8e91a`: removed editor sync callback and event handling, orphaned editor React state/refs, filesystem/editor type imports, and unreachable Git/Model Hub refresh/polling. Project relocation/removal no longer refer to removed editor tabs. App.tsx now ~1,040 lines, down from 1,217. Backend MCP and permissions unchanged.
+- Run `git pull --ff-only && npm run check && npm run build`, then verify Projects, Connections, tray shortcuts. No remote CI validation performed. If TS errors occur, fix before advancing. More unused Home/History/Checkpoint state remains and should be pruned in subsequent stages.
+
 ## Editor handler removal (awaiting validation and follow-up)
 - User confirmed prior editor background-effects removal passed and works.
 - Commits `63d9bcc`, `8fa1734`: deleted unreachable editor open/save/reload/tab/file-tree callback block and obsolete top-level editor document/session helper functions. `App.tsx` reduced from 1,603 to 1,217 lines.
