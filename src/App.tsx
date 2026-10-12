@@ -1706,6 +1706,8 @@ function App() {
             onRevoke={handleRevokeMcpAccess}
             onForget={handlePublicTunnelForget}
           />
+          <details className="connection-advanced-details">
+            <summary>Advanced: OpenAI Secure Tunnel</summary>
           <ChatConnectionPanel
             status={connectionStatus}
             gatewayRunning={gatewayStatus.running}
@@ -1714,6 +1716,7 @@ function App() {
             onConnect={handleChatConnect}
             onDisconnect={handleChatDisconnect}
           />
+          </details>
         </div>
       );
     }
