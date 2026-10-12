@@ -13,6 +13,7 @@ use rmcp::{
     tool, tool_handler, tool_router, ErrorData as McpError, RoleServer, ServerHandler,
 };
 use crate::mcp_git_helpers::compact_git_action_for_ai;
+use crate::mcp_ai_workspace_params::{AiWorkspaceFrameParams, AiWorkspaceInspectParams, AiWorkspaceSemanticSnapshotParams, AiWorkspaceActionParams, AiWorkspaceSequenceStep, AiWorkspaceSequenceParams};
 use crate::mcp_phone_params::{PhoneTargetParams, PhoneTapParams, PhoneSwipeParams, PhoneKeyParams, PhoneTextParams, PhonePackageParams, PhoneShellParams, PhoneLogsParams, PhonePingParams, PhoneSettingParams, PhoneSettingWriteParams, PhonePathParams, PhoneFileWriteParams, PhoneSequenceStepParam, PhoneSequenceParams, PhoneFastSequenceStepParam, PhoneFastSequenceParams, PhoneFastScreenParams, PhoneSemanticSnapshotParams, PhoneSemanticFindParams, PhoneSemanticActionParams, PhoneTransactionStepParam, PhoneTransactionParams};
 use crate::mcp_launch_params::{LaunchTargetKindParam, LaunchTargetParams, IntegrationActionParams, AiWorkspaceSessionParams};
 use crate::mcp_execution_params::{WorkspaceCommandParams, ListCommandsParams, TerminalCommandParams, ManagedProcessStartParams, ListProcessesParams, WorkspaceRuntimeStatusParams, ProcessIdParams, ProcessOutputParams, ProcessWaitParams, StopProcessParams};
@@ -320,113 +321,6 @@ struct GitDiffView {
     stats: crate::models::GitDiffStats,
     content: Option<String>,
     content_truncated: bool,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct AiWorkspaceFrameParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Per-application appSessionId. Omit only when this AI owns exactly one app session.
-    app_session_id: Option<String>,
-    /// Optional app-owned window ID. When omitted RepoTunnel selects the active/first window owned by the app session.
-    window_id: Option<String>,
-    /// Maximum returned image width. RepoTunnel clamps this to the virtual screen width.
-    max_width: Option<u32>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct AiWorkspaceInspectParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Per-application appSessionId. Omit only when this AI owns exactly one app session.
-    app_session_id: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct AiWorkspaceSemanticSnapshotParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Per-application appSessionId. Required when multiple app sessions share the desktop.
-    app_session_id: Option<String>,
-    /// Maximum private AT-SPI nodes to normalize into the shared semantic snapshot. Clamped to 20..800.
-    max_nodes: Option<usize>,
-    /// Hash from a previous AI Workspace semantic snapshot. When unchanged, RepoTunnel can return a compact response.
-    known_hash: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct AiWorkspaceActionParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Per-application appSessionId. Omit only when this AI owns exactly one app session.
-    app_session_id: Option<String>,
-    /// One of activate, click, key, type, or scroll.
-    action: String,
-    /// Optional AI Workspace window ID returned by ai_workspace_inspect. When supplied, click/scroll coordinates are relative to that exact isolated window.
-    window_id: Option<String>,
-    /// Horizontal position from 0..1 for click/scroll inside the isolated virtual display or selected window.
-    x_ratio: Option<f64>,
-    /// Vertical position from 0..1 for click/scroll inside the isolated virtual display.
-    y_ratio: Option<f64>,
-    /// Click count 1..3 for action=click.
-    click_count: Option<u8>,
-    /// Safe shortcut for action=key, such as Ctrl+S, Enter, Escape, or F5.
-    shortcut: Option<String>,
-    /// Text for action=type. Credential/authentication windows are blocked.
-    text: Option<String>,
-    /// For action=type, resolve this workspace-relative file/folder to the exact host path visible inside the isolated app. Mutually exclusive with text.
-    workspace_relative_path: Option<String>,
-    /// Horizontal scroll delta.
-    delta_x: Option<i32>,
-    /// Vertical scroll delta.
-    delta_y: Option<i32>,
-}
-
-#[derive(Debug, serde::Deserialize, serde::Serialize, schemars::JsonSchema)]
-#[serde(rename_all = "camelCase")]
-struct AiWorkspaceSequenceStep {
-    /// One of activate, click, key, type, scroll, or wait.
-    operation: String,
-    /// Optional per-step window override. Omit to inherit the sequence window_id.
-    window_id: Option<String>,
-    /// Horizontal position from 0..1 for click/scroll.
-    x_ratio: Option<f64>,
-    /// Vertical position from 0..1 for click/scroll.
-    y_ratio: Option<f64>,
-    /// Click count 1..3 for click.
-    count: Option<u8>,
-    /// Safe shortcut for key.
-    shortcut: Option<String>,
-    /// Text for type. Text is never echoed in completed sequence results.
-    text: Option<String>,
-    /// For type, resolve this workspace-relative file/folder to the exact host path visible inside the isolated app. Mutually exclusive with text.
-    workspace_relative_path: Option<String>,
-    /// Horizontal scroll delta.
-    delta_x: Option<i32>,
-    /// Vertical scroll delta.
-    delta_y: Option<i32>,
-    /// Optional bounded delay for wait, clamped to 0..2000 ms.
-    wait_ms: Option<u64>,
-    /// Optional wait-condition timeout, clamped to 0..5000 ms.
-    timeout_ms: Option<u64>,
-    /// Wait until the active isolated window title contains this text.
-    title_contains: Option<String>,
-    /// Wait until at least this many isolated windows exist.
-    window_count_at_least: Option<usize>,
-    /// Wait until no more than this many isolated windows exist.
-    window_count_at_most: Option<usize>,
-}
-
-#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
-struct AiWorkspaceSequenceParams {
-    /// ID returned by list_workspaces for the approved project.
-    workspace_id: String,
-    /// Per-application appSessionId. Omit only when this AI owns exactly one app session.
-    app_session_id: Option<String>,
-    /// Optional default isolated window ID inherited by steps that omit windowId.
-    window_id: Option<String>,
-    /// Ordered fast-path actions. RepoTunnel accepts 1..64 bounded steps per request.
-    steps: Vec<AiWorkspaceSequenceStep>,
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
