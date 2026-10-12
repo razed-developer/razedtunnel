@@ -1,3 +1,7 @@
+## Validation: gateway-only layout (2026-10-12)
+- User confirmed the responsive Projects/Connections layout fix works. Regression resolved.
+- Next: incremental removal of unused frontend state and imports, keeping Projects/Connections functionality and tray navigation intact.
+
 ## UI layout regression fix (awaiting validation)
 - User screenshot after removing ProjectRail showed severely compressed Projects content, overlapping permission controls and clipped header. This is a regression; do not proceed with more deletion until layout is confirmed.
 - Commit `61e1c96`: targeted gateway-only CSS for two-column shell, content sizing, wrapping permission actions and narrow-window responsive sidebar. No backend changes.
