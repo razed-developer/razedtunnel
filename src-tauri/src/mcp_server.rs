@@ -49,7 +49,7 @@ use crate::{
     monitoring, project_index, project_memory, project_setup, repository, secret_guard,
     self_continuation, semantic,
     storage::load_workspaces,
-    system_resources, team, temp_workspace, terminal, workflow,
+    system_resources, temp_workspace, terminal, workflow,
 };
 
 
