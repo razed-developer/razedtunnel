@@ -1,3 +1,9 @@
+## Rust IPC audit: history/checkpoint/safety registrations (awaiting validation)
+- User confirmed prior Rust Model Hub/Home registration cleanup passed, including cargo check and app behavior.
+- Inspected `lib.rs` Tauri invoke handler groups and mounted `App.tsx`/Projects UI dependencies. Commit `8facb67` unregisters 15 desktop-only IPC entries: history (6), checkpoints (8), safety scan (1). These are unreachable from the mounted two-page desktop interface. This change does **not** remove modules, MCP tool handlers, storage, permission checks, or gateway services. Changes and approval IPC remain registered pending MCP/control review.
+- Run `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; verify Projects, Connections, tray and remote MCP access. No local compile by assistant.
+- Next audit editor/filesystem UI IPC separately; ensure MCP tool access is preserved before removing any backend implementations. Avoid deleting Rust modules based solely on removed desktop screens.
+
 ## Rust IPC audit: first registration-only removal (awaiting local validation)
 - User confirmed previous two-page navigation fix passed.
 - Inspected `src-tauri/src/lib.rs`: Tauri IPC registers extensive legacy UI commands while MCP server is separate; core Projects/Connections commands and gateway/public tunnel/chat connection remain required. Startup also initializes terminal and monitoring; do not remove without MCP dependency audit.
