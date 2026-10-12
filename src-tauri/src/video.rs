@@ -582,24 +582,6 @@ fn install_yt_dlp(
     Ok(())
 }
 
-fn wheel_matches_platform(filename: &str) -> bool {
-    let lower = filename.to_ascii_lowercase();
-    if !lower.ends_with(".whl") {
-        return false;
-    }
-    match (env::consts::OS, env::consts::ARCH) {
-        ("linux", "x86_64") => lower.contains("manylinux") && lower.contains("x86_64"),
-        ("linux", "aarch64") => {
-            lower.contains("manylinux") && (lower.contains("aarch64") || lower.contains("arm64"))
-        }
-        ("windows", "x86_64") => lower.contains("win_amd64"),
-        ("windows", "aarch64") => lower.contains("win_arm64"),
-        ("macos", "x86_64") => lower.contains("macosx") && lower.contains("x86_64"),
-        ("macos", "aarch64") => lower.contains("macosx") && lower.contains("arm64"),
-        _ => false,
-    }
-}
-
 fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), String> {
     if program_path(app, "ffmpeg").is_some() {
         return Ok(());
@@ -624,7 +606,7 @@ fn install_ffmpeg(app: &AppHandle, cancel: Option<&AtomicBool>) -> Result<(), St
         .iter()
         .filter_map(|item| {
             let filename = item.get("filename")?.as_str()?;
-            if !wheel_matches_platform(filename) {
+            if !crate::media_tools::wheel_matches_platform(filename) {
                 return None;
             }
             let url = item.get("url")?.as_str()?;
