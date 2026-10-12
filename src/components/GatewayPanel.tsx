@@ -15,7 +15,9 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
   const actionLabel = status.running ? "Stop gateway" : "Start gateway";
   const mcpEndpoint = status.running && status.port ? `http://127.0.0.1:${status.port}/mcp` : null;
   const remoteReady = publicTunnel.ready || connection.ready;
-  const managedClientState = publicTunnel.ready ? "Public MCP ready" : connection.ready ? "Connected" : connection.running ? "Starting" : "Not connected";
+  const managedClientState = publicTunnel.ready ? "Endpoint ready; client not confirmed" : connection.ready ? "Tunnel ready; client not confirmed" : connection.running ? "Starting" : "Not connected";
+  const requestObserved = publicTunnel.requestCount > 0;
+  const verifiedClient = false; // Transport counters do not prove authenticated MCP access.
 
   async function copyEndpoint() {
     if (!mcpEndpoint) return;
@@ -39,8 +41,8 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
     <section className="gateway-panel" aria-labelledby="gateway-title">
       <div className="gateway-copy">
         <span className="section-kicker">Local MCP gateway</span>
-        <h2 id="gateway-title">{status.running ? "Ready for MCP connections" : "Currently offline"}</h2>
-        <p>{status.running ? "Approved workspace tools are available through a loopback-only MCP endpoint. Every request still passes through RepoTunnel’s local security policy." : "Start the local gateway when you want an MCP client to use RepoTunnel. By default it stays private on this machine."}</p>
+        <h2 id="gateway-title">{status.running ? "Local gateway running" : "Currently offline"}</h2>
+        <p>{status.running ? "Approved workspace tools are available through a loopback-only MCP endpoint. Every request still passes through RazedTunnel’s local security policy." : "Start the local gateway when you want an MCP client to use RazedTunnel. By default it stays private on this machine."}</p>
 
         {mcpEndpoint ? (
           <div className="mcp-endpoint" aria-label="Local MCP endpoint">
@@ -52,6 +54,24 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
             <button type="button" className="secondary-button" onClick={() => void copyEndpoint()}>{copied ? "Copied" : "Copy"}</button>
           </div>
         ) : null}
+
+        <div className="gateway-client-summary" aria-label="Connection verification">
+          <div>
+            <span>1. Local gateway</span>
+            <strong>{status.running ? "Running" : "Offline"}</strong>
+            <small>{status.running ? "Local MCP endpoint active" : "Start the gateway to accept connections"}</small>
+          </div>
+          <div>
+            <span>2. Remote endpoint</span>
+            <strong>{remoteReady ? "Ready" : "Not ready"}</strong>
+            <small>{remoteReady ? "Tunnel reports ready; external reachability not proven" : "No ready remote tunnel"}</small>
+          </div>
+          <div>
+            <span>3. Authenticated MCP client</span>
+            <strong>{verifiedClient ? "Verified" : "Not verified"}</strong>
+            <small>{requestObserved ? `${publicTunnel.requestCount} remote request(s) observed; authentication not confirmed` : "No authenticated MCP session evidence available"}</small>
+          </div>
+        </div>
 
         <div className="gateway-client-summary" aria-label="Gateway client status">
           <div>
@@ -66,7 +86,7 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
           </div>
         </div>
 
-        <p className="gateway-client-note">Direct MCP clients can use the endpoint above. RepoTunnel shows a client name when the managed connection reports one; generic HTTP clients may not provide a reliable identity.</p>
+        <p className="gateway-client-note">Direct MCP clients can use the endpoint above. RazedTunnel shows a client name when the managed connection reports one; generic HTTP clients may not provide a reliable identity.</p>
       </div>
 
       <div className="gateway-actions">
