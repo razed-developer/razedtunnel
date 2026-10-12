@@ -53,6 +53,7 @@ mod macos_ax;
 mod mcp_auth;
 mod mcp_server;
 mod mcp_git_helpers;
+mod mcp_time;
 mod media_inspection;
 mod media_commands;
 mod media_tools;
