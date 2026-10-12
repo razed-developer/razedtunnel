@@ -89,7 +89,6 @@ mod self_continuation;
 mod semantic;
 mod storage;
 mod system_resources;
-mod team;
 mod temp_workspace;
 mod temp_workspace_commands;
 mod terminal;
