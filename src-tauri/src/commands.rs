@@ -13,7 +13,7 @@ use crate::{
     app_state::AppState,
     browser, changes, checkpoint, continuity, conversation, desktop_control, environment,
     execution, filesystem, git, github, gmail_access, hardening, integrations, launcher, mcp_auth,
-    media_inspection,
+    media_inspection, mcp_server,
     model_hub::{
         self, ModelHubSnapshot, ModelProviderId, ModelSelection, ModelTestResult, RuntimeStatus,
     },
@@ -123,7 +123,10 @@ fn approved_workspace(app: &AppHandle, id: &str) -> Result<Workspace, String> {
 fn status(app: &AppHandle, state: &AppState) -> Result<GatewayStatus, String> {
     let (running, port) = state.gateway_status()?;
 
+    let (task_tool_successes, task_tool_failures) = mcp_server::task_tool_outcomes();
     Ok(GatewayStatus {
+        task_tool_successes,
+        task_tool_failures,
         running,
         port,
         workspace_count: load_workspaces(app)?.len(),
