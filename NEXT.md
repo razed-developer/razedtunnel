@@ -9,7 +9,8 @@ Purpose: durable handoff between ChatGPT conversations. **Read this file first**
 - Commit `83f34f9`: removed retired Android Phone, Video Production, and Team Mode feature claims and links from README, including architecture and security sections. This is documentation-only; no runtime changes.
 - Commit `0548ec6`: fixed README grammar introduced by prior deletion.
 - Commits `f802b4a`, `e3e72de`, `721f995`: deleted obsolete feature guides `docs/team-mode.md`, `docs/phone-access.md`, and `docs/video.md`.
-- Next: audit references to deleted guides throughout remaining docs; then review diff and merge after validation. Do not touch unrelated local edits to `src-tauri/Cargo.lock` or `src-tauri/src/github.rs`.
+- Commit `a22bdcf`: removed retired Team/Phone/Video feature descriptions and related limitations from `docs/product.md`.
+- Audit found additional stale feature claims in `docs/architecture.md`, `docs/mcp.md`, `docs/security.md`, `docs/acceptance.md`, and `docs/release.md`. Next update these in focused stages, preserving unrelated capabilities and security boundaries; then review diff and merge after validation. Do not touch unrelated local edits to `src-tauri/Cargo.lock` or `src-tauri/src/github.rs`.
 
 ## Goal and boundaries
 RazedTunnel is a compact Windows/Tauri Rust MCP gateway for approved local workspaces, files, terminal, Git/GitHub, and related development tools. Keep modules focused and remove legacy RepoTunnel features that do not serve the gateway. Do not break ordinary workspace permissions, MCP access, or file operations. Prefer small commits and local validation; do not merge before user approval/validation.
