@@ -48,7 +48,6 @@ export type IconName =
   | "checks"
   | "checkpoint"
   | "shield"
-  | "phone"
   | "pause"
   | "resume";
 
