@@ -4,6 +4,24 @@
 use std::{env, fs, path::PathBuf};
 use tauri::{path::BaseDirectory, AppHandle, Manager};
 
+pub(crate) fn wheel_matches_platform(filename: &str) -> bool {
+    let lower = filename.to_ascii_lowercase();
+    if !lower.ends_with(".whl") {
+        return false;
+    }
+    match (env::consts::OS, env::consts::ARCH) {
+        ("linux", "x86_64") => lower.contains("manylinux") && lower.contains("x86_64"),
+        ("linux", "aarch64") => {
+            lower.contains("manylinux") && (lower.contains("aarch64") || lower.contains("arm64"))
+        }
+        ("windows", "x86_64") => lower.contains("win_amd64"),
+        ("windows", "aarch64") => lower.contains("win_arm64"),
+        ("macos", "x86_64") => lower.contains("macosx") && lower.contains("x86_64"),
+        ("macos", "aarch64") => lower.contains("macosx") && lower.contains("arm64"),
+        _ => false,
+    }
+}
+
 fn executable_name(name: &str) -> String {
     if cfg!(windows) { format!("{name}.exe") } else { name.to_string() }
 }
