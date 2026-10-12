@@ -21,10 +21,13 @@ Validated by user:
 4. Removed MCP `team_status` and `team_action` tools and their parameter models from `src-tauri/src/mcp_server.rs` (commit `994f016d7ea5e0b996cef7201b189e02d35d47c3`). **User confirmed `cargo check` passed**.
 
 ## Latest patch — awaiting user validation
-- Commit `5ee379185cec878a0a869f6044b7640e2e46505f`: removed eight `team::assert_paths_available` calls from MCP filesystem mutations, leaving workspace approval and `changes::*` mutation handling in place. **Not yet Rust-validated.** Possible unused `client_key` locals and rename destination calculation need cleanup after compilation; do not mistake warnings for test failures.
+- Commit `aad66688bda47b5c2a90b5fe5d9fafa835a80832`: removed eight `team::assert_browser_mutation_available` checks from MCP browser mutation handlers. Independent approved workspace scope, tab access, Google/Gmail access, and AI browser ownership checks remain in place. **Awaiting `cargo check` and tests.**
+
+## Prior patch — validated
+- Commit `5ee379185cec878a0a869f6044b7640e2e46505f`: removed eight `team::assert_paths_available` calls from MCP filesystem mutations, leaving workspace approval and `changes::*` mutation handling in place. **User confirmed `cargo check` passed.** Possible unused `client_key` locals and rename destination calculation need cleanup after compilation; do not mistake warnings for test failures.
 
 ## Next steps — priority order
-1. Validate the eight removed Team path-claim checks with `cargo check`; address unused variables and confirm independent authorization remains in the `changes` subsystem. Then audit all remaining Team references and dependencies before deleting the engine. `src-tauri/src/team.rs` (~2649 lines) is still used for `team::assert_paths_available` in filesystem MCP operations and `team::assert_browser_mutation_available` in browser MCP operations. These checks may represent coordination locks rather than core workspace authorization. Inspect exact call sites and preserve independent approval/access checks.
+1. Validate removal of browser Team checks with `cargo check`. Then confirm `mcp_server.rs` has no `team::` calls; inspect other references before deleting Team engine. `src-tauri/src/team.rs` (~2649 lines) is still used for `team::assert_paths_available` in filesystem MCP operations and `team::assert_browser_mutation_available` in browser MCP operations. These checks may represent coordination locks rather than core workspace authorization. Inspect exact call sites and preserve independent approval/access checks.
 2. Remove Team-only coordination hooks carefully, with targeted Rust compilation and tests after each patch. Do not replace Team locks with unconditional access without confirming the existing workspace authorization path.
 3. Delete `team.rs` and `mod team;` in `src-tauri/src/lib.rs` only after all references are gone.
 4. Remove Team-specific Rust data models (near end of `src-tauri/src/models.rs`), stale activity enums/labels, docs and remaining dead code after verifying usages. Watch for tests and imports.
