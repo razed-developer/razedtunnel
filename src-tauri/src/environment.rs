@@ -5,6 +5,16 @@ use std::{
     process::Command,
 };
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+fn background_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    let mut command = Command::new(program);
+    #[cfg(target_os = "windows")]
+    command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    command
+}
+
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
@@ -535,7 +545,7 @@ fn tool_version(path: &Path, args: &[&str]) -> Option<String> {
     if args.is_empty() {
         return None;
     }
-    let output = Command::new(path)
+    let output = background_command(path)
         .args(args)
         .env("NO_COLOR", "1")
         .env("TERM", "dumb")
