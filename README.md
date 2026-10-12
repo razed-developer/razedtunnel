@@ -86,7 +86,6 @@ RepoTunnel puts a **permissioned local gateway** between the AI and your machine
 | **Git & GitHub** | Status, diff, log, validated staging, staged-only commits, safe restore, secret preflight, and use of RepoTunnel's connected GitHub credential without exposing it to the AI. |
 | **Browser & desktop** | Managed Chromium automation, screenshots, network/console diagnostics, semantic actions, desktop control, and isolated AI Workspace sessions. |
 | **Android Phone** | Wireless Debugging with USB fallback, live scrcpy control, apps/files/APKs/settings/logs/network tools, and optional semantic Phone Helper integration. |
-| **Team Mode** | Two persistent AI engineers with task ownership, non-overlapping path claims, parallel implementation, cross-review, and evidence-based completion. |
 | **Video** | Video Intelligence plus durable Video Production projects with scripts, scenes, narration, subtitles, rendering, preview, QA, and asset provenance. |
 | **Continuity** | Continuity / Resume v2, Project Memory, factual recovery state, and exact-chat continuation through the optional Chromium extension. |
 
@@ -190,22 +189,6 @@ RepoTunnel's browser layer uses isolated/persistent Chromium-family profiles and
 State-changing browser and semantic actions use bounded mutation receipts. If helper transport is lost after a mutation may already have happened, RepoTunnel reports the outcome as **ambiguous** and does not blindly replay the action.
 
 Desktop control requires explicit local permission and blocks AI control of RepoTunnel itself. **AI Workspace** provides an isolated virtual desktop for supported GUI workflows so AI-owned application sessions do not need to take over the user's normal desktop.
-
-## Team Mode
-
-Team Mode keeps two AI engineers attached to one approved project.
-
-The coordination model enforces:
-
-- planning before implementation
-- distinct task ownership
-- non-overlapping path claims
-- parallel work where safe
-- cross-review by the other engineer
-- evidence-based success criteria
-- persistent teams across multiple user requests until the user explicitly ends the team
-
-[Team Mode details](docs/team-mode.md)
 
 ## Video Intelligence & Production
 
@@ -324,7 +307,7 @@ Platform-specific Tauri/native dependencies are required to build the desktop ap
 | Browser & semantic safety | [Semantic Interaction Layer](SEMANTIC_INTERACTION_LAYER.md) |
 | Continuity & recovery | [AI Continuity](AI_CONTINUITY.md) |
 | Connections | [Remote MCP](docs/connection.md) · [Direct HTTPS](docs/direct-https.md) |
-| Advanced workflows | [Team Mode](docs/team-mode.md) · [Phone](docs/phone-access.md) · [Video](docs/video.md) |
+| Advanced workflows | [Phone](docs/phone-access.md) · [Video](docs/video.md) |
 | Security & releases | [Security](docs/security.md) · [Release / Auto Update](docs/release.md) · [Acceptance](docs/acceptance.md) |
 
 ## Contributing
