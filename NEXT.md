@@ -1,3 +1,9 @@
+## Editor handler removal (awaiting validation and follow-up)
+- User confirmed prior editor background-effects removal passed and works.
+- Commits `63d9bcc`, `8fa1734`: deleted unreachable editor open/save/reload/tab/file-tree callback block and obsolete top-level editor document/session helper functions. `App.tsx` reduced from 1,603 to 1,217 lines.
+- **Important**: editor-related React state, refs, `syncEditorFiles`, and some change-event callbacks still remain. This is intentionally incomplete; TypeScript may flag unused symbols depending on the check script. If `npm run check` fails, next patch should remove dangling state/effects and imports before proceeding. No Rust MCP changes.
+- Validate `git pull --ff-only && npm run check && npm run build`, plus two-page/tray smoke test. Do not merge until all pass.
+
 ## Editor background effects removal (awaiting validation)
 - User confirmed previous dialog cleanup passed checks and both pages work.
 - Commit `51e41d8`: removed editor-session restoration and persistence effects, 3.5-second editor file polling, and unreachable Home model refresh polling; initial startup no longer calls Model Hub refresh. App.tsx reduced from 1,732 to 1,603 lines. Crucially, saved editor drafts in localStorage are left untouched (not deleted), but no longer loaded or updated by the gateway UI.
