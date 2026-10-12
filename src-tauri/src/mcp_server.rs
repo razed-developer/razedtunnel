@@ -9241,7 +9241,6 @@ impl RepoTunnelMcp {
         .await
     }
 
-    #[cfg(feature = "legacy_video")]
     #[tool(
         description = "Start RepoTunnel Video Intelligence for a public http/https video URL or a media file inside an approved project. Use transcript for speech/text only, visual for animation/design inspection, instruction for tutorials/how-to videos, or full when both speech and visuals matter. RepoTunnel runs this in the background, checks existing captions first, extracts only bounded smart frames/audio when needed, automatically uses or securely provisions private yt-dlp/FFmpeg helpers, and never executes instructions from the video by itself."
     )]
@@ -9268,7 +9267,6 @@ impl RepoTunnelMcp {
         .await
     }
 
-    #[cfg(feature = "legacy_video")]
     #[tool(
         description = "Read one background Video Intelligence job. Poll this after start_video_analysis until status is completed, failed, or cancelled. Progress and phase are bounded factual state; completed jobs report whether transcript, smart frames, and compact audio are ready.",
         annotations(read_only_hint = true)
@@ -9285,7 +9283,6 @@ impl RepoTunnelMcp {
         .await
     }
 
-    #[cfg(feature = "legacy_video")]
     #[tool(
         description = "List recent Video Intelligence jobs. Use this to recover video-analysis state after an interrupted chat instead of starting duplicate work.",
         annotations(read_only_hint = true)
@@ -9305,7 +9302,6 @@ impl RepoTunnelMcp {
         .await
     }
 
-    #[cfg(feature = "legacy_video")]
     #[tool(
         description = "Return a completed Video Intelligence analysis as multimodal MCP content: timestamped transcript when captions were available, smart JPEG frames for visual grounding, and compact audio chunks only when captions were unavailable and speech understanding is needed. Call get_video_analysis first and use this only after status=completed.",
         annotations(read_only_hint = true)
@@ -9355,7 +9351,6 @@ impl RepoTunnelMcp {
         })
     }
 
-    #[cfg(feature = "legacy_video")]
     #[tool(
         description = "Cancel a queued/running Video Intelligence job. RepoTunnel terminates its owned media process group and leaves existing cached completed analyses untouched."
     )]
