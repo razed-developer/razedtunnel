@@ -7753,7 +7753,7 @@ mod tests {
 
     #[test]
     fn local_phone_panel_control_stays_separate_from_mcp_ai_control() {
-        let commands = include_str!("commands.rs");
+        let commands = include_str!("phone_commands.rs");
         let mcp = include_str!("mcp_server.rs");
 
         assert!(commands.contains(".local_ui_screen_frame"));
