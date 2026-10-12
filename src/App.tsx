@@ -6,10 +6,6 @@ import AppSidebar, { type AppView } from "./components/AppSidebar";
 import ChatConnectionPanel from "./components/ChatConnectionPanel";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 import GatewayPanel from "./components/GatewayPanel";
-import HomeFeatureDialog from "./components/HomeFeatureDialog";
-import NewProjectDialog from "./components/NewProjectDialog";
-import ProjectSetupPanel from "./components/ProjectSetupPanel";
-import ProjectMemoryPanel from "./components/ProjectMemoryPanel";
 
 import WindowChrome from "./components/WindowChrome";
 import PublicTunnelPanel from "./components/PublicTunnelPanel";
@@ -1692,28 +1688,6 @@ function App() {
         />
       ) : null}
 
-      {pendingWorkspaceSelection ? (
-        <ConfirmationDialog
-          title="Switch projects with unsaved edits?"
-          message="One or more files in the current project have unsaved edits. RepoTunnel will keep those drafts session-protected and leave their tabs open while you switch projects."
-          confirmLabel="Switch project"
-          variant="primary"
-          onCancel={() => setPendingWorkspaceSelection(null)}
-          onConfirm={() => {
-            setSelectedWorkspaceId(pendingWorkspaceSelection);
-            setPendingWorkspaceSelection(null);
-          }}
-        />
-      ) : null}
-
-      {showNewProject ? (
-        <NewProjectDialog
-          busy={creatingProject}
-          onCancel={() => setShowNewProject(false)}
-          onCreate={handleCreateProject}
-        />
-      ) : null}
-
       {confirmStopGateway ? (
         <ConfirmationDialog
           title="Stop the MCP gateway?"
@@ -1750,14 +1724,6 @@ function App() {
         />
       ) : null}
 
-      <HomeFeatureDialog
-        checkpoint={checkpointResult}
-        safetyScan={safetyScanResult}
-        onClose={() => {
-          setCheckpointResult(null);
-          setSafetyScanResult(null);
-        }}
-      />
     </div>
   );
 }
