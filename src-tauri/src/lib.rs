@@ -213,16 +213,9 @@ pub fn run() {
                 workspace_policy_commands::update_workspace_change_policy,
                 workspace_policy_commands::update_workspace_command_policy,
                 workspace_policy_commands::check_workspace_access,
-                filesystem_commands::list_directory,
-                filesystem_commands::read_file,
-                filesystem_commands::search_files,
-                editor_commands::editor_save_file,
-                editor_commands::editor_create_file,
-                editor_commands::editor_create_directory,
-                editor_commands::editor_rename_entry,
-                editor_commands::editor_delete_entry,
-                editor_commands::preview_workspace_image,
                 workspace_policy_commands::open_workspace_path_local,
+                // File explorer and editor IPC belong to the removed desktop workspace UI.
+                // Filesystem and editor Rust modules remain for MCP dependencies.
                 project_lifecycle_commands::get_project_setup,
                 project_lifecycle_commands::prepare_project,
                 project_lifecycle_commands::get_project_memory,
