@@ -9,6 +9,7 @@ mod changes;
 mod change_commands;
 mod chatgpt_bridge;
 mod checkpoint;
+mod checkpoint_commands;
 mod commands;
 mod connection;
 mod continuity;
@@ -357,14 +358,14 @@ pub fn run() {
                 git_commands::reject_git_action,
                 git_commands::request_git_restore_file,
                 commands::get_file_info,
-                commands::create_checkpoint,
-                commands::list_checkpoints,
-                commands::compare_checkpoint,
-                commands::restore_checkpoint,
-                commands::delete_checkpoint,
-                commands::rename_checkpoint,
-                commands::set_checkpoint_pinned,
-                commands::clear_checkpoints,
+                checkpoint_commands::create_checkpoint,
+                checkpoint_commands::list_checkpoints,
+                checkpoint_commands::compare_checkpoint,
+                checkpoint_commands::restore_checkpoint,
+                checkpoint_commands::delete_checkpoint,
+                checkpoint_commands::rename_checkpoint,
+                checkpoint_commands::set_checkpoint_pinned,
+                checkpoint_commands::clear_checkpoints,
                 commands::run_safety_scan,
                 commands::get_ai_access_status,
                 commands::set_ai_access_paused,
