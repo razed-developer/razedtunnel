@@ -41,6 +41,7 @@ import {
 } from "./lib/filesystem";
 import {
   addWorkspace,
+  cloneGitWorkspace,
   checkForUpdates,
   createProject,
   approveChange,
@@ -895,6 +896,23 @@ function App() {
     }
   }
 
+  async function handleCloneGitWorkspace(url: string) {
+    const parentPath = await selectWorkspace();
+    if (!parentPath) return;
+    setNotice(null);
+    try {
+      const workspace = await cloneGitWorkspace(url, parentPath);
+      await refresh();
+      setSelectedWorkspaceId(workspace.id);
+      setActiveView("projects");
+      setNotice(`Cloned and connected ${workspace.name}.`);
+    } catch (error) {
+      const message = errorMessage(error);
+      setNotice(`Could not clone repository: ${message}`);
+      throw new Error(message);
+    }
+  }
+
   async function handleCreateProject(name: string) {
     setNotice(null);
     setCreatingProject(true);
@@ -1561,6 +1579,7 @@ function App() {
             workspaceHealth={workspaceHealth}
             relocatingWorkspaceId={relocatingWorkspaceId}
             onAdd={handleAddWorkspace}
+            onClone={handleCloneGitWorkspace}
             onRemove={setWorkspaceToRemove}
             onAccessChange={handleAccessChange}
             onChangePolicyChange={handleChangePolicyChange}
