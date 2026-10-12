@@ -23,6 +23,7 @@ mod filesystem_commands;
 mod gateway;
 mod git;
 mod github;
+mod github_commands;
 mod gmail_access;
 mod hardening;
 mod https_setup;
@@ -279,10 +280,10 @@ pub fn run() {
                 commands::stop_managed_process,
                 commands::restart_managed_process,
                 commands::list_launchable_applications,
-                commands::get_github_connection_status,
-                commands::connect_github,
-                commands::cancel_github_connection,
-                commands::disconnect_github,
+                github_commands::get_github_connection_status,
+                github_commands::connect_github,
+                github_commands::cancel_github_connection,
+                github_commands::disconnect_github,
                 commands::list_deep_integrations,
                 commands::set_deep_integration_enabled,
                 commands::list_desktop_control_applications,
