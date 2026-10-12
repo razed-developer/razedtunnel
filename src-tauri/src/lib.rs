@@ -46,6 +46,7 @@ mod media_inspection;
 mod media_commands;
 mod media_tools;
 mod model_hub;
+mod model_hub_commands;
 mod model_trial;
 mod models;
 mod monitoring;
@@ -387,11 +388,11 @@ pub fn run() {
                 commands::get_chat_connection_status,
                 commands::start_chat_connection,
                 commands::stop_chat_connection,
-                commands::get_model_hub,
-                commands::refresh_model_runtime,
-                commands::update_model_runtime_endpoint,
-                commands::set_selected_local_model,
-                commands::test_local_model,
+                model_hub_commands::get_model_hub,
+                model_hub_commands::refresh_model_runtime,
+                model_hub_commands::update_model_runtime_endpoint,
+                model_hub_commands::set_selected_local_model,
+                model_hub_commands::test_local_model,
                 commands::get_model_trial,
                 commands::run_model_trial,
                 commands::cancel_model_trial,
