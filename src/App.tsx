@@ -14,22 +14,13 @@ import {
   addWorkspace,
   cloneGitWorkspace,
   checkForUpdates,
-  createProject,
-  approveChange,
-  createCheckpoint,
-  clearVersionHistory,
   getAiAccessStatus,
   getChatConnectionStatus,
   getGatewayStatus,
   getWorkspaceHealth,
-  getActivityTimeline,
   getPublicTunnelStatus,
-  getVersionTimeline,
   listChanges,
   listWorkspaces,
-  restoreVersion,
-  runSafetyScan,
-  rejectChange,
   removeWorkspace,
   relocateWorkspace,
   restartPublicTunnel,
@@ -48,23 +39,16 @@ import {
   updateWorkspaceCommandPolicy,
 } from "./lib/backend";
 import type {
-  ActivityTimeline,
   ChangeRecord,
-  CheckpointSummary,
   ChatConnectionStatus,
   CommandPolicy,
-  DirectoryEntry,
   GatewayStatus,
-  HomeContextErrorInput,
-  HomeContextTextInput,
   PublicTunnelProvider,
   PublicTunnelStatus,
-  SafetyScanResult,
   Workspace,
   WorkspaceHealth,
   WorkspaceAccessMode,
   WorkspaceChangePolicy,
-  VersionTimeline,
 } from "./types";
 
 const initialStatus: GatewayStatus = {
@@ -139,9 +123,6 @@ function App() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [changes, setChanges] = useState<ChangeRecord[]>([]);
-  const [versionTimeline, setVersionTimeline] = useState<VersionTimeline>({ records: [], currentVersionId: null });
-  const [activityTimeline, setActivityTimeline] = useState<ActivityTimeline>({ groups: [] });
-  const [versionBusy, setVersionBusy] = useState(false);
   const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus>(initialStatus);
   const [connectionStatus, setConnectionStatus] = useState<ChatConnectionStatus>(
     initialConnectionStatus,
@@ -155,23 +136,14 @@ function App() {
   const [workspaceToRemove, setWorkspaceToRemove] = useState<Workspace | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [changeBusyId, setChangeBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [workspaceHealth, setWorkspaceHealth] = useState<Record<string, WorkspaceHealth>>({});
   const [relocatingWorkspaceId, setRelocatingWorkspaceId] = useState<string | null>(null);
-  const [pendingWorkspaceSelection, setPendingWorkspaceSelection] = useState<string | null>(null);
-  const [showNewProject, setShowNewProject] = useState(false);
-  const [creatingProject, setCreatingProject] = useState(false);
   const [confirmStopGateway, setConfirmStopGateway] = useState(false);
   const [confirmForgetPublicTunnel, setConfirmForgetPublicTunnel] = useState(false);
   const [confirmRevokeMcpAccess, setConfirmRevokeMcpAccess] = useState(false);
   const [aiAccessPaused, setAiAccessPausedState] = useState(false);
-  const [checkpointBusy, setCheckpointBusy] = useState(false);
-  const [safetyBusy, setSafetyBusy] = useState(false);
-  const [aiAccessBusy, setAiAccessBusy] = useState(false);
-  const [checkpointResult, setCheckpointResult] = useState<CheckpointSummary | null>(null);
-  const [safetyScanResult, setSafetyScanResult] = useState<SafetyScanResult | null>(null);
 
   const pendingCount = useMemo(
     () => changes.filter((change) => change.status === "pending").length,
@@ -185,21 +157,6 @@ function App() {
   const refreshPendingChanges = useCallback(async () => {
     setChanges(await listChanges(undefined, 100));
   }, []);
-
-  const refreshChanges = useCallback(async () => {
-    await refreshPendingChanges();
-    if (selectedWorkspaceId) {
-      const [versions, activities] = await Promise.all([
-        getVersionTimeline(selectedWorkspaceId),
-        getActivityTimeline(selectedWorkspaceId),
-      ]);
-      setVersionTimeline(versions);
-      setActivityTimeline(activities);
-    } else {
-      setVersionTimeline({ records: [], currentVersionId: null });
-      setActivityTimeline({ groups: [] });
-    }
-  }, [selectedWorkspaceId, refreshPendingChanges]);
 
   const refresh = useCallback(async () => {
     const [savedWorkspaces, status, publicStatus, chatStatus, savedChanges, aiStatus] = await Promise.all([
@@ -316,21 +273,6 @@ function App() {
   }, [workspaces]);
 
   useEffect(() => {
-    if (activeView !== "changes") return;
-    if (!selectedWorkspaceId) {
-      setVersionTimeline({ records: [], currentVersionId: null });
-      setActivityTimeline({ groups: [] });
-      return;
-    }
-    Promise.all([getVersionTimeline(selectedWorkspaceId), getActivityTimeline(selectedWorkspaceId)])
-      .then(([versions, activities]) => {
-        setVersionTimeline(versions);
-        setActivityTimeline(activities);
-      })
-      .catch((error) => setNotice(`Could not load history: ${errorMessage(error)}`));
-  }, [activeView, selectedWorkspaceId]);
-
-  useEffect(() => {
     if (!connectionStatus.running) return;
 
     const timer = window.setInterval(() => {
@@ -354,103 +296,6 @@ function App() {
     const timer = window.setInterval(poll, 4000);
     return () => window.clearInterval(timer);
   }, [publicTunnelStatus.configured]);
-
-  useEffect(() => {
-    let disposed = false;
-    let unlisten: (() => void) | null = null;
-    let timer: number | null = null;
-    let refreshRunning = false;
-    let refreshQueued = false;
-
-    const refreshAfterChange = async () => {
-      if (disposed) return;
-      if (refreshRunning) {
-        refreshQueued = true;
-        return;
-      }
-      refreshRunning = true;
-      try {
-        await refreshPendingChanges().catch(() => undefined);
-        if (activeView === "changes" && selectedWorkspaceId) {
-          await Promise.all([
-            getVersionTimeline(selectedWorkspaceId),
-            getActivityTimeline(selectedWorkspaceId),
-          ]).then(([versions, activities]) => {
-            setVersionTimeline(versions);
-            setActivityTimeline(activities);
-          }).catch(() => undefined);
-        }
-      } finally {
-        refreshRunning = false;
-        if (refreshQueued && !disposed) {
-          refreshQueued = false;
-          timer = window.setTimeout(() => {
-            timer = null;
-            void refreshAfterChange();
-          }, 500);
-        }
-      }
-    };
-
-    listen("repotunnel://changes-updated", () => {
-      if (disposed) return;
-      if (timer !== null) window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        timer = null;
-        void refreshAfterChange();
-      }, 500);
-    })
-      .then((stopListening) => {
-        if (disposed) stopListening();
-        else unlisten = stopListening;
-      })
-      .catch(() => undefined);
-
-    return () => {
-      disposed = true;
-      if (timer !== null) window.clearTimeout(timer);
-      unlisten?.();
-    };
-  }, [activeView, selectedWorkspaceId, refreshPendingChanges]);
-
-  useEffect(() => {
-    let disposed = false;
-    let unlisten: (() => void) | null = null;
-    let timer: number | null = null;
-    let refreshRunning = false;
-
-    const refreshActivity = async () => {
-      if (disposed || activeView !== "changes" || !selectedWorkspaceId || refreshRunning) return;
-      refreshRunning = true;
-      try {
-        setActivityTimeline(await getActivityTimeline(selectedWorkspaceId));
-      } catch {
-        // Keep the last successful history snapshot during active AI work.
-      } finally {
-        refreshRunning = false;
-      }
-    };
-
-    listen("repotunnel://activity-updated", () => {
-      if (disposed || activeView !== "changes" || !selectedWorkspaceId) return;
-      if (timer !== null) window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        timer = null;
-        void refreshActivity();
-      }, 700);
-    })
-      .then((stopListening) => {
-        if (disposed) stopListening();
-        else unlisten = stopListening;
-      })
-      .catch(() => undefined);
-
-    return () => {
-      disposed = true;
-      if (timer !== null) window.clearTimeout(timer);
-      unlisten?.();
-    };
-  }, [activeView, selectedWorkspaceId]);
 
   useEffect(() => {
     if (!gatewayStatus.running) return;
@@ -493,24 +338,6 @@ function App() {
       const message = errorMessage(error);
       setNotice(`Could not clone repository: ${message}`);
       throw new Error(message);
-    }
-  }
-
-  async function handleCreateProject(name: string) {
-    setNotice(null);
-    setCreatingProject(true);
-    try {
-      const workspace = await createProject(name);
-      await refresh();
-      setSelectedWorkspaceId(workspace.id);
-      setShowNewProject(false);
-      setActiveView("projects");
-      setNotice(`Created ${workspace.name}. The project is ready for AI work.`);
-    } catch (error) {
-      setNotice(`Could not create that project: ${errorMessage(error)}`);
-      throw error;
-    } finally {
-      setCreatingProject(false);
     }
   }
 
@@ -595,30 +422,6 @@ function App() {
       setNotice(`Could not change the AI edit policy: ${errorMessage(error)}`);
     } finally {
       setUpdatingId(null);
-    }
-  }
-
-  async function handlePendingChange(
-    change: ChangeRecord,
-    action: "approve" | "reject",
-  ) {
-    setNotice(null);
-    setChangeBusyId(change.id);
-    try {
-      if (action === "approve") {
-        await approveChange(change.id);
-        setNotice(`Applied ${change.primaryPath} and saved it to version history.`);
-      } else {
-        await rejectChange(change.id);
-        setNotice(`Rejected ${change.primaryPath}.`);
-      }
-      await refreshChanges();
-    } catch (error) {
-      const verb = action === "approve" ? "apply" : "reject";
-      setNotice(`Could not ${verb} that AI change: ${errorMessage(error)}`);
-      await refreshChanges().catch(() => undefined);
-    } finally {
-      setChangeBusyId(null);
     }
   }
 
@@ -744,111 +547,6 @@ function App() {
     }
   }
 
-  function selectedWorkspace(): Workspace | null {
-    if (!selectedWorkspaceId) return null;
-    return workspaces.find((workspace) => workspace.id === selectedWorkspaceId) ?? null;
-  }
-
-  async function handleCreateCheckpoint() {
-    const workspace = selectedWorkspace();
-    if (!workspace) {
-      setNotice("Open a project before creating a checkpoint.");
-      return;
-    }
-
-    setNotice(null);
-    setCheckpointBusy(true);
-    try {
-      const result = await createCheckpoint(workspace.id);
-      setSafetyScanResult(null);
-      setCheckpointResult(result);
-    } catch (error) {
-      setNotice(`Could not create checkpoint: ${errorMessage(error)}`);
-    } finally {
-      setCheckpointBusy(false);
-    }
-  }
-
-  async function handleSafetyScan() {
-    const workspace = selectedWorkspace();
-    if (!workspace) {
-      setNotice("Open a project before running a safety scan.");
-      return;
-    }
-
-    setNotice(null);
-    setSafetyBusy(true);
-    try {
-      const result = await runSafetyScan(workspace.id);
-      setCheckpointResult(null);
-      setSafetyScanResult(result);
-    } catch (error) {
-      setNotice(`Safety scan failed: ${errorMessage(error)}`);
-    } finally {
-      setSafetyBusy(false);
-    }
-  }
-
-  async function handleAiAccessToggle() {
-    setNotice(null);
-    setAiAccessBusy(true);
-    try {
-      const result = await setAiAccessPaused(!aiAccessPaused);
-      setAiAccessPausedState(result.paused);
-      setNotice(result.paused
-        ? "AI access paused. MCP clients cannot read or change approved project files until you resume access."
-        : "AI access resumed. Connected MCP clients can use approved projects again.");
-    } catch (error) {
-      setNotice(`Could not update AI access: ${errorMessage(error)}`);
-    } finally {
-      setAiAccessBusy(false);
-    }
-  }
-
-  async function handleRestoreVersion(versionId: string | null) {
-    const workspace = selectedWorkspace();
-    if (!workspace) {
-      setNotice("Select a project before restoring version history.");
-      return;
-    }
-
-    setNotice(null);
-    setVersionBusy(true);
-    try {
-      const result = await restoreVersion(workspace.id, versionId);
-      setVersionTimeline(await getVersionTimeline(workspace.id));
-      await refreshChanges().catch(() => undefined);
-      setNotice(`Version restored. ${result.restoredFiles} files restored${result.removedFiles ? `, ${result.removedFiles} newer files removed` : ""}. Later versions remain saved.`);
-    } catch (error) {
-      setNotice(`Could not restore version: ${errorMessage(error)}`);
-      throw error;
-    } finally {
-      setVersionBusy(false);
-    }
-  }
-
-  async function handleClearVersionHistory() {
-    const workspace = selectedWorkspace();
-    if (!workspace) {
-      setNotice("Select a project before clearing version history.");
-      return;
-    }
-
-    setNotice(null);
-    try {
-      const result = await clearVersionHistory(workspace.id);
-      await refreshChanges();
-      const removedRecords = result.removedChanges + result.removedActivities + result.removedOperationalRecords;
-      setNotice(
-        `History cleared. Removed ${result.removedVersions} saved ${result.removedVersions === 1 ? "version" : "versions"} and ${removedRecords} activity ${removedRecords === 1 ? "record" : "records"}. Current project files were not changed.`,
-      );
-    } catch (error) {
-      setNotice(`Could not clear history: ${errorMessage(error)}`);
-      throw error;
-    }
-  }
-
-  // The gateway UI no longer owns an editor or project file-tree session.
   function handleGatewayToggle() {
     if (gatewayStatus.running) {
       setConfirmStopGateway(true);
