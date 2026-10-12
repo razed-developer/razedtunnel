@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   CommandPolicy,
   Workspace,
@@ -56,6 +57,7 @@ function WorkspaceList({
   onRelocate,
   onRetryHealth,
 }: WorkspaceListProps) {
+  const [showGitInstructions, setShowGitInstructions] = useState(false);
   return (
     <section className="workspace-section" aria-labelledby="workspace-title">
       <div className="section-heading">
@@ -67,11 +69,26 @@ function WorkspaceList({
             select its local checkout. Access and execution permissions are configured per project.
           </p>
         </div>
-        <button className="secondary-button" type="button" onClick={onAdd} disabled={adding}>
-          <span aria-hidden="true">+</span>
-          {adding ? "Adding…" : "Add local folder"}
-        </button>
+        <div className="workspace-actions">
+          <button className="secondary-button" type="button" onClick={onAdd} disabled={adding}>
+            <span aria-hidden="true">+</span>
+            {adding ? "Adding…" : "Add local folder"}
+          </button>
+          <button className="secondary-button" type="button" aria-expanded={showGitInstructions} onClick={() => setShowGitInstructions((value) => !value)}>
+            Git repository
+          </button>
+        </div>
       </div>
+
+      {showGitInstructions ? (
+        <div className="security-note" role="region" aria-label="Connect a Git repository">
+          <div>
+            <strong>Connect an existing Git checkout</strong>
+            <p>RazedTunnel currently registers folders on this computer, not remote URLs. Clone your repository with Git first (for example, <code>git clone https://github.com/OWNER/REPO.git</code>), then select the cloned folder using Add local folder. Your existing Git credentials and permissions remain in effect. Cloning directly from this screen is not available yet.</p>
+            <button className="secondary-button" type="button" onClick={onAdd} disabled={adding}>{adding ? "Opening…" : "Select cloned folder"}</button>
+          </div>
+        </div>
+      ) : null}
 
       {workspaces.length === 0 ? (
         <div className="empty-state">
