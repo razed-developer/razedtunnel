@@ -3,7 +3,7 @@ use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine as _};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Extension, wrapper::Parameters},
     model::{
-        CallToolResult, ContentBlock, ExtensionCapabilities, Implementation,
+        AudioContent, CallToolResult, ContentBlock, ExtensionCapabilities, Implementation,
         ListResourcesResult, MetaObject, PaginatedRequestParams, ReadResourceRequestParams,
         ReadResourceResponse, ReadResourceResult, Resource, ResourceContents, ServerCapabilities,
         ServerInfo,
