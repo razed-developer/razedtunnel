@@ -26,6 +26,33 @@ pub fn list_workspaces(app: AppHandle) -> Result<Vec<Workspace>, String> {
 }
 
 #[tauri::command]
+pub fn open_workspace_folder(app: AppHandle, workspace_id: String) -> Result<(), String> {
+    let workspace = approved_workspace(&app, &workspace_id)?;
+    validate_workspace_root(&workspace)?;
+    let path = std::path::Path::new(&workspace.path);
+    #[cfg(target_os = "windows")]
+    let mut command = {
+        let mut command = std::process::Command::new("explorer.exe");
+        command.arg(path);
+        command
+    };
+    #[cfg(target_os = "macos")]
+    let mut command = {
+        let mut command = std::process::Command::new("open");
+        command.arg(path);
+        command
+    };
+    #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
+    let mut command = {
+        let mut command = std::process::Command::new("xdg-open");
+        command.arg(path);
+        command
+    };
+    command.spawn().map_err(|error| format!("Could not open project folder: {error}"))?;
+    Ok(())
+}
+
+#[tauri::command]
 pub fn get_workspace_health(
     app: AppHandle,
     workspace_id: String,
