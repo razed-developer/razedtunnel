@@ -1,3 +1,10 @@
+## Desktop execution IPC wrapper cleanup (awaiting validation)
+- User validated previous launcher wrapper exclusion with **365** compiler warnings, up from 359. Increase can arise from newly unused underlying code; no root-cause analysis yet. Original baseline 437 (72 fewer). Do not treat warning count alone as quality metric.
+- Inspected `lib.rs`, `execution_commands.rs` (64 lines), `mcp_server.rs`, `app_state.rs`, `src/App.tsx`; six desktop execution Tauri handler registrations remained but no direct references to wrapper from inspected MCP/AppState/UI modules.
+- Commit `9621b63` removes six `execution_commands::*` Tauri handler registrations and `mod execution_commands;` from `lib.rs`; source file retained. Core `execution`, project access policy, approvals, and MCP tool implementations untouched.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; test Projects/Connections/tray, optionally read-only MCP execution status/presets. Report warnings vs 365. Assistant did not compile locally.
+- Next: dependency graph and actual binary size/service audit; avoid removing core MCP tools, and preserve runtime launch-at-login support for tray-first design. Do not merge.
+
 ## Desktop launcher wrapper cleanup (awaiting validation)
 - User confirmed live MCP Git status, log, and compact diff all passed on approved `story-gospel-according-to-ashe` after Windows `git.exe` discovery fix. Branch main, clean worktree. Last compiler warning count 359.
 - Inspected `lib.rs` and `launcher_commands.rs` (67 lines). Old desktop launcher wrapper still registered six Tauri IPC commands; not mounted in current Projects/Connections interface. Core `launcher` remains separate for MCP. Also inspected `execution_commands.rs` and `runtime_commands.rs` but did not alter them: `set_launch_at_login` may be needed for tray-first startup.
