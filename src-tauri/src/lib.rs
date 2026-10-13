@@ -14,7 +14,6 @@ mod chatgpt_bridge;
 mod checkpoint;
 mod connection;
 mod continuity;
-mod conversation;
 mod desktop_control;
 mod direct_https;
 mod environment;
@@ -50,13 +49,10 @@ mod mcp_ai_workspace_helpers;
 mod mcp_observation;
 mod media_inspection;
 mod media_tools;
-mod model_hub;
-mod model_trial;
 mod models;
 mod monitoring;
 mod platform_sandbox;
 mod projects;
-mod project_context;
 mod project_index;
 mod project_memory;
 mod project_setup;
@@ -268,8 +264,6 @@ pub fn run() {
                 chat_connection_commands::get_chat_connection_status,
                 chat_connection_commands::start_chat_connection,
                 chat_connection_commands::stop_chat_connection,
-                // Legacy Model Hub, model trials, and Home chat have no mounted UI.
-                // Keep their Rust modules until MCP dependencies are audited.
                 runtime_commands::get_runtime_diagnostics,
                 runtime_commands::set_launch_at_login,
             ];
@@ -311,8 +305,6 @@ pub fn run() {
                 monitoring::stop_all_activity();
                 terminal::stop_transient_activity_for_shutdown();
                 browser::stop_all_activity();
-                // Legacy video lifecycle is opt-in during gateway simplification.
-                model_hub::stop_owned_local_runtimes();
                 #[cfg(feature = "legacy_background_services")]
                 {
                     chatgpt_bridge::shutdown();
