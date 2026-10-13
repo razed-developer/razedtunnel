@@ -95,6 +95,11 @@ pub(crate) struct IgnoredVisualApplication {
     pub(crate) name: String,
 }
 
+#[cfg(not(windows))]
+fn executable_identity(_application_id: &str) -> Result<String, String> {
+    Err("Only Windows supports executable identity filtering.".into())
+}
+
 fn ignored_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
     use tauri::Manager;
     app.path()
