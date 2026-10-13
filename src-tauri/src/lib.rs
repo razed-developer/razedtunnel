@@ -257,13 +257,8 @@ pub fn run() {
                 terminal_commands::restart_managed_process,
                 // Legacy GitHub account-management desktop IPC is unmounted.
                 // GitHub and git MCP implementations remain available.
-                integration_commands::list_deep_integrations,
-                integration_commands::set_deep_integration_enabled,
-                integration_commands::list_desktop_control_applications,
-                integration_commands::get_desktop_control_enabled,
-                integration_commands::set_desktop_control_enabled,
-                integration_commands::get_gmail_access_enabled,
-                integration_commands::set_gmail_access_enabled,
+                // Deep integration / desktop control / Gmail settings IPC belonged
+                // to removed desktop pages; preserve MCP-side access controls.
                 // AI Workspace frame/action desktop IPC belonged to the removed editor.
                 // Preserve AI workspace implementation and MCP tool dependencies.
                 launcher_commands::open_url,
