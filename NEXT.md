@@ -1,3 +1,7 @@
+## WINDOWS COMPILER FIX — 2026-10-13
+- User reported E0432 for GetDC/PrintWindow/ReleaseDC imported from WindowsAndMessaging and E0369/E0605 for treating uiautomation::types::Handle as primitive.
+- Fixed GDI imports in `windows_capture.rs` and switched UIA handle check to `!hwnd.is_invalid()`, then `hwnd.into()` for isize. Await local Windows compile; no runtime capture validation yet.
+
 ## WINDOWS CAPTURE PATCH — 2026-10-13 — LOCAL WINDOWS VALIDATION REQUIRED
 - Added `windows_capture.rs` using PrintWindow on a revalidated approved app HWND, no desktop BitBlt fallback, bounded dimensions/pixels/PNG bytes, base64 PNG in existing DesktopScreenshot response. `desktop_control::screenshot` still enforces existing require_enabled before capture. UIA resolver returns HWND and matching current window ID.
 - Added Windows GDI / WindowsAndMessaging features to windows-sys and png crate (Cargo.lock will update on user's local cargo check). This code has NOT been compiled on Windows in this environment; treat as candidate patch pending validation, not working capture.
