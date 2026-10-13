@@ -6077,3 +6077,19 @@ textarea:focus-visible {
 @media (max-width: 650px) {
   .page-stack > .visual-access-panel { padding: 18px; }
 }
+
+/* Alternating Visual Access application rows, including their expanded window details. */
+.visual-access-panel .visual-access-apps > div:nth-child(even) {
+  background: color-mix(in srgb, var(--text-primary) 3%, transparent);
+}
+.visual-access-panel .visual-access-apps > div:hover {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.visual-access-panel .visual-access-apps > div {
+  border-radius: 8px;
+  padding-inline: 12px;
+  transition: background-color 140ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .visual-access-panel .visual-access-apps > div { transition: none; }
+}
