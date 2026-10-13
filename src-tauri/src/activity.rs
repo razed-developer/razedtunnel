@@ -870,32 +870,6 @@ pub(crate) fn sync_process(app: &AppHandle, record: &ManagedProcessRecord) {
     sync_processes(app, std::slice::from_ref(record));
 }
 
-pub(crate) fn sync_launch(app: &AppHandle, record: &LaunchActionRecord) {
-    let status = match record.status {
-        LaunchActionStatus::Pending => ActivityStatus::Pending,
-        LaunchActionStatus::Launched => ActivityStatus::Succeeded,
-        LaunchActionStatus::Failed => ActivityStatus::Failed,
-        LaunchActionStatus::Rejected => ActivityStatus::Rejected,
-    };
-    let _ = update_source(app, &record.id, status, record.error.clone());
-}
-
-pub(crate) fn sync_browser(app: &AppHandle, record: &BrowserActionRecord) {
-    let status = match record.status {
-        BrowserActionStatus::Pending => ActivityStatus::Pending,
-        BrowserActionStatus::Applied => ActivityStatus::Succeeded,
-        BrowserActionStatus::Ambiguous => ActivityStatus::Failed,
-        BrowserActionStatus::Failed => ActivityStatus::Failed,
-        BrowserActionStatus::Rejected => ActivityStatus::Rejected,
-    };
-    let _ = update_source(
-        app,
-        &record.id,
-        status,
-        record.error.clone().or_else(|| record.detail.clone()),
-    );
-}
-
 #[cfg(test)]
 mod tests {
     use super::reconcile_process_event;
