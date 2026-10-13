@@ -1,3 +1,10 @@
+## Rust IPC audit: project lifecycle desktop registration cleanup (awaiting validation)
+- User confirmed previous editor/file-explorer IPC cleanup passed. Prior three Rust cleanup stages removed 39 registrations.
+- Inspected mounted App.tsx, WorkspaceList, ChatConnectionPanel, GatewayPanel. None use `project_lifecycle_commands` desktop IPC; App still uses `get_workspace_health` and it remains registered.
+- Commit `969ea99` unregisters five Tauri-only project lifecycle commands: get_project_setup, prepare_project, get_project_memory, get_resume_snapshot, update_project_memory. Rust project lifecycle implementations and MCP tools remain compiled and unchanged. No deletion of storage, project setup, memory, permissions, or gateway functionality.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml` and Projects/Connections/tray/MCP access. Assistant cannot run local builds.
+- Next audit seven diagnostics registrations separately; preserve `workspace_management_commands::get_workspace_health` used by live Projects UI. Audit dependency graph before deleting Rust modules.
+
 ## Rust IPC audit: editor and file explorer registration cleanup (awaiting validation)
 - User confirmed previous 15-command history/checkpoint/safety desktop IPC removal passed.
 - Reviewed mounted `App.tsx`, `WorkspaceList`, `ChatConnectionPanel`, and `GatewayPanel`: none invoke removed editor/file-explorer desktop IPC. Commit `738579b` unregisters 9 Tauri commands: `filesystem_commands` list/read/search (3), `editor_commands` save/create file/create directory/rename/delete/image preview (6).
