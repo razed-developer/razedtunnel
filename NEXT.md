@@ -1,3 +1,8 @@
+## LIGHT SHELL CONSISTENCY PATCH — 2026-10-13
+- Screenshot showed light dashboard with dark sidebar/top header, low-contrast branding, and overly narrow overview. Added stronger light-mode shell overrides in `src/theme.css` to bridge legacy hard-coded dark styles and `!important` rules. Widened only Home overview via `home-page-content` class; existing Projects/Connections content width retained.
+- Validate locally on `ui/dashboard-restoration`: `git pull --ff-only && npm run build`. Inspect light/dark/System Home, sidebar and top toolbar, then Projects/Connections. Report screenshots of any remaining hard-coded dark cards or low contrast. No Rust/backend changes.
+- Next after passing: targeted deeper light-theme component fixes and then real activity/approval integrations.
+
 ## UI THEME HANDOFF — 2026-10-13
 - On `ui/dashboard-restoration`: added System / Light / Dark appearance selector in header, saved to localStorage under `razedtunnel.theme`, reacts to OS color-scheme changes in System mode.
 - New `src/theme.css` loads after existing CSS and overrides the dashboard, shell, navigation, title bar, and common legacy surfaces for light mode. Dark mode preserves prior look. This is an incremental migration; some deep legacy Projects/Connections widgets may still have hard-coded dark colors and require further inspection.
