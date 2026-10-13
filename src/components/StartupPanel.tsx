@@ -29,7 +29,7 @@ export default function StartupPanel() {
 
   return (
     <section className="home-card">
-      <div className="home-section-title"><div><h3>Startup</h3><p>Choose how RazedTunnel starts with Windows.</p></div></div>
+      <div className="home-section-title"><div><h3>Startup <abbr title="Launch at sign-in starts quietly in the tray and requires an installed release build.">ⓘ</abbr></h3></div></div>
       <label>
         <input
           type="checkbox"
@@ -39,7 +39,6 @@ export default function StartupPanel() {
         />
         {" "}Launch RazedTunnel when I sign in
       </label>
-      <p>Starts quietly in the system tray. Requires an installed release build on Windows; development builds cannot enable startup.</p>
       {error ? <p role="alert">{error}</p> : null}
     </section>
   );
