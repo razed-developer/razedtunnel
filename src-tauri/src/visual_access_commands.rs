@@ -15,7 +15,16 @@ pub(crate) fn set_visual_access_enabled(app: AppHandle, enabled: bool) -> Result
 pub(crate) async fn list_visual_access_applications(app: AppHandle) -> Result<Vec<DesktopControlApplication>, String> {
     // UI Automation needs a fresh COM apartment, and enumeration must not block
     // the Tauri UI thread while Connections mounts.
-    tauri::async_runtime::spawn_blocking(move || desktop_control::list(&app, ""))
+    tauri::async_runtime::spawn_blocking(move || {
+        let ignored = read_ignored(&app)?;
+        let apps = desktop_control::list(&app, "")?;
+        Ok(apps.into_iter().filter(|candidate| {
+            match executable_identity(&candidate.id) {
+                Ok(path) => !ignored.iter().any(|entry| entry.executable_path.eq_ignore_ascii_case(&path)),
+                Err(_) => true, // Unknown identities remain visible; never hide by PID/title.
+            }
+        }).collect())
+    })
         .await
         .map_err(|error| format!("UI Automation discovery worker failed: {error}"))?
 }
