@@ -10,6 +10,7 @@ import ConfirmationDialog from "./components/ConfirmationDialog";
 import GatewayPanel from "./components/GatewayPanel";
 import StartupPanel from "./components/StartupPanel";
 import VisualAccessPanel from "./components/VisualAccessPanel";
+import VisualAccessSettings from "./components/VisualAccessSettings";
 
 import WindowChrome from "./components/WindowChrome";
 import PublicTunnelPanel from "./components/PublicTunnelPanel";
@@ -142,7 +143,7 @@ function App() {
     let unlisten: (() => void) | undefined;
     let disposed = false;
     void listen<string>("razedtunnel:open-page", (event) => {
-      if (event.payload === "home" || event.payload === "projects" || event.payload === "connections") {
+      if (event.payload === "home" || event.payload === "projects" || event.payload === "connections" || event.payload === "settings") {
         setActiveView(event.payload);
       }
     }).then((cleanup) => {
@@ -569,6 +570,16 @@ function App() {
       );
     }
 
+    if (activeView === "settings") {
+      return (
+        <div className="page-stack">
+          <div className="home-intro"><div><span className="home-eyebrow">PREFERENCES</span><h2>Settings</h2><p>Configure startup and application visibility without changing project permissions.</p></div></div>
+          <StartupPanel />
+          <VisualAccessSettings />
+        </div>
+      );
+    }
+
     if (activeView === "connections") {
       return (
         <div className="page-stack">
@@ -591,7 +602,6 @@ function App() {
             onForget={handlePublicTunnelForget}
           />
           <VisualAccessPanel />
-          <StartupPanel />
           <details className="connection-advanced-details">
             <summary>Advanced: OpenAI Secure Tunnel</summary>
           <ChatConnectionPanel
