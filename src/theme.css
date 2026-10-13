@@ -148,11 +148,11 @@
 
 /* Solid, vivid status cards. No gradient washes or translucent fills. */
 :root {
-  --metric-blue:#225bd3;
-  --metric-green:#168b4e;
-  --metric-yellow:#f3bd32;
+  --metric-blue:#94b2ec;
+  --metric-green:#8cc4aa;
+  --metric-yellow:#f1d28d;
   --metric-red:#c83d45;
-  --metric-neutral:#475569;
+  --metric-neutral:#b8c2d0;
 }
 .home-metric {
   background:var(--metric-solid,var(--metric-blue)) !important;
