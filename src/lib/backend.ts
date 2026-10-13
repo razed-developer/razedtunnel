@@ -164,3 +164,17 @@ export async function setVisualAccessEnabled(enabled: boolean): Promise<boolean>
 export async function listVisualAccessApplications(): Promise<VisualAccessApplication[]> {
   return invoke<VisualAccessApplication[]>("list_visual_access_applications");
 }
+
+export type VisualAccessScreenshot = {
+  applicationId: string;
+  windowId: string;
+  mimeType: string;
+  sizeBytes: number;
+  width: number;
+  height: number;
+  dataBase64: string;
+};
+
+export async function captureVisualAccessWindow(applicationId: string): Promise<VisualAccessScreenshot> {
+  return invoke<VisualAccessScreenshot>("capture_visual_access_window", { applicationId });
+}
