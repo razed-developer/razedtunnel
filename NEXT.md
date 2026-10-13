@@ -1,3 +1,9 @@
+## Follow-up fix: remove stale Tauri handler registration (awaiting validation)
+- User's rerun after `6ad388e` failed E0433: `lib.rs` still registered `workspace_policy_commands::open_workspace_path_local` in `tauri::generate_handler!` although the function had been removed. Previous checkpoint incorrectly described it as already unregistered.
+- Commit `83cfbb8` removes that exact handler entry; no other command registrations, MCP implementations, or runtime logic changed.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Previous successful warnings baseline remains 407; two warnings from failed checks are not a meaningful comparison.
+- Before future wrapper/module exclusion, audit **both** references from other Rust modules and `generate_handler!` entries to avoid repeating these failures. No merge.
+
 ## Fix: orphaned desktop open-path helper after editor wrapper exclusion (awaiting validation)
 - User reported `cargo check` E0433 at `workspace_policy_commands.rs:105`: `open_workspace_path_local` referenced excluded `crate::editor_commands::local_user_workspace`; frontend check/build passed. The command's Tauri IPC registration had already been removed in a prior stage.
 - Commit `33ecbed` removes this unregistered `open_workspace_path_local` desktop-only function and its now-unused `launcher`, `LaunchActionOutcome`, `approved_workspace` imports. Retains live workspace policy setters and all MCP path-opening/launcher implementations unchanged. `editor_commands` remains excluded from compilation.
