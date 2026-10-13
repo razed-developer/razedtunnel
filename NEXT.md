@@ -1,3 +1,10 @@
+## Rust compilation cleanup: monitoring desktop wrapper only (awaiting validation)
+- User validated prior media wrapper exclusion; warning count remained **359** (baseline 437). No additional warnings eliminated by that change.
+- Inspected `lib.rs`, `monitoring_commands.rs`, `mcp_server.rs`, `app_state.rs` previously. Monitoring desktop wrapper consists of five Tauri IPC commands; no mounted Projects/Connections UI uses them. Distinguish the wrapper from core `monitoring` runtime, which resumes persisted watchers and is required by MCP.
+- Commit `e7faf38` removes all five `monitoring_commands::*` Tauri registrations and the `mod monitoring_commands;` declaration **together**. Source file remains. Crucially `mod monitoring;`, `monitoring::initialize(app)` and `monitoring::stop_all_activity()` remain unchanged; monitoring MCP functionality preserved at implementation level.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; test Projects, Connections, tray, MCP monitoring if available, and report warning count vs 359. Assistant did not compile locally.
+- Next inspect remaining desktop-only wrappers and their registrations; prioritize eliminating genuinely unused compilation units, but warning count is not sole success metric. Do not merge.
+
 ## Rust compilation cleanup: media desktop IPC wrapper (awaiting validation)
 - User validated previous GitHub/integration/AI Workspace wrapper exclusion; warnings decreased from 376 to **359** (437 original; 78 fewer).
 - Audited `media_commands.rs` (58 lines), `lib.rs`, `mcp_server.rs`, and `app_state.rs`. The media desktop wrapper still had three Tauri `generate_handler!` registrations, unlike earlier wrappers. No direct references from inspected MCP or AppState modules.
