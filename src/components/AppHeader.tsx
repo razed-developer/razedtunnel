@@ -1,8 +1,10 @@
+import type { ReactNode } from "react";
 import type { AppView } from "./AppSidebar";
 import { NavIcon } from "./AppSidebar";
 
 type AppHeaderProps = {
   view: AppView;
+  themeControl: ReactNode;
   gatewayRunning: boolean;
   connectionReady: boolean;
   aiAccessPaused: boolean;
@@ -10,7 +12,7 @@ type AppHeaderProps = {
   onToggleFocusMode: () => void;
 };
 
-function AppHeader({ view, gatewayRunning, connectionReady, aiAccessPaused, focusMode, onToggleFocusMode }: AppHeaderProps) {
+function AppHeader({ view, themeControl, gatewayRunning, connectionReady, aiAccessPaused, focusMode, onToggleFocusMode }: AppHeaderProps) {
   return (
     <header className="page-header">
       <div className="page-tab active">
@@ -18,6 +20,7 @@ function AppHeader({ view, gatewayRunning, connectionReady, aiAccessPaused, focu
         <h1>{view === "home" ? "Home" : view === "connections" ? "Connections" : "Projects"}</h1>
       </div>
       <div className="page-statuses" aria-label="Connection status">
+        {themeControl}
         <button
           type="button"
           className={`focus-mode-toggle ${focusMode ? "active" : ""}`}
