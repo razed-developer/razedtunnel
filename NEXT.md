@@ -1,3 +1,10 @@
+## Rust module audit: remove three desktop-only command wrapper modules from build (awaiting validation)
+- User confirmed prior 7-integration-IPC cleanup passed and reported `razedtunnel (lib)` emitted 437 compiler warnings. Do not suppress warnings indiscriminately; many are dead-code candidates after IPC pruning, but count alone is not a dependency proof.
+- Inspected `lib.rs`, `model_hub_commands.rs`, `model_trial_commands.rs`, `conversation_commands.rs`, and searched `mcp_server.rs` for these wrapper module names. These three files consist of Tauri command wrappers for previously unregistered Home chat, Model Hub, and model trial UI, with no direct MCP references observed.
+- Commit `7e5c379` removes **only** `mod conversation_commands;`, `mod model_hub_commands;`, `mod model_trial_commands;` from `lib.rs`, so those obsolete wrappers are no longer compiled. Their files remain in Git for now; **core** `conversation`, `model_hub`, `model_trial` and all MCP modules remain compiled and untouched. This is the first module-level compilation reduction, not deletion of implementation or data.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, then Projects/Connections/tray/MCP access. If cargo check reports unresolved module references, restore declaration or fix dependencies before advancing. Record new warning count (437 baseline, counts may vary with compiler/config).
+- Next: map references to core legacy modules and determine whether they are actually needed by MCP or startup before removing more. Do not merge.
+
 ## Startup dependency audit: monitoring and terminal (audit only; no runtime change)
 - User validated integration IPC removal; prior total 74 desktop IPC registrations removed.
 - Reviewed `src-tauri/src/lib.rs`, `monitoring.rs`, `terminal.rs`, and `app_state.rs` before attempting actual Rust module/startup removal.
