@@ -474,7 +474,7 @@ mod runtime {
                 continue;
             }
             let hwnd = window.get_native_window_handle().map_err(|error| uia_error("Could not resolve approved window handle", error))?;
-            if hwnd != 0 { visible.push((hwnd as isize, id)); }
+            if !hwnd.is_invalid() { visible.push((hwnd.into(), id)); }
         }
         match requested_window_id {
             Some(id) => visible
