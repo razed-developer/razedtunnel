@@ -189,3 +189,7 @@ export const listIgnoredVisualApplications = () =>
 export const setVisualApplicationIgnored = (args: {
   applicationId?: string; executablePath?: string; name?: string; ignored: boolean;
 }) => invoke<IgnoredVisualApplication[]>("set_visual_application_ignored", args);
+
+export type VisualAccessWindow = { applicationId: string; title: string };
+export const listVisualAccessWindows = () =>
+  invoke<VisualAccessWindow[]>("list_visual_access_windows");
