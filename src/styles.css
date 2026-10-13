@@ -6193,3 +6193,70 @@ textarea:focus-visible {
   .public-overview .public-health-grid { grid-template-columns: 1fr; }
   .public-overview .public-mcp-endpoint { flex-wrap: wrap; }
 }
+
+/* Public endpoint: remove legacy dark blocks and restore readable theme colors. */
+.public-overview .public-health-grid {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.public-overview .public-health-grid > div {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.public-overview .public-health-grid > div span,
+.public-overview .public-mcp-endpoint span,
+.public-overview .public-mcp-endpoint small {
+  color: var(--text-secondary);
+}
+.public-overview .public-health-grid > div strong,
+.public-overview .public-mcp-endpoint code {
+  color: var(--text-primary);
+}
+.public-overview .public-mcp-endpoint {
+  width: 100%;
+  max-width: 100%;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+.public-overview .public-mcp-endpoint > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.public-overview .public-mcp-endpoint code {
+  white-space: normal;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.public-overview .public-connection-actions .secondary-button,
+.public-overview .public-mcp-endpoint .secondary-button {
+  background: var(--surface-soft);
+  color: var(--accent);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.public-overview .public-connection-actions .secondary-button:hover:not(:disabled),
+.public-overview .public-mcp-endpoint .secondary-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+}
+.public-overview .public-connection-actions .danger-outline {
+  color: #b33b47;
+  border-color: color-mix(in srgb, #b33b47 28%, var(--border));
+}
+.public-overview .public-connection-actions .danger-outline:hover:not(:disabled) {
+  background: color-mix(in srgb, #b33b47 9%, var(--surface));
+  border-color: #b33b47;
+}
+.public-overview .connection-heading h2,
+.public-overview .public-health-grid strong { color: var(--text-primary); }
+.public-overview .public-provider-switch { background: var(--surface-soft); border: 1px solid var(--border); }
+.public-overview .public-provider-switch button { color: var(--text-secondary); }
+.public-overview .public-provider-switch button.active {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
