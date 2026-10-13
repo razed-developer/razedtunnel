@@ -1,3 +1,10 @@
+## Rust compilation cleanup: history/checkpoint/safety desktop wrappers (awaiting validation)
+- User validated preceding three-wrapper removal and reported warnings decreased from 437 to 422 (15 fewer).
+- Reviewed `history_commands.rs`, `checkpoint_commands.rs`, `safety_commands.rs` and `mcp_server.rs`: these are desktop Tauri command wrappers, their IPC registrations were previously removed, and no direct references from `mcp_server.rs` to the wrapper modules were found.
+- Commit `6de1917` removes only `mod history_commands;`, `mod checkpoint_commands;`, and `mod safety_commands;` declarations from `lib.rs`, excluding those wrapper files from Rust compilation. Core `activity`, `checkpoint`, `changes`, `versioning`, `workflow`, `hardening`, and MCP implementations remain intact; source files retained.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; check Projects/Connections/tray/MCP. Report warning count compared with 422 baseline. Assistant cannot run local build.
+- Next inspect other unregistered wrapper modules; only then investigate core module dependencies. Never suppress warnings wholesale or merge this cleanup branch.
+
 ## Rust module audit: remove three desktop-only command wrapper modules from build (awaiting validation)
 - User confirmed prior 7-integration-IPC cleanup passed and reported `razedtunnel (lib)` emitted 437 compiler warnings. Do not suppress warnings indiscriminately; many are dead-code candidates after IPC pruning, but count alone is not a dependency proof.
 - Inspected `lib.rs`, `model_hub_commands.rs`, `model_trial_commands.rs`, `conversation_commands.rs`, and searched `mcp_server.rs` for these wrapper module names. These three files consist of Tauri command wrappers for previously unregistered Home chat, Model Hub, and model trial UI, with no direct MCP references observed.
