@@ -1,3 +1,11 @@
+## Rust compilation cleanup: editor/filesystem/diagnostics wrappers (awaiting validation)
+- User confirmed previous history/checkpoint/safety wrapper cleanup passed; compiler warnings fell from 422 to 407 (437 original).
+- Reviewed `editor_commands.rs` (245 lines), `filesystem_commands.rs` (35 lines), `workspace_diagnostics_commands.rs` (82 lines), `mcp_server.rs`, `change_commands.rs`, and `lib.rs`. No direct MCP or remaining wrapper references to these desktop modules found in inspected files; desktop IPC entries were previously removed.
+- Commit `d7a1788` removes only three `mod` declarations from `lib.rs`: `editor_commands`, `filesystem_commands`, `workspace_diagnostics_commands`. Their source files remain in Git; core `filesystem`, `access`, `project_index`, `workflow`, and MCP remain compiled and unchanged.
+- **Important**: `editor_commands` exports `local_user_workspace`; compilation may reveal a reference from another Rust module not inspected. If `cargo check` reports a missing `crate::editor_commands`, restore the declaration or relocate that helper carefully. Do not claim validation before user tests.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; test Projects/Connections/tray/MCP and report warnings vs 407 baseline.
+- Next continue wrapper dependency review, not core module removal without full cross-module proof. Do not merge.
+
 ## Rust compilation cleanup: history/checkpoint/safety desktop wrappers (awaiting validation)
 - User validated preceding three-wrapper removal and reported warnings decreased from 437 to 422 (15 fewer).
 - Reviewed `history_commands.rs`, `checkpoint_commands.rs`, `safety_commands.rs` and `mcp_server.rs`: these are desktop Tauri command wrappers, their IPC registrations were previously removed, and no direct references from `mcp_server.rs` to the wrapper modules were found.
