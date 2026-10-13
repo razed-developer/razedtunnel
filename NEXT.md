@@ -1,3 +1,9 @@
+## UI COMPLETION PRIORITY — 2026-10-13
+- User explicitly paused Visual Access monitoring development to finish consistent UI across pages and expose existing functionality.
+- First UI pass: dedicated Settings navigation/page; Startup moved from Connections into Settings; ignored application management available in Settings; shared home-card/home-section-title presentation; header supports Settings. Connections retains operational Visual Access and managed tunnel controls. No backend permission semantics changed.
+- Next: audit dormant frontend components against current backend and classify as supported/legacy/unsafe; expose supported features in appropriate Home/Projects/Connections/Settings pages with consistent design, avoid resurrecting dead UI blindly. Consolidate duplicate ignored-app management later. Improve page-level layout and empty/error/loading states; verify accessibility and responsive behavior.
+- Windows validation: git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && npm run build. Check Settings nav, launch-at-login, ignored apps restore, and Connections controls.
+
 ## WINDOW-AWARE MONITORING — FIRST PATCH 2026-10-13
 - Added async UIA top-level window discovery (separate entries for multiple VS Code windows) and expandable Windows list in Visual Access. This is read-only discovery; window titles are labels, NOT validated workspace identities or persistent capture targets. No monitoring or automatic reattachment has been enabled.
 - Next: bind each selected window to verified project identity using workspace folder evidence, not title alone. Obtain stable HWND-backed window ID and revalidate executable + project before capturing; ambiguous matches must pause. Add persistent explicit opt-in monitoring and restart state machine only after verification. Avoid using app-level Capture Now for specific-window monitoring.
