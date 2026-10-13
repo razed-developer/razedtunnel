@@ -365,7 +365,7 @@ mod runtime {
             .map_err(|error| uia_error("Could not read Windows UIA root", error))?;
         let children = walker
             .get_children_build_cache(&root, &cache)
-            .unwrap_or_default();
+            .map_err(|error| uia_error("Could not enumerate Windows desktop windows", error))?;
         let own_pid = std::process::id() as i32;
         let mut grouped = BTreeMap::<i32, WindowsUiaApplication>::new();
 
