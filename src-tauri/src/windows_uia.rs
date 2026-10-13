@@ -404,7 +404,6 @@ mod runtime {
     pub(crate) struct WindowsUiaWindow {
         pub(crate) application_id: String,
         pub(crate) title: String,
-        pub(crate) window_id: String,
     }
 
     pub(crate) fn list_top_level_windows() -> Result<Vec<WindowsUiaWindow>, String> {
@@ -425,9 +424,6 @@ mod runtime {
             windows.push(WindowsUiaWindow {
                 application_id: format!("uia-pid-{pid}"),
                 title,
-                window_id: format!("uia-window-{}", element_signature(
-                    "0", 50032, &cached_name(&window), ""
-                )),
             });
         }
         Ok(windows)
