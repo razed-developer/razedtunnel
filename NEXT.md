@@ -1,3 +1,7 @@
+## CONNECTIONS VISUAL POLISH — 2026-10-13
+- User supplied screenshots of Connections: Gateway and Public Tunnel visually denser, Visual Access had default buttons, edge-to-edge text and rows. Applied first Visual Access pass: padded card, wrapped app rows, consistent button styling, hover help instead of lengthy explanations, responsive padding. Existing behavior unchanged.
+- Next: audit and simplify GatewayPanel and PublicTunnelPanel with same visual language; keep critical security states/actions visible, collapse optional diagnostics and verbose technical copy. Verify with Windows npm run build and screenshot at desktop and narrow width.
+
 ## UI COMPLETION PRIORITY — 2026-10-13
 - User explicitly paused Visual Access monitoring development to finish consistent UI across pages and expose existing functionality.
 - First UI pass: dedicated Settings navigation/page; Startup moved from Connections into Settings; ignored application management available in Settings; shared home-card/home-section-title presentation; header supports Settings. Connections retains operational Visual Access and managed tunnel controls. No backend permission semantics changed.
