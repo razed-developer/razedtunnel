@@ -163,8 +163,23 @@ fn initialize_connection_runtime(app: &tauri::AppHandle) {
             .name("repotunnel-auto-connect".to_string())
             .spawn(move || {
                 let state = app_handle.state::<AppState>();
-                if let Err(error) = state.start_public_tunnel(app_handle.clone()) {
-                    hardening::log_event(&app_handle, "WARN", "public_tunnel.auto_start", &error);
+                // A login-time network delay can make the first connection attempt fail.
+                // Retry a few times without requiring the configuration window to be open.
+                for attempt in 1..=3 {
+                    match state.start_public_tunnel(app_handle.clone()) {
+                        Ok(()) => break,
+                        Err(error) => {
+                            hardening::log_event(
+                                &app_handle,
+                                "WARN",
+                                "public_tunnel.auto_start",
+                                &format!("Attempt {attempt}/3 failed: {error}"),
+                            );
+                            if attempt < 3 {
+                                std::thread::sleep(std::time::Duration::from_secs(10));
+                            }
+                        }
+                    }
                 }
             })
         {
