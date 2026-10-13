@@ -1,3 +1,8 @@
+## VISUAL ACCESS UI — 2026-10-13
+- Restored local Tauri commands for global Desktop Access status, toggle, and application listing via `visual_access_commands.rs`; registered in `lib.rs`.
+- Added `VisualAccessPanel` to Connections with explicit global/control scope disclosure, enable/disable, refresh, discovered app names/window counts. No auto-capture, no new privilege grant beyond existing global toggle. This has not been locally compiled yet.
+- Validate `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && npm run build`. Then open Notepad and use Connections → Visual Access → Enable → Refresh apps. Next verify MCP connection and actual PNG output; do not claim live capture works before that test.
+
 ## WINDOWS COMPILER FIX — 2026-10-13
 - User reported E0432 for GetDC/PrintWindow/ReleaseDC imported from WindowsAndMessaging and E0369/E0605 for treating uiautomation::types::Handle as primitive.
 - Fixed GDI imports in `windows_capture.rs` and switched UIA handle check to `!hwnd.is_invalid()`, then `hwnd.into()` for isize. Await local Windows compile; no runtime capture validation yet.
