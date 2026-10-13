@@ -290,16 +290,57 @@ fn desktop_exec_value(path: &Path) -> String {
     format!("\"{escaped}\"")
 }
 
+#[cfg(target_os = "windows")]
+const WINDOWS_AUTOSTART_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
+#[cfg(target_os = "windows")]
+const WINDOWS_AUTOSTART_VALUE: &str = "RazedTunnel";
+
 pub(crate) fn launch_at_login_enabled() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        return Command::new("reg.exe")
+            .args(["query", WINDOWS_AUTOSTART_KEY, "/v", WINDOWS_AUTOSTART_VALUE])
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false);
+    }
+    #[cfg(not(target_os = "windows"))]
     autostart_path().map(|path| path.is_file()).unwrap_or(false)
 }
 
 pub(crate) fn set_launch_at_login(app: &AppHandle, enabled: bool) -> Result<(), String> {
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "windows")]
+    {
+        let mut command = Command::new("reg.exe");
+        if enabled {
+            let executable = env::current_exe()
+                .map_err(|error| format!("Could not locate RazedTunnel executable: {error}"))?;
+            let executable = executable.to_str()
+                .ok_or_else(|| "RazedTunnel executable path is not valid Unicode.".to_string())?;
+            let quoted = format!("\\\"{executable}\\\"");
+            command.args(["add", WINDOWS_AUTOSTART_KEY, "/v", WINDOWS_AUTOSTART_VALUE,
+                "/t", "REG_SZ", "/d", &quoted, "/f"]);
+        } else {
+            if !launch_at_login_enabled() {
+                return Ok(());
+            }
+            command.args(["delete", WINDOWS_AUTOSTART_KEY, "/v", WINDOWS_AUTOSTART_VALUE, "/f"]);
+        }
+        let output = command.output()
+            .map_err(|error| format!("Could not update Windows launch at login: {error}"))?;
+        if !output.status.success() {
+            return Err(format!("Windows launch-at-login update failed: {}",
+                String::from_utf8_lossy(&output.stderr).trim()));
+        }
+        log_event(app, "INFO", "autostart", if enabled { "enabled=true" } else { "enabled=false" });
+        return Ok(());
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
     {
         let _ = app;
         let _ = enabled;
-        Err("Launch at login is currently supported only on Linux.".to_string())
+        Err("Launch at login is currently supported only on Linux and Windows.".to_string())
     }
 
     #[cfg(target_os = "linux")]
