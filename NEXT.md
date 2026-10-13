@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — remove unused activity git sync wrapper
+- User pulled prior docs-only FFmpeg audit. Inspected `activity.rs` (960 lines). `sync_git` is a compiler-confirmed unused wrapper calling `update_source`; removed only `sync_git` in commit `32a090f`. Preserved `record_git_record` (active recording), `update_source`, other activity reconciliation paths, and tests. No unrelated files changed.
+- **Awaiting local validation**: `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services && node scripts/audit-rust-functions.mjs`. Expect review candidates to drop from 26 to 25, but compiler warnings should be checked rather than assumed.
+- Preserve local `github.rs` and `Cargo.lock`; DO NOT MERGE. Continue with similarly narrow compiler-confirmed unused wrappers only after checks pass.
+
 ## CURRENT HANDOFF — 2026-10-13 — FFmpeg provisioning dependency map
 - User confirmed audit passes: 1,825 declarations, 336 zero textual refs, 26 review candidates, 310 protected. No runtime code change in this step.
 - Inspected `media_tools.rs` and `media_inspection.rs`. Documented the active discovery path and disconnected provisioning cluster in `docs/audits/media-provisioning-dependencies.md` (commit `b558c6b`). Media inspection calls `available_ffmpeg_program` / `available_ffprobe_program`; retain these. `ensure_ffmpeg_program` is unreferenced, but the rest of the provisioning chain contains download integrity and safety controls and should be considered as one feature, not isolated dead helpers.
