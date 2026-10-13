@@ -1,3 +1,9 @@
+## UI THEME HANDOFF — 2026-10-13
+- On `ui/dashboard-restoration`: added System / Light / Dark appearance selector in header, saved to localStorage under `razedtunnel.theme`, reacts to OS color-scheme changes in System mode.
+- New `src/theme.css` loads after existing CSS and overrides the dashboard, shell, navigation, title bar, and common legacy surfaces for light mode. Dark mode preserves prior look. This is an incremental migration; some deep legacy Projects/Connections widgets may still have hard-coded dark colors and require further inspection.
+- Validate: `git pull --ff-only && npm run build`; launch app, test all three modes and OS appearance change, reload persistence, and check Projects/Connections readability. Do not claim build pass until local result is returned.
+- Next: fix any light-mode contrast defects found locally, then connect actual activity and approval data without placeholder counts.
+
 ## UI RESTORATION HANDOFF — 2026-10-13
 - UI work is isolated on branch `ui/dashboard-restoration`, based on `cleanup/dead-video-view`. Do not merge the Rust cleanup branch as part of UI validation.
 - First UI slice: added Home navigation and landing page with actual gateway status, remote tunnel/chat readiness, project count and permissions, MCP tool success/failure totals. No fabricated activity or approvals. Projects and Connections setup flows unchanged.
