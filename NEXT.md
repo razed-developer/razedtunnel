@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — Rust function audit entry-point classification
+- Branch `cleanup/dead-video-view`; DO NOT MERGE. User confirmed cargo checks PASSED after removing unused `save_history_settings`.
+- Updated `scripts/audit-rust-functions.mjs` commits `4fcffb6`, `f20043b` to distinguish no-textual-reference counts from review candidates; suppress likely MCP `#[tool]` functions, Tauri registered `#[tauri::command]` functions, and tests from deletion candidates. Heuristic attribute proximity; method/trait/callback classification **not** solved. No production code changed. Not locally validated.
+- Next run: `git pull --ff-only && node scripts/audit-rust-functions.mjs`. Compare `noTextualReferences`, `protectedEntryPoints`, `reviewCandidates` in printed counts and JSON; investigate a few candidate functions manually before deletion. Existing history settings loader remains active.
+
 ## CURRENT HANDOFF — 2026-10-13 — unused history-settings writer removed
 - Branch `cleanup/dead-video-view`; DO NOT MERGE. User ran function-reference audit: 1,833 declarations, 342 no textual references. `load_history_settings` is used in `activity.rs`, `updates.rs`, `versioning.rs`; `history_settings_path` has two internal references. Preserve these and `HistorySettings`/existing on-disk settings. `save_history_settings` had zero textual references outside its declaration; removed only that unused function in `storage.rs`, commit `a697e0b`. No persistence files modified; historical settings loading remains intact.
 - **NOT YET COMPILED.** Validate `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services`.
