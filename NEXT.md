@@ -1,3 +1,9 @@
+## CONNECTIONS FREEZE FIX — 2026-10-13
+- User confirmed Capture Now preview works, but Connections freezes for a long time on entry.
+- Root cause likely synchronous `list_visual_access_applications` IPC waiting on UIA worker `join()` on a Tauri command thread.
+- Changed listing command to `async fn` + `tauri::async_runtime::spawn_blocking`; COM initialization stays isolated, but UI can render without waiting for discovery.
+- Not yet locally compiled/tested. Validate cargo check, npm build, then navigate Connections repeatedly and refresh application list. If freeze persists, profile other synchronous IPC on Connections.
+
 ## CAPTURE NOW — 2026-10-13
 - Application discovery confirmed working by user (8 apps including Notepad); dedicated UIA worker solved COM apartment conflict.
 - Added `capture_visual_access_window` async Tauri IPC via `spawn_blocking`, reusing `desktop_control::screenshot` permission enforcement and `windows_capture::capture` PrintWindow-only path.
