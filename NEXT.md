@@ -1,3 +1,9 @@
+## CURRENT HANDOFF — 2026-10-13 — unused GitHub cache accessor
+- Branch `cleanup/dead-video-view`; DO NOT MERGE. User's latest audit: 1,826 declarations, 337 zero textual references, 28 review candidates, 309 protected; `workspace_policy_commands::check_workspace_access` correctly flagged as unregistered Tauri command.
+- Reviewed `github::cached_status`: compiler warns unused, textual audit confirms zero references. Removed only its 3-line accessor, commit `8a97b55`. Kept `status_cache`, `cache_status`, GitHub CLI authentication, connection lifecycle and status handling intact. **Not locally validated yet.**
+- Noted `browser::deref` is a `Deref` trait method; it must not be deleted as an ordinary orphan even if no textual references. Next audit improvement could protect trait implementations rather than relying on generic name matching.
+- Next validation: `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services && node scripts/audit-rust-functions.mjs`. Continue small, compiler-confirmed removals; preserve active MCP/gateway/security/tunnels/terminal/browser/Projects/Connections/tray.
+
 ## CURRENT HANDOFF — 2026-10-13 — unregistered Tauri command audit
 - User's checks PASSED after removing unused MCP `success_result`: default Cargo 140 warnings, legacy feature 101 warnings. Rust audit: 1,826 declarations, 337 zero textual references, 29 review candidates, 308 protected entry points.
 - Inspected review candidate `workspace_policy_commands::check_workspace_access`: it has `#[tauri::command]` but is not in the registered `generate_handler!` list. Treat it as an unregistered Tauri endpoint, not a routine dead helper; no runtime code removed.
