@@ -43,11 +43,21 @@ pub(crate) struct AppState {
     public_tunnel: Mutex<PublicTunnelState>,
     ai_access_paused: AtomicBool,
     public_connection_desired: AtomicBool,
+    shutting_down: AtomicBool,
     remote_request_count: AtomicU64,
     last_remote_request_at: AtomicU64,
 }
 
 impl AppState {
+    pub(crate) fn mark_shutting_down(&self) {
+        self.shutting_down.store(true, Ordering::SeqCst);
+        self.set_public_connection_desired(false);
+    }
+
+    pub(crate) fn shutting_down(&self) -> bool {
+        self.shutting_down.load(Ordering::SeqCst)
+    }
+
     pub(crate) fn public_connection_desired(&self) -> bool {
         self.public_connection_desired.load(Ordering::SeqCst)
     }
