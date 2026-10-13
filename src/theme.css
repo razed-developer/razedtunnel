@@ -100,3 +100,47 @@
 .activity-entry > span { text-transform:capitalize; border:1px solid var(--rt-line); border-radius:20px; padding:4px 8px; white-space:nowrap; }
 .activity-empty { padding:24px 0; color:var(--rt-text-3); font-size:12px; }
 .activity-disclaimer { border-top:1px solid var(--rt-line-soft); margin:0; padding-top:13px; font-size:11px; color:var(--rt-text-4); }
+
+
+/* Muted semantic accents for the monitoring dashboard.
+   Values use theme-local tokens so colour communicates actual state. */
+:root {
+  --home-green:#55b89c; --home-green-wash:rgba(62,175,135,.10);
+  --home-blue:#7ca9ee; --home-blue-wash:rgba(82,141,225,.12);
+  --home-violet:#b5a1ed; --home-violet-wash:rgba(147,112,215,.11);
+  --home-teal:#67b9c8; --home-teal-wash:rgba(63,157,178,.11);
+  --home-amber:#d3a257; --home-amber-wash:rgba(204,150,54,.13);
+  --home-red:#d98288; --home-red-wash:rgba(200,81,91,.12);
+}
+:root[data-theme="light"] {
+  --home-green:#168666; --home-green-wash:#eaf7f1;
+  --home-blue:#356fb8; --home-blue-wash:#edf4ff;
+  --home-violet:#7855b3; --home-violet-wash:#f4effc;
+  --home-teal:#287f93; --home-teal-wash:#eaf6f8;
+  --home-amber:#a56d20; --home-amber-wash:#fff5e5;
+  --home-red:#b34c55; --home-red-wash:#fff0f0;
+}
+.home-metric { position:relative; overflow:hidden; border-top:3px solid var(--metric-accent,var(--rt-line)); background:linear-gradient(165deg,var(--metric-wash,transparent),transparent 65%),var(--rt-panel); }
+.home-metric .home-card-label svg { color:var(--metric-accent,var(--rt-blue)); }
+.home-metric .home-card-label { color:var(--rt-text-2); }
+.home-metric strong { color:var(--rt-text); }
+.home-metric::after { content:""; position:absolute; top:18px; right:19px; width:8px; height:8px; border-radius:50%; background:var(--metric-accent,var(--rt-line)); opacity:.8; }
+.metric-healthy { --metric-accent:var(--home-green); --metric-wash:var(--home-green-wash); }
+.metric-connected { --metric-accent:var(--home-teal); --metric-wash:var(--home-teal-wash); }
+.metric-projects { --metric-accent:var(--home-violet); --metric-wash:var(--home-violet-wash); }
+.metric-tools { --metric-accent:var(--home-blue); --metric-wash:var(--home-blue-wash); }
+.metric-warning { --metric-accent:var(--home-amber); --metric-wash:var(--home-amber-wash); }
+.metric-neutral { --metric-accent:var(--rt-text-4); --metric-wash:transparent; }
+.home-detail-health { border-top:2px solid var(--home-teal); }
+.home-detail-projects { border-top:2px solid var(--home-violet); }
+.home-detail-health .home-section-title h3 { color:var(--rt-text); }
+.home-detail-projects .home-section-title h3 { color:var(--rt-text); }
+.home-detail-projects .home-detail-row svg { color:var(--home-violet); }
+.home-detail-health .home-detail-row svg { color:var(--home-teal); }
+.home-runtime.is-running { background:var(--home-green-wash); border-color:var(--home-green); color:var(--home-green); }
+.activity-feed { border-top:2px solid var(--home-blue); }
+.activity-entry > .activity-status { border-color:transparent; font-weight:600; }
+.activity-status-succeeded,.activity-status-completed,.activity-status-applied { color:var(--home-green); background:var(--home-green-wash); }
+.activity-status-running,.activity-status-observed { color:var(--home-blue); background:var(--home-blue-wash); }
+.activity-status-pending { color:var(--home-amber); background:var(--home-amber-wash); }
+.activity-status-failed,.activity-status-rejected,.activity-status-stopped { color:var(--home-red); background:var(--home-red-wash); }
