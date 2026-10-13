@@ -37,7 +37,7 @@ export default function VisualAccessSettings() {
     <section className="home-card">
       <div className="home-section-title">
         <div>
-          <h3>Ignored applications</h3>
+          <h3>Ignored applications <abbr title="Applications ignored here are hidden from discovery after restarts. This does not revoke Desktop Access or block MCP control.">ⓘ</abbr></h3>
         </div>
         <button type="button" disabled={busy} onClick={() => void refresh()}>Refresh</button>
       </div>
