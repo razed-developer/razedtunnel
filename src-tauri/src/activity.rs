@@ -750,58 +750,6 @@ pub(crate) fn record_git_record(
     )
 }
 
-pub(crate) fn sync_change(app: &AppHandle, record: &ChangeRecord) {
-    let status = match record.status {
-        ChangeStatus::Pending => ActivityStatus::Pending,
-        ChangeStatus::Applied => ActivityStatus::Succeeded,
-        ChangeStatus::Rejected => ActivityStatus::Rejected,
-        ChangeStatus::Undone => ActivityStatus::Stopped,
-        ChangeStatus::Failed => ActivityStatus::Failed,
-    };
-    let _ = update_source(
-        app,
-        &record.id,
-        status,
-        record.error.clone().or_else(|| record.diff.clone()),
-    );
-}
-
-pub(crate) fn sync_sandbox_command(app: &AppHandle, record: &CommandRecord) {
-    let status = match record.status {
-        CommandStatus::Pending => ActivityStatus::Pending,
-        CommandStatus::Running => ActivityStatus::Running,
-        CommandStatus::Completed => ActivityStatus::Succeeded,
-        CommandStatus::Failed | CommandStatus::TimedOut => ActivityStatus::Failed,
-        CommandStatus::Rejected => ActivityStatus::Rejected,
-        CommandStatus::Cancelled => ActivityStatus::Stopped,
-    };
-    let _ = update_source(
-        app,
-        &record.id,
-        status,
-        output_detail(
-            &record.stdout,
-            &record.stderr,
-            record.exit_code,
-            record.error.as_deref(),
-        ),
-    );
-}
-
-pub(crate) fn sync_terminal(app: &AppHandle, record: &TerminalCommandRecord) {
-    let _ = update_source(
-        app,
-        &record.id,
-        terminal_status(record.status),
-        output_detail(
-            &record.stdout,
-            &record.stderr,
-            record.exit_code,
-            record.error.as_deref(),
-        ),
-    );
-}
-
 pub(crate) fn sync_processes(app: &AppHandle, records: &[ManagedProcessRecord]) {
     if records.is_empty() {
         return;
