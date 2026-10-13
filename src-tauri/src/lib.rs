@@ -232,12 +232,10 @@ pub fn run() {
                 workspace_management_commands::relocate_workspace,
                 workspace_management_commands::add_workspace,
                 workspace_management_commands::clone_git_workspace,
-                workspace_management_commands::create_project,
                 workspace_management_commands::remove_workspace,
                 workspace_policy_commands::update_workspace_access,
                 workspace_policy_commands::update_workspace_change_policy,
                 workspace_policy_commands::update_workspace_command_policy,
-                workspace_policy_commands::check_workspace_access,
                 // File explorer and editor IPC belong to the removed desktop workspace UI.
                 // Filesystem and editor Rust modules remain for MCP dependencies.
                 // Project lifecycle desktop IPC belonged to the removed workspace UI.
@@ -246,17 +244,6 @@ pub fn run() {
                 // registered above for Projects, and MCP diagnostics stay compiled.
                 // Temporary workspace desktop controls are unmounted; preserve
                 // temporary workspace implementation for MCP project tooling.
-                change_commands::create_file,
-                change_commands::write_file,
-                change_commands::patch_file,
-                change_commands::create_directory,
-                change_commands::rename_entry,
-                change_commands::move_entry,
-                change_commands::delete_entry,
-                change_commands::list_changes,
-                change_commands::approve_change,
-                change_commands::reject_change,
-                change_commands::undo_change,
                 // History, checkpoints and safety scan have no mounted desktop UI.
                 // Their underlying modules and MCP dependencies remain compiled.
                 // Terminal desktop IPC was retired with the terminal UI.
@@ -280,10 +267,6 @@ pub fn run() {
                 public_tunnel_commands::configure_public_tunnel,
                 public_tunnel_commands::restart_public_tunnel,
                 public_tunnel_commands::provision_direct_https_certificate,
-                https_setup::get_https_setup_readiness,
-                https_setup::install_https_setup_wireguard_config,
-                https_setup::open_https_setup_resource,
-                https_setup::verify_https_setup_hostname,
                 public_tunnel_commands::clear_public_tunnel,
                 public_tunnel_commands::revoke_mcp_access,
                 chat_connection_commands::get_chat_connection_status,
@@ -293,11 +276,6 @@ pub fn run() {
                 // Keep their Rust modules until MCP dependencies are audited.
                 runtime_commands::get_runtime_diagnostics,
                 runtime_commands::set_launch_at_login,
-                runtime_commands::get_update_status,
-                runtime_commands::check_for_updates,
-                runtime_commands::set_auto_update_checks,
-                runtime_commands::defer_update,
-                runtime_commands::install_update_and_restart,
             ];
             handler
         })
