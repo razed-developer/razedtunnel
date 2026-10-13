@@ -33,7 +33,6 @@ mod https_setup;
 mod integrations;
 mod large_project_read;
 mod launcher;
-mod launcher_commands;
 #[cfg(any(target_os = "macos", test))]
 mod macos_ax;
 mod mcp_auth;
@@ -243,12 +242,6 @@ pub fn run() {
                 // to removed desktop pages; preserve MCP-side access controls.
                 // AI Workspace frame/action desktop IPC belonged to the removed editor.
                 // Preserve AI workspace implementation and MCP tool dependencies.
-                launcher_commands::open_url,
-                launcher_commands::open_workspace_path,
-                launcher_commands::launch_application,
-                launcher_commands::list_launch_history,
-                launcher_commands::approve_launch_action,
-                launcher_commands::reject_launch_action,
                 browser_commands::list_automation_browsers,
                 browser_commands::get_browser_automation_status,
                 browser_commands::start_browser_automation,
