@@ -1,3 +1,9 @@
+## Reconnect lifecycle safety (awaiting validation)
+- Live MCP list_workspaces confirmed working while RazedTunnel is hidden; previous startup retry patch was not explicitly build-validated in latest user message.
+- Audit found `AppState::start_public_tunnel` returned Ok whenever a runtime object existed, even if its worker had already exited. Commit c285c4f fixes this: stop/join a finished worker before checking for an active runtime, allowing explicit/startup reconnect attempts to spawn a new worker. Healthy running workers remain untouched. This is a small prerequisite for safe recovery, not a new background supervisor.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; then check MCP while hidden. Assistant did not compile locally.
+- Next: design background watchdog that distinguishes intentional Stop from unexpected failure, supports cancellation on exit, avoids races with provider reconfiguration, and retries long outages. Do not introduce an unconditional poll that restarts intentionally stopped connections. Keep cleanup/dead-video-view unmerged.
+
 ## Auto-connect retries after login (awaiting validation)
 - User reported previous Windows startup toggle build passed. ChatGPT MCP was confirmed accessible with UI hidden.
 - Audited `lib.rs` auto-connect and `app_state.rs`/`public_tunnel.rs` recovery: startup auto-connect previously attempted only once. Cloudflare worker itself has restart/backoff; ngrok session handles network interruptions; public_tunnel_status can restart a finished worker when queried. These do not guarantee recovery after an initial login-time network failure.
