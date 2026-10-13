@@ -1,6 +1,6 @@
 import RepoTunnelLogo from "./RepoTunnelLogo";
 
-export type AppView = "home" | "projects" | "connections";
+export type AppView = "home" | "projects" | "connections" | "settings";
 
 type AppSidebarProps = {
   activeView: AppView;
@@ -44,6 +44,9 @@ const navGroups: NavGroup[] = [
     { id: "home", label: "Home", icon: "home" },
     { id: "projects", label: "Projects", icon: "folder" },
     { id: "connections", label: "Connections", icon: "link" },
+  ] },
+  { label: "Preferences", items: [
+    { id: "settings", label: "Settings", icon: "settings" },
   ] },
 ];
 
