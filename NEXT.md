@@ -1,3 +1,10 @@
+## Rust IPC audit: diagnostics desktop registrations (awaiting validation)
+- User confirmed project lifecycle IPC removal passed. Previous cleanup total 44 registrations removed.
+- Inspected mounted App, WorkspaceList, ChatConnectionPanel, GatewayPanel, PublicTunnelPanel. None reference seven `workspace_diagnostics_commands` IPC entries. Commit `b6c44df` unregisters inspect_project, get_workflow_readiness, get_environment_diagnostics, list_tool_capabilities, get_system_resource_snapshot, list_launchable_applications, get_file_info (7).
+- `workspace_management_commands::get_workspace_health` remains registered and used by live Projects. Diagnostics Rust modules and all MCP tools remain compiled, unchanged. No Rust implementation deletion.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, then Projects/Connections/tray/MCP project file access. Assistant has not compiled locally.
+- Next audit remaining unused Tauri IPC groups and startup services; avoid removing anything used by MCP or tray. No merge.
+
 ## Rust IPC audit: project lifecycle desktop registration cleanup (awaiting validation)
 - User confirmed previous editor/file-explorer IPC cleanup passed. Prior three Rust cleanup stages removed 39 registrations.
 - Inspected mounted App.tsx, WorkspaceList, ChatConnectionPanel, GatewayPanel. None use `project_lifecycle_commands` desktop IPC; App still uses `get_workspace_health` and it remains registered.
