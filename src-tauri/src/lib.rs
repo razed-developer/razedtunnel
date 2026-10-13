@@ -218,11 +218,8 @@ pub fn run() {
                 // Filesystem and editor Rust modules remain for MCP dependencies.
                 // Project lifecycle desktop IPC belonged to the removed workspace UI.
                 // Preserve its Rust implementation for MCP tool dependencies.
-                workspace_diagnostics_commands::inspect_project,
-                workspace_diagnostics_commands::get_workflow_readiness,
-                workspace_diagnostics_commands::get_environment_diagnostics,
-                workspace_diagnostics_commands::list_tool_capabilities,
-                workspace_diagnostics_commands::get_system_resource_snapshot,
+                // Legacy desktop diagnostics IPC removed; workspace health remains
+                // registered above for Projects, and MCP diagnostics stay compiled.
                 temp_workspace_commands::create_temp_workspace,
                 temp_workspace_commands::list_temp_workspaces,
                 temp_workspace_commands::inspect_temp_workspace,
@@ -262,7 +259,6 @@ pub fn run() {
                 terminal_commands::reject_managed_process,
                 terminal_commands::stop_managed_process,
                 terminal_commands::restart_managed_process,
-                workspace_diagnostics_commands::list_launchable_applications,
                 github_commands::get_github_connection_status,
                 github_commands::connect_github,
                 github_commands::cancel_github_connection,
@@ -331,7 +327,6 @@ pub fn run() {
                 git_commands::approve_git_action,
                 git_commands::reject_git_action,
                 git_commands::request_git_restore_file,
-                workspace_diagnostics_commands::get_file_info,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
                 gateway_commands::get_gateway_status,
