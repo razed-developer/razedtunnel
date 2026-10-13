@@ -332,8 +332,6 @@ function PublicTunnelPanel({
                 : "Use Restart connection if setup needs attention.")}
             </p>
           </div>
-
-            </div>
           </details>
 
           <div className="public-connection-actions">
