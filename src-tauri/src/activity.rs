@@ -896,21 +896,6 @@ pub(crate) fn sync_browser(app: &AppHandle, record: &BrowserActionRecord) {
     );
 }
 
-pub(crate) fn sync_git(app: &AppHandle, record: &GitActionRecord) {
-    let status = match record.status {
-        GitActionStatus::Pending => ActivityStatus::Pending,
-        GitActionStatus::Applied => ActivityStatus::Succeeded,
-        GitActionStatus::Rejected => ActivityStatus::Rejected,
-        GitActionStatus::Failed => ActivityStatus::Failed,
-    };
-    let _ = update_source(
-        app,
-        &record.id,
-        status,
-        record.error.clone().or_else(|| record.detail.clone()),
-    );
-}
-
 #[cfg(test)]
 mod tests {
     use super::reconcile_process_event;
