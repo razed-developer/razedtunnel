@@ -1,3 +1,9 @@
+## Frontend cleanup batch 2 — editor dependency cluster (awaiting validation)
+- User confirmed prior restored-DeveloperDock state passes check/build/cargo check.
+- Inspected current `WorkspaceEditor.tsx` (510 lines), `CodeMirrorSurface.tsx` (427 lines), `DeveloperDock.tsx` (894 lines): WorkspaceEditor imports both CodeMirrorSurface and DeveloperDock; CodeMirrorSurface imports the EditorProblem type from DeveloperDock. None is imported by current `src/App.tsx` or `src/main.tsx` entrypoint. Deleted all three as a single legacy editor cluster (commits 5f6e8d9, 622c483, 216c651), rather than leaving broken internal imports. `ModelHub.tsx` remains deleted from prior batch. No Rust/MCP changes.
+- Local validation needed: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. If TypeScript reports imports from another legacy component, audit and remove its dead cluster or restore as necessary. Assistant cannot run user's Windows build.
+- Still need comprehensive component directory inventory and reachable import graph; do not claim exhaustive audit. Next consider unused `ModelTrial.tsx` and its exclusive helpers, after validating and checking dependents. Keep branch cleanup/dead-video-view unmerged.
+
 ## Frontend cleanup build correction
 - User's `npm run check` caught six errors after deleting DeveloperDock: CodeMirrorSurface imports EditorProblem type; WorkspaceEditor imports DeveloperDock and EditorProblem. Type inference errors cascade from missing module. These legacy files are still included by TypeScript even if not mounted in App.
 - Commit 6494cab restores DeveloperDock unchanged as immediate safe fix; ModelHub remains removed. Do not claim 1,236 lines removed; net deletion currently only ModelHub (340 lines). User should pull and rerun checks.
