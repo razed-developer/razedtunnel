@@ -63,6 +63,7 @@ function WorkspaceList({
   const [gitUrl, setGitUrl] = useState("");
   const [cloning, setCloning] = useState(false);
   const [cloneError, setCloneError] = useState<string | null>(null);
+  const [expandedPolicies, setExpandedPolicies] = useState<Record<string, boolean>>({});
   async function submitClone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCloning(true);
@@ -83,10 +84,7 @@ function WorkspaceList({
         <div>
           <span className="section-kicker">Projects</span>
           <h2 id="workspace-title">Approved workspaces</h2>
-          <p>
-            Only approved local folders are exposed through RazedTunnel. To connect a Git repository,
-            select its local checkout. Access and execution permissions are configured per project.
-          </p>
+          <p>Manage approved folders and their access permissions.</p>
         </div>
         <div className="workspace-actions">
           <button className="secondary-button" type="button" onClick={onAdd} disabled={adding}>
@@ -143,7 +141,7 @@ function WorkspaceList({
                   </div>
                   <p title={workspace.path}>{workspace.path}</p>
                   {unavailable ? <div className="workspace-path-warning">{health?.message ?? "This project folder cannot be reached."}</div> : null}
-                  <div className="workspace-security">
+                  <div className="workspace-security" aria-label="Current project permissions">
                     <span>{accessLabel(workspace.accessMode)}</span>
                     <span aria-hidden="true">•</span>
                     <span>{changePolicyLabel(workspace.changePolicy)}</span>
@@ -153,7 +151,10 @@ function WorkspaceList({
                     <span>Secrets blocked</span>
                   </div>
                 </div>
-                <div className="workspace-actions">
+                <div className="workspace-actions workspace-card-actions">
+                  <button className="workspace-manage-button" type="button" aria-expanded={Boolean(expandedPolicies[workspace.id])} aria-controls={`workspace-policies-${workspace.id}`} onClick={() => setExpandedPolicies((current) => ({ ...current, [workspace.id]: !current[workspace.id] }))}>
+                    {expandedPolicies[workspace.id] ? "Hide permissions" : "Manage permissions"}
+                  </button>
                   {unavailable ? (
                     <>
                       <button className="access-button recovery" type="button" onClick={() => onRelocate(workspace)} disabled={relocatingWorkspaceId === workspace.id}>
@@ -161,7 +162,7 @@ function WorkspaceList({
                       </button>
                       <button className="policy-button" type="button" onClick={() => onRetryHealth(workspace.id)}>Recheck</button>
                     </>
-                  ) : (<>
+                  ) : expandedPolicies[workspace.id] ? (<div className="workspace-policy-controls" id={`workspace-policies-${workspace.id}`}>
                   <button
                     className={`policy-button ${workspace.changePolicy === "automatic" ? "automatic" : ""}`}
                     type="button"
@@ -196,7 +197,7 @@ function WorkspaceList({
                   >
                     {updating ? "Updating…" : accessLabel(workspace.accessMode)}
                   </button>
-                  </>)}
+                  </div>) : <div id={`workspace-policies-${workspace.id}`} hidden />}
                   <button
                     className="icon-button"
                     type="button"
