@@ -148,21 +148,6 @@ pub(crate) fn load_history_settings(app: &AppHandle) -> Result<HistorySettings, 
         .map_err(|error| format!("Saved history settings are invalid: {error}"))
 }
 
-pub(crate) fn save_history_settings(
-    app: &AppHandle,
-    settings: &HistorySettings,
-) -> Result<(), String> {
-    let path = history_settings_path(app)?;
-    let parent = path
-        .parent()
-        .ok_or_else(|| "Could not resolve RepoTunnel data directory.".to_string())?;
-    fs::create_dir_all(parent)
-        .map_err(|error| format!("Could not create RepoTunnel data directory: {error}"))?;
-    let contents = serde_json::to_string_pretty(settings)
-        .map_err(|error| format!("Could not serialize history settings: {error}"))?;
-    fs::write(path, contents).map_err(|error| format!("Could not save history settings: {error}"))
-}
-
 #[cfg(test)]
 mod tests {
     use super::parse_ai_access_paused;
