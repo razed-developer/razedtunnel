@@ -932,11 +932,8 @@ pub(crate) fn screenshot(
 
     #[cfg(windows)]
     {
-        let _ = (app, window_id);
-        Err(
-            "Windows UI Automation semantic control is available, but app-window screenshot fallback is not implemented in Stage 10."
-                .to_string(),
-        )
+        let _ = app;
+        crate::windows_capture::capture(application_id, window_id)
     }
 
     #[cfg(target_os = "macos")]
