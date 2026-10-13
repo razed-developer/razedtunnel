@@ -4,6 +4,9 @@ import {
   type VisualAccessScreenshot,
   getVisualAccessApplicationIdentity,
   getVisualAccessStatus,
+  listIgnoredVisualApplications,
+  setVisualApplicationIgnored,
+  type IgnoredVisualApplication,
   listVisualAccessApplications,
   setVisualAccessEnabled,
   type VisualAccessApplication,
@@ -16,6 +19,8 @@ function message(error: unknown): string {
 export default function VisualAccessPanel() {
   const [enabled, setEnabled] = useState(false);
   const [apps, setApps] = useState<VisualAccessApplication[]>([]);
+  const [ignoredApps, setIgnoredApps] = useState<IgnoredVisualApplication[]>([]);
+  const [showIgnored, setShowIgnored] = useState(false);
   const [busy, setBusy] = useState(false);
   const [capturingId, setCapturingId] = useState<string | null>(null);
   const [preview, setPreview] = useState<VisualAccessScreenshot | null>(null);
@@ -26,12 +31,14 @@ export default function VisualAccessPanel() {
   const refresh = useCallback(async () => {
     setBusy(true);
     try {
-      const [status, discovered] = await Promise.all([
+      const [status, discovered, ignored] = await Promise.all([
         getVisualAccessStatus(),
         listVisualAccessApplications(),
+        listIgnoredVisualApplications(),
       ]);
       setEnabled(status);
       setApps(discovered);
+      setIgnoredApps(ignored);
       setError(null);
     } catch (cause) {
       setError(message(cause));
@@ -41,6 +48,20 @@ export default function VisualAccessPanel() {
   }, []);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  async function changeIgnored(args: { applicationId?: string; executablePath?: string; name?: string; ignored: boolean }) {
+    setBusy(true);
+    try {
+      const updated = await setVisualApplicationIgnored(args);
+      setIgnoredApps(updated);
+      setApps(await listVisualAccessApplications());
+      setError(null);
+    } catch (cause) {
+      setError(message(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function inspectIdentity(app: VisualAccessApplication) {
     setBusy(true);
@@ -110,12 +131,17 @@ export default function VisualAccessPanel() {
             <div className="home-detail-row" key={app.id}>
               <span>{app.name}</span>
               <span className="home-muted">{app.windowCount} window{app.windowCount === 1 ? "" : "s"} · {app.accessibility ? "Accessible" : "Limited accessibility"}</span>
+              <button type="button" disabled={busy || capturingId !== null} onClick={() => void changeIgnored({ applicationId: app.id, name: app.name, ignored: true })}>Ignore</button>
               <button type="button" disabled={busy || capturingId !== null} onClick={() => void inspectIdentity(app)}>Identify</button>
               <button type="button" disabled={!enabled || busy || capturingId !== null} onClick={() => void capture(app)}>{capturingId === app.id ? "Capturing…" : "Capture Now"}</button>
             </div>
           ))}
         </div>
       )}
+      <div className="visual-access-ignored-settings">
+        <button type="button" aria-expanded={showIgnored} onClick={() => setShowIgnored(!showIgnored)}>{showIgnored ? "Hide" : "Manage"} ignored apps ({ignoredApps.length})</button>
+        {showIgnored ? <div><h4>Ignored applications</h4><p>Hidden from this Visual Access list, including after application restarts. This does not revoke Desktop Access permissions.</p>{ignoredApps.length === 0 ? <p>No ignored applications.</p> : ignoredApps.map((entry) => <div className="home-detail-row" key={entry.executablePath}><span>{entry.name} <small style={{ overflowWrap: "anywhere" }}>{entry.executablePath}</small></span><button type="button" disabled={busy} onClick={() => void changeIgnored({ executablePath: entry.executablePath, ignored: false })}>Restore</button></div>)}</div> : null}
+      </div>
       {identity ? <p><strong>Executable identity for {identity.name}:</strong> <code style={{ overflowWrap: "anywhere" }}>{identity.path}</code></p> : null}
       {preview ? <div className="visual-access-preview"><h4>Preview: {previewName}</h4><p>{preview.width} × {preview.height} · {(preview.sizeBytes / 1024).toFixed(0)} KB · Local window capture</p><img src={`data:image/png;base64,${preview.dataBase64}`} alt={`Captured window: ${previewName}`} style={{ display: "block", width: "100%", maxWidth: 900, height: "auto", borderRadius: 8, border: "1px solid var(--border, #d1d5db)" }} /><button type="button" onClick={() => setPreview(null)}>Clear preview</button></div> : null}
       <p>Captures are on demand and shown only in this local preview. No background recording or desktop fallback.</p>
