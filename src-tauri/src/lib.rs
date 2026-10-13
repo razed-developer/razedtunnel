@@ -225,6 +225,7 @@ pub fn run() {
             let handler: fn(tauri::ipc::Invoke<tauri::Wry>) -> bool = tauri::generate_handler![
                 workspace_management_commands::select_workspace,
                 workspace_management_commands::list_workspaces,
+                workspace_management_commands::open_workspace_folder,
                 workspace_management_commands::get_workspace_health,
                 workspace_management_commands::relocate_workspace,
                 workspace_management_commands::add_workspace,
