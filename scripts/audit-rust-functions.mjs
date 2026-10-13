@@ -42,7 +42,9 @@ const externallyExposed = (fn) => {
   const isTest = /#\[(?:tokio::)?test(?:\s*\(|\s*\])/.test(attrs);
   // ServerHandler trait hooks are invoked by MCP runtime dispatch.
   const isMcpServerHandler = fn.file === "mcp_server.rs" && ["on_initialized", "get_info", "list_resources", "read_resource"].includes(fn.name);
-  // Known Deref trait implementation: Rust invokes this through trait dispatch.\n  const isTraitImpl = fn.file === "browser.rs" && fn.name === "deref" && /impl Deref for BrowserScope\\s*\\{/.test(code);\n  return { isMcpTool, isTauri, isUnregisteredTauri, isTest, isMcpServerHandler, isTraitImpl };
+  // Known Deref trait implementation: Rust invokes this through trait dispatch.
+  const isTraitImpl = fn.file === "browser.rs" && fn.name === "deref" && /impl Deref for BrowserScope\s*\{/.test(code);
+  return { isMcpTool, isTauri, isUnregisteredTauri, isTest, isMcpServerHandler, isTraitImpl };
 };
 const rows = declarations.map((fn) => {
   const pattern = new RegExp("\\b" + fn.name + "\\b", "g");
@@ -69,7 +71,7 @@ for (const row of rows.filter((x) => x.reviewCandidate)) {
   console.log("  " + row.file + ":" + row.line + " " + row.name);
 }
 console.log("Protected zero-reference functions by flag:");
-for (const flag of ["isMcpTool", "isTauri", "isUnregisteredTauri", "isTest", "isMcpServerHandler"]) {
+for (const flag of ["isMcpTool", "isTauri", "isUnregisteredTauri", "isTest", "isMcpServerHandler", "isTraitImpl"]) {
   const protectedRows = rows.filter((x) => x.references.length === 0 && x[flag]);
   console.log("  " + flag + ": " + protectedRows.length);
   for (const row of protectedRows.slice(0, 8)) console.log("    " + row.file + ":" + row.line + " " + row.name);
