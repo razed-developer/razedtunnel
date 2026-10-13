@@ -506,15 +506,6 @@ fn serialize_success_payload<T: Serialize>(value: T) -> Result<String, serde_jso
     serde_json::to_string(&SuccessEnvelope { ok: true, result: value })
 }
 
-fn success_result<T: Serialize>(value: T) -> CallToolResult {
-    match serialize_success_payload(value) {
-        Ok(content) => CallToolResult::success(vec![ContentBlock::text(content)]),
-        Err(error) => CallToolResult::error(vec![ContentBlock::text(format!(
-            "RepoTunnel could not serialize the tool result: {error}"
-        ))]),
-    }
-}
-
 fn error_result(message: impl Into<String>) -> CallToolResult {
     let message = message.into();
     let content = serde_json::to_string(&serde_json::json!({
