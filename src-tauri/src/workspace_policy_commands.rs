@@ -1,5 +1,5 @@
 use tauri::AppHandle;
-use crate::{access::{resolve_workspace_path, validate_workspace_root, AccessOperation}, launcher, models::{AccessCheck, CommandPolicy, LaunchActionOutcome, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy}, projects::approved_workspace, storage::{load_workspaces, mutate_workspaces}};
+use crate::{access::{resolve_workspace_path, validate_workspace_root, AccessOperation}, models::{AccessCheck, CommandPolicy, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy}, storage::{load_workspaces, mutate_workspaces}};
 
 #[tauri::command]
 pub fn update_workspace_access(
@@ -95,16 +95,3 @@ pub fn check_workspace_access(
         }),
     }
 }
-
-#[tauri::command]
-pub fn open_workspace_path_local(
-    app: AppHandle,
-    workspace_id: String,
-    relative_path: String,
-) -> Result<LaunchActionOutcome, String> {
-    let workspace = crate::editor_commands::local_user_workspace(approved_workspace(&app, &workspace_id)?);
-    launcher::request_open_workspace_path(&app, &workspace, relative_path, None)
-}
-
-
-
