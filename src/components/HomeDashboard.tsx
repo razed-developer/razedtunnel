@@ -1,5 +1,6 @@
 import { NavIcon } from "./AppSidebar";
-import type { ChatConnectionStatus, GatewayStatus, PublicTunnelStatus, Workspace } from "../types";
+import ActivityFeed from "./ActivityFeed";
+import type { ActivityTimeline, ChatConnectionStatus, GatewayStatus, PublicTunnelStatus, Workspace } from "../types";
 
 type Props = {
   gateway: GatewayStatus;
@@ -7,10 +8,14 @@ type Props = {
   chat: ChatConnectionStatus;
   workspaces: Workspace[];
   aiAccessPaused: boolean;
+  activity: ActivityTimeline | null;
+  activityLoading: boolean;
+  activityError: string | null;
+  onRefreshActivity: () => void;
   onNavigate: (view: "projects" | "connections") => void;
 };
 
-export default function HomeDashboard({ gateway, tunnel, chat, workspaces, aiAccessPaused, onNavigate }: Props) {
+export default function HomeDashboard({ gateway, tunnel, chat, workspaces, aiAccessPaused, activity, activityLoading, activityError, onRefreshActivity, onNavigate }: Props) {
   const remoteReady = tunnel.ready || chat.ready;
   const remoteLabel = tunnel.ready ? "Public tunnel ready" : chat.ready ? "Secure connection ready" : "Not connected";
   const totalCalls = gateway.taskToolSuccesses + gateway.taskToolFailures;
@@ -34,7 +39,7 @@ export default function HomeDashboard({ gateway, tunnel, chat, workspaces, aiAcc
           {workspaces.length ? workspaces.slice(0, 5).map((workspace) => <div className="home-detail-row" key={workspace.id}><span><NavIcon name="folder" />{workspace.name}</span><span className="home-muted">{workspace.accessMode === "readWrite" ? "Read & write" : "Read only"}</span></div>) : <div className="home-empty"><NavIcon name="folder" size={24} /><strong>No projects yet</strong><p>Add a project to make it available to connected AI clients.</p><button type="button" onClick={() => onNavigate("projects")}>Set up projects →</button></div>}
         </section>
       </div>
-      <div className="home-footnote">Activity and approval monitoring will appear here once their live data sources are connected. No simulated activity is shown.</div>
+      <ActivityFeed timeline={activity} loading={activityLoading} error={activityError} onRefresh={onRefreshActivity} />
     </div>
   );
 }
