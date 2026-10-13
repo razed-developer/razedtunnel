@@ -1,3 +1,9 @@
+## CAPTURE NOW — 2026-10-13
+- Application discovery confirmed working by user (8 apps including Notepad); dedicated UIA worker solved COM apartment conflict.
+- Added `capture_visual_access_window` async Tauri IPC via `spawn_blocking`, reusing `desktop_control::screenshot` permission enforcement and `windows_capture::capture` PrintWindow-only path.
+- Added per-application Capture Now button and local PNG preview; no automatic recording or full-desktop fallback.
+- Not yet compiled or live-tested. Run `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && npm run build`, then restart RazedTunnel and capture Notepad. If capture fails, report exact UI error. Verify black/blank captures, COM worker, and PrintWindow support before MCP testing.
+
 ## VISUAL ACCESS UI — 2026-10-13
 - Restored local Tauri commands for global Desktop Access status, toggle, and application listing via `visual_access_commands.rs`; registered in `lib.rs`.
 - Added `VisualAccessPanel` to Connections with explicit global/control scope disclosure, enable/disable, refresh, discovered app names/window counts. No auto-capture, no new privilege grant beyond existing global toggle. This has not been locally compiled yet.
