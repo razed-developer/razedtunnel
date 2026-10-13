@@ -5982,3 +5982,28 @@ textarea:focus-visible {
     display: none;
   }
 }
+
+/* Settings cards use the dashboard layout but need their own inner spacing. */
+.home-dashboard > .home-detail-grid > .home-card {
+  padding: 22px 24px;
+}
+.home-dashboard > .home-detail-grid > .home-card .home-section-title {
+  margin-bottom: 18px;
+}
+.home-dashboard > .home-detail-grid > .home-card > label,
+.home-dashboard > .home-detail-grid > .home-card > p,
+.home-dashboard > .home-detail-grid > .home-card > .visual-access-apps {
+  margin-top: 12px;
+}
+.home-dashboard > .home-detail-grid > .home-card abbr[title] {
+  margin-left: 5px;
+  text-decoration: none;
+  cursor: help;
+  color: var(--text-secondary);
+  font-size: 0.85em;
+}
+@media (max-width: 650px) {
+  .home-dashboard > .home-detail-grid > .home-card {
+    padding: 18px;
+  }
+}
