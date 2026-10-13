@@ -1,3 +1,10 @@
+## Windows startup toggle on Connections (awaiting validation)
+- User confirmed previous Windows autostart backend change compiled and MCP remains available while window hidden.
+- Commit fd91119: Windows `set_launch_at_login(enabled=true)` rejects debug builds, preventing a development executable from being registered for login startup. Disabling remains allowed. This guards the registry path; it does not auto-enable anything.
+- Commit 4e99116: new `src/components/StartupPanel.tsx` reads existing `getRuntimeDiagnostics` and shows opt-in checkbox, busy/error handling, and installed-release requirement. Commit 1b4e8df mounts it on Connections. Existing `setLaunchAtLogin` backend wrapper and `runtime_commands` Tauri registrations are reused.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; open Connections and check Startup panel. In `tauri dev`, checkbox enable should show an explanatory error and not create registry startup entry. Installed release build can opt in. Check that toggling off removes the entry and that login startup opens only in tray. Assistant did not compile locally.
+- Important follow-up: Windows registry launch command quoting and installed-executable path should be verified on an installed build, not just `cargo check`; consider inspecting HKCU Run value after opt-in. Do not merge cleanup/dead-video-view.
+
 ## Opt-in Windows login startup (awaiting validation)
 - User confirmed ChatGPT MCP `list_workspaces` works while main window hidden; tray-first startup validated. Idle baseline 47.30 MB working set / 7.70 MB private.
 - Audited `hardening.rs`: existing `runtime_commands::set_launch_at_login` supported Linux only; Windows returned unsupported. Added Windows HKCU Run-key handling with `reg.exe` in commits `79bc58e` and `0aa9509`; existing Linux path unchanged. Detection uses `reg query`, opt-in enable uses `reg add`, disable uses `reg delete`. Executable path is quoted. Does NOT auto-enable on startup or modify registry until existing Tauri command is explicitly invoked.
