@@ -317,7 +317,7 @@ pub(crate) fn set_launch_at_login(app: &AppHandle, enabled: bool) -> Result<(), 
                 .map_err(|error| format!("Could not locate RazedTunnel executable: {error}"))?;
             let executable = executable.to_str()
                 .ok_or_else(|| "RazedTunnel executable path is not valid Unicode.".to_string())?;
-            let quoted = format!("\\\"{executable}\\\"");
+            let quoted = format!("\"{executable}\"");
             command.args(["add", WINDOWS_AUTOSTART_KEY, "/v", WINDOWS_AUTOSTART_VALUE,
                 "/t", "REG_SZ", "/d", &quoted, "/f"]);
         } else {
