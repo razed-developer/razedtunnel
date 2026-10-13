@@ -1,3 +1,8 @@
+## Frontend cleanup build correction
+- User's `npm run check` caught six errors after deleting DeveloperDock: CodeMirrorSurface imports EditorProblem type; WorkspaceEditor imports DeveloperDock and EditorProblem. Type inference errors cascade from missing module. These legacy files are still included by TypeScript even if not mounted in App.
+- Commit 6494cab restores DeveloperDock unchanged as immediate safe fix; ModelHub remains removed. Do not claim 1,236 lines removed; net deletion currently only ModelHub (340 lines). User should pull and rerun checks.
+- Next: audit full TypeScript inclusion and import graph; remove dead WorkspaceEditor/CodeMirrorSurface/DeveloperDock together only after verifying no active dependents, or extract shared types if any active component needs them. Avoid deleting files individually solely because App does not import them.
+
 ## Frontend legacy component cleanup — batch 1 (awaiting validation)
 - User requested inventory/deletion of leftover components after tray-first simplification. Active `src/App.tsx` imports AppHeader, AppErrorBoundary, AppSidebar, ChatConnectionPanel, ConfirmationDialog, GatewayPanel, StartupPanel, WindowChrome, PublicTunnelPanel, WorkspaceList; `src/main.tsx` imports App and AppErrorBoundary. Do not remove those or their transitive dependencies.
 - Removed `src/components/ModelHub.tsx` (341 lines) and `src/components/DeveloperDock.tsx` (895 lines) in commits dfc74e3 and 58ebf40. Neither is imported by active App/main entrypoints; no Rust backend or MCP tools changed. This is a targeted first batch, not a complete repository-wide reachability proof.
