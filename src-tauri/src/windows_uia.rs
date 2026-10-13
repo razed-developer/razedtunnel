@@ -448,7 +448,7 @@ mod runtime {
     pub(crate) fn resolve_capture_window(
         application_id: &str,
         requested_window_id: Option<&str>,
-    ) -> Result<(UIElement, String), String> {
+    ) -> Result<(isize, String), String> {
         let pid = parse_application_pid(application_id)?;
         let (automation, walker, cache) = automation()?;
         let windows = app_windows(&automation, &walker, &cache, pid)?;
@@ -473,7 +473,8 @@ mod runtime {
             if window.get_process_id().ok() != Some(pid as u32) {
                 continue;
             }
-            visible.push((window, id));
+            let hwnd = window.get_native_window_handle().map_err(|error| uia_error("Could not resolve approved window handle", error))?;
+            if hwnd != 0 { visible.push((hwnd, id)); }
         }
         match requested_window_id {
             Some(id) => visible
