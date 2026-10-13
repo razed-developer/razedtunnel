@@ -1,3 +1,9 @@
+## VISUAL MONITORING RESTART RESILIENCE — requirement 2026-10-13
+- User requires opt-in window monitoring to survive monitored app closing/restarting during development/builds without reconfiguration.
+- Persist only monitoring target identity and consent/settings across process/window restarts, NOT screenshot history. Match on verified executable path / app identity plus optional project/build target; never on transient PID, HWND, or changing window title alone. Revalidate identity and permission before auto-reattachment; avoid attaching to unrelated/reused PID or lookalike process. If multiple candidate windows match, pause for user selection.
+- State machine: Active → Waiting for application (on exit) → Reattached/Active (on verified restart) → Stopped (manual disable/revoke). Use bounded polling or window events; no busy loop. Clear RAM frame buffer on exit/rebind and when disabled; retain max 60 seconds only while active. Do not auto-start a different application or capture entire desktop. Explicit user opt-in to persistent reattach, visible monitoring indicator and Stop control.
+- Handle app process respawn, changed PID/HWND/window title, temporary zero windows, and UI app restart. On RazedTunnel restart, restore preference only if explicit persisted monitoring consent remains enabled; revalidate before resuming.
+
 ## LIVE MCP VISUAL ACCESS VERIFIED — 2026-10-13
 - User confirmed Connections freeze resolved and local Capture Now preview works.
 - Live RepoTunnel MCP connected in ChatGPT. `list_workspaces` returned approved projects; `list_desktop_applications` returned Windows Notepad (uia-pid-6936).
