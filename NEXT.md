@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — FFmpeg provisioning dependency map
+- User confirmed audit passes: 1,825 declarations, 336 zero textual refs, 26 review candidates, 310 protected. No runtime code change in this step.
+- Inspected `media_tools.rs` and `media_inspection.rs`. Documented the active discovery path and disconnected provisioning cluster in `docs/audits/media-provisioning-dependencies.md` (commit `b558c6b`). Media inspection calls `available_ffmpeg_program` / `available_ffprobe_program`; retain these. `ensure_ffmpeg_program` is unreferenced, but the rest of the provisioning chain contains download integrity and safety controls and should be considered as one feature, not isolated dead helpers.
+- Next: inspect remaining function candidates or decide whether managed FFmpeg provisioning is intentionally retained. Validate docs-only patch with `git pull --ff-only`. Preserve local `github.rs` and `Cargo.lock`; DO NOT MERGE.
+
 ## CURRENT HANDOFF — 2026-10-13 — fix audit JS syntax regression
 - Previous trait classification patch accidentally inserted literal `\\n` into a JavaScript `//` comment, commenting out the function's return and causing `Object.values(undefined)` at line 56. User reported the failure after a successful pull.
 - Fixed actual newlines, corrected regex escapes for `impl Deref for BrowserScope`, and included `isTraitImpl` in protected-flag output; commit `a9d8f80`. No runtime Rust code changed. **Awaiting user validation**.
