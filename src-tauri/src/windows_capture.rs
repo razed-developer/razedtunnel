@@ -6,12 +6,19 @@ use windows_sys::Win32::{
     Foundation::{HWND, RECT},
     Graphics::Gdi::{
         CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits,
-        SelectObject, GetDC, ReleaseDC, PrintWindow, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
+        SelectObject, GetDC, ReleaseDC, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
     },
     UI::WindowsAndMessaging::{GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible},
 };
 
 use crate::{desktop_control::DesktopScreenshot, windows_uia};
+
+// PrintWindow is exported by user32.dll. Declare its ABI directly because
+// windows-sys 0.61 does not expose this function through the enabled bindings.
+#[link(name = "user32")]
+extern "system" {
+    fn PrintWindow(hwnd: HWND, hdc_blt: windows_sys::Win32::Graphics::Gdi::HDC, flags: u32) -> i32;
+}
 
 const MAX_DIMENSION: i32 = 4096;
 const MAX_PIXELS: i64 = 8_388_608;
