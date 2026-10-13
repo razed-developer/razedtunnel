@@ -1,3 +1,10 @@
+## Auto-connect retries after login (awaiting validation)
+- User reported previous Windows startup toggle build passed. ChatGPT MCP was confirmed accessible with UI hidden.
+- Audited `lib.rs` auto-connect and `app_state.rs`/`public_tunnel.rs` recovery: startup auto-connect previously attempted only once. Cloudflare worker itself has restart/backoff; ngrok session handles network interruptions; public_tunnel_status can restart a finished worker when queried. These do not guarantee recovery after an initial login-time network failure.
+- Commit db34ad3: when saved tunnel config has auto_start enabled, startup worker attempts `start_public_tunnel` up to three times, waiting 10 seconds after failed attempts, logging each failure. Successful connection ends loop. No new background service or frontend polling, no change to MCP tools/permissions. Existing behavior when auto_start disabled is unchanged.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Then fully restart and verify MCP with UI hidden. To exercise retries, test an intentional temporary network outage during startup only when convenient; watch logs for attempt 1/3 etc. The assistant did not compile locally.
+- Remaining limitation: bounded retries can still fail if network unavailable longer than retry window; worker-exit recovery is currently status-query-driven in app_state.rs. Future work: carefully scoped lifecycle supervisor with shutdown cancellation and no duplicate tunnels. Keep cleanup/dead-video-view unmerged.
+
 ## Windows startup toggle on Connections (awaiting validation)
 - User confirmed previous Windows autostart backend change compiled and MCP remains available while window hidden.
 - Commit fd91119: Windows `set_launch_at_login(enabled=true)` rejects debug builds, preventing a development executable from being registered for login startup. Disabling remains allowed. This guards the registry path; it does not auto-enable anything.
