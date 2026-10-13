@@ -334,3 +334,21 @@
 .workspace-section .workspace-segmented button:hover:not(:disabled):not(.selected) { background:var(--rt-hover); }
 .workspace-section .workspace-segmented button:disabled { opacity:.6; cursor:not-allowed; }
 @media(max-width:1050px) { .workspace-section .workspace-policy-controls { grid-template-columns:1fr; } }
+
+/* Projects light theme: explicitly supersede legacy !important dark surfaces.
+   Keep scoped until the old project rules are extracted from workspace.css. */
+:root[data-theme="light"] .workspace-section .workspace-card {
+  background:#fff !important; background-image:none !important;
+  border:1px solid var(--rt-line) !important; border-radius:14px !important;
+  box-shadow:0 4px 14px rgba(33,56,89,.06) !important;
+  padding:20px !important; gap:16px !important;
+}
+:root[data-theme="light"] .workspace-section .workspace-card:hover { background:#f8fbff !important; }
+:root[data-theme="light"] .workspace-section .workspace-title-row h3 { color:var(--rt-text) !important; font-size:14px !important; }
+:root[data-theme="light"] .workspace-section .workspace-details > p { color:var(--rt-text-3) !important; font-size:11px !important; }
+:root[data-theme="light"] .workspace-section .workspace-security { color:var(--rt-text-2) !important; font-size:11px !important; }
+:root[data-theme="light"] .workspace-section .workspace-icon { background:#edf4ff !important; border-color:#c5d8ef !important; color:#356fb8 !important; }
+:root[data-theme="light"] .workspace-section .workspace-actions > .secondary-button,
+:root[data-theme="light"] .workspace-section .section-heading .secondary-button { background:#e7f0fd !important; border:1px solid #bed5f5 !important; color:#174f9a !important; }
+:root[data-theme="light"] .workspace-section .workspace-card-actions .icon-button { background:#fff1f2 !important; color:#a12c3b !important; border-color:#edc1c7 !important; }
+:root[data-theme="light"] .workspace-section .workspace-list { gap:14px !important; }
