@@ -182,3 +182,10 @@ export async function captureVisualAccessWindow(applicationId: string): Promise<
 export async function getVisualAccessApplicationIdentity(applicationId: string): Promise<string> {
   return invoke<string>("get_visual_access_application_identity", { applicationId });
 }
+
+export type IgnoredVisualApplication = { executablePath: string; name: string };
+export const listIgnoredVisualApplications = () =>
+  invoke<IgnoredVisualApplication[]>("list_ignored_visual_applications");
+export const setVisualApplicationIgnored = (args: {
+  applicationId?: string; executablePath?: string; name?: string; ignored: boolean;
+}) => invoke<IgnoredVisualApplication[]>("set_visual_application_ignored", args);
