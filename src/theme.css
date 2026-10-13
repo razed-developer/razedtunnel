@@ -149,6 +149,8 @@
 /* Solid, vivid status cards. No gradient washes or translucent fills. */
 :root {
   --metric-blue:#94b2ec;
+  --metric-purple:#bfa8e4;
+  --metric-orange:#eac594;
   --metric-green:#8cc4aa;
   --metric-yellow:#f1d28d;
   --metric-red:#c83d45;
@@ -166,12 +168,12 @@
 .home-metric .home-card-label svg,
 .home-metric strong,
 .home-metric p { color:inherit !important; }
-.metric-healthy { --metric-solid:var(--metric-green); color:#fff; }
-.metric-connected { --metric-solid:var(--metric-blue); color:#fff; }
-.metric-projects { --metric-solid:var(--metric-blue); color:#fff; }
-.metric-tools { --metric-solid:var(--metric-blue); color:#fff; }
+.metric-healthy { --metric-solid:var(--metric-green); color:#172436; }
+.metric-connected { --metric-solid:var(--metric-blue); color:#172436; }
+.metric-projects { --metric-solid:var(--metric-purple); color:#172436; }
+.metric-tools { --metric-solid:var(--metric-orange); color:#172436; }
 .metric-warning { --metric-solid:var(--metric-yellow); color:#252018; }
-.metric-neutral { --metric-solid:var(--metric-neutral); color:#fff; }
+.metric-neutral { --metric-solid:var(--metric-neutral); color:#172436; }
 :root[data-theme="light"] .home-metric,
 :root[data-theme="dark"] .home-metric { background:var(--metric-solid) !important; }
 @media (prefers-reduced-motion:no-preference) {
