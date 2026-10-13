@@ -78,3 +78,69 @@ pub(crate) async fn get_visual_access_application_identity(application_id: Strin
     .await
     .map_err(|error| format!("Application identity worker failed: {error}"))?
 }
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct IgnoredVisualApplication {
+    pub(crate) executable_path: String,
+    pub(crate) name: String,
+}
+
+fn ignored_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    use tauri::Manager;
+    app.path()
+        .app_data_dir()
+        .map(|dir| dir.join("visual-access-ignored.json"))
+        .map_err(|error| format!("Cannot resolve Visual Access settings: {error}"))
+}
+
+fn read_ignored(app: &AppHandle) -> Result<Vec<IgnoredVisualApplication>, String> {
+    let path = ignored_path(app)?;
+    if !path.exists() { return Ok(Vec::new()); }
+    let bytes = std::fs::read(&path).map_err(|error| format!("Cannot read ignored applications: {error}"))?;
+    serde_json::from_slice(&bytes).map_err(|error| format!("Invalid ignored applications settings: {error}"))
+}
+
+#[tauri::command]
+pub(crate) fn list_ignored_visual_applications(app: AppHandle) -> Result<Vec<IgnoredVisualApplication>, String> {
+    read_ignored(&app)
+}
+
+#[tauri::command]
+pub(crate) async fn set_visual_application_ignored(
+    app: AppHandle,
+    application_id: Option<String>,
+    executable_path: Option<String>,
+    name: Option<String>,
+    ignored: bool,
+) -> Result<Vec<IgnoredVisualApplication>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let path = if ignored {
+            let id = application_id.ok_or("Select a currently running application to ignore.")?;
+            #[cfg(windows)]
+            { executable_identity(&id)? }
+            #[cfg(not(windows))]
+            { let _ = id; return Err("Application identity is supported on Windows only.".to_string()); }
+        } else {
+            executable_path.ok_or("Executable path is required to restore an ignored application.")?
+        };
+        let mut items = read_ignored(&app)?;
+        items.retain(|entry| !entry.executable_path.eq_ignore_ascii_case(&path));
+        if ignored {
+            items.push(IgnoredVisualApplication {
+                executable_path: path,
+                name: name.unwrap_or_else(|| "Application".to_string()).chars().take(256).collect(),
+            });
+        }
+        items.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        let file = ignored_path(&app)?;
+        if let Some(parent) = file.parent() {
+            std::fs::create_dir_all(parent).map_err(|error| format!("Cannot create settings directory: {error}"))?;
+        }
+        let data = serde_json::to_vec_pretty(&items).map_err(|error| error.to_string())?;
+        std::fs::write(file, data).map_err(|error| format!("Cannot save ignored applications: {error}"))?;
+        Ok(items)
+    })
+    .await
+    .map_err(|error| format!("Ignored applications worker failed: {error}"))?
+}
