@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — function audit candidate diagnostics
+- Branch `cleanup/dead-video-view`; DO NOT MERGE. User ran function audit: 1,832 declarations; 341 no textual references; 303 protected by heuristic; 38 review candidates. `load_history_settings` is still called by activity/updates/versioning, keep it.
+- Added console diagnostics to `scripts/audit-rust-functions.mjs`, commit `c2d97f3`: prints all review candidate file:line/function names, counts of zero-reference functions protected by each flag, and first 8 examples per flag. No production code removed. Attribute-proximity heuristic may falsely protect adjacent methods; review output before deleting anything. **Not yet locally run.**
+- Next validation: `git pull --ff-only && node scripts/audit-rust-functions.mjs`. Use output to inspect specific candidates and improve protection classification, particularly MCP attribute association, traits and callbacks. Preserve active MCP/gateway/security/tunnels/Projects/Connections/tray; do not merge.
+
 ## CURRENT HANDOFF — 2026-10-13 — Rust function audit entry-point classification
 - Branch `cleanup/dead-video-view`; DO NOT MERGE. User confirmed cargo checks PASSED after removing unused `save_history_settings`.
 - Updated `scripts/audit-rust-functions.mjs` commits `4fcffb6`, `f20043b` to distinguish no-textual-reference counts from review candidates; suppress likely MCP `#[tool]` functions, Tauri registered `#[tauri::command]` functions, and tests from deletion candidates. Heuristic attribute proximity; method/trait/callback classification **not** solved. No production code changed. Not locally validated.
