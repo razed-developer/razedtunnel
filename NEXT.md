@@ -1,3 +1,10 @@
+## Rust IPC audit: AI Workspace desktop registrations (awaiting validation)
+- User confirmed prior GitHub account IPC cleanup passed; prior total removed: 61.
+- Reviewed mounted App, ChatConnectionPanel, PublicTunnelPanel, GatewayPanel. No mounted UI calls `ai_workspace_commands` or `integration_commands`. Commit `fa1bfdd` unregisters six AI Workspace desktop IPC commands (status/start/stop/frame/action/sequence) associated with the removed editor UI. Kept all integration registrations for a separate audit.
+- AI Workspace Rust modules, MCP tools, gateway, project permissions, and legacy background-service feature remain untouched. This stage only changes the Tauri invoke handler registration list.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml` and Projects/Connections/tray/MCP access. Assistant did not compile locally.
+- Next audit integration desktop IPC, then distinguish Rust modules required by MCP from unused UI-only code before deletion. Do not merge branch.
+
 ## Rust IPC audit: GitHub account desktop registrations (awaiting validation)
 - User confirmed six-command temporary workspace cleanup passed; total prior desktop IPC registrations removed: 57.
 - Commit `c04fb23` unregisters four GitHub account-management Tauri IPC entries (`get_github_connection_status`, `connect_github`, `cancel_github_connection`, `disconnect_github`) for the removed desktop GitHub account UI. No mounted Projects/Connections interface uses them. This does not remove git/GitHub Rust modules, CLI credentials, MCP git/GitHub tools, or gateway/auth operations.
