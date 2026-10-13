@@ -28,8 +28,8 @@ export default function StartupPanel() {
   }
 
   return (
-    <section className="gateway-panel">
-      <h2>Startup</h2>
+    <section className="home-card">
+      <div className="home-section-title"><div><h3>Startup</h3><p>Choose how RazedTunnel starts with Windows.</p></div></div>
       <label>
         <input
           type="checkbox"
