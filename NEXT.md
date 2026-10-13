@@ -1,3 +1,9 @@
+## Frontend legacy component cleanup — batch 1 (awaiting validation)
+- User requested inventory/deletion of leftover components after tray-first simplification. Active `src/App.tsx` imports AppHeader, AppErrorBoundary, AppSidebar, ChatConnectionPanel, ConfirmationDialog, GatewayPanel, StartupPanel, WindowChrome, PublicTunnelPanel, WorkspaceList; `src/main.tsx` imports App and AppErrorBoundary. Do not remove those or their transitive dependencies.
+- Removed `src/components/ModelHub.tsx` (341 lines) and `src/components/DeveloperDock.tsx` (895 lines) in commits dfc74e3 and 58ebf40. Neither is imported by active App/main entrypoints; no Rust backend or MCP tools changed. This is a targeted first batch, not a complete repository-wide reachability proof.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; TypeScript build will catch any surviving static imports. If it fails, fix dependents rather than restoring obsolete UI wholesale.
+- Next: obtain complete `src/components` and frontend import graph (prefer local inventory script or repository tree) and classify direct/transitive reachability, then remove dead components/helpers/styles in batches. Keep cleanup/dead-video-view unmerged. Preserve MCP backend.
+
 ## Long-outage connection recovery (awaiting local validation)
 - User confirmed prior finished-worker cleanup passed local checks. Live MCP was available while hidden.
 - Commits d056cb4 and e0ae1b5 add in-memory `public_connection_desired` and `shutting_down` flags to AppState. Explicit stop_gateway and clear_public_tunnel clear desired; configure_public_tunnel sets desired. Startup initializes desired from saved auto_start. ExitRequested marks shutdown before stopping services.
