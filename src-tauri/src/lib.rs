@@ -54,6 +54,7 @@ mod mcp_observation;
 mod media_inspection;
 mod media_tools;
 mod model_hub;
+mod model_trial;
 mod models;
 mod monitoring;
 mod platform_sandbox;
