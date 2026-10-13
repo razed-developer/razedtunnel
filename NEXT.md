@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — activity updater cleanup
+- User validated previous removal of three unused activity sync wrappers: default Cargo PASS (134 warnings), legacy PASS (95 warnings), audit 1,819 declarations / 21 review candidates / 310 protected.
+- Removed now-orphaned `activity::update_source` and unused `ChangeRecord`/`CommandRecord` imports in `ddf32c8`. Kept active recorders, continuity, process reconciliation, and retention logic.
+- Validate: `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services && node scripts/audit-rust-functions.mjs`. Expect 20 review candidates; warning counts likely decrease by 2 each (unused imports and dead function). Do not merge; preserve local Cargo.lock, github.rs and audit files.
+
 ## CURRENT HANDOFF — 2026-10-13 — activity sync wrappers
 - User validated previous launch/browser wrapper removal: default Cargo check PASS (136 warnings), legacy feature PASS (97 warnings), audit 1,822 declarations / 23 review candidates / 310 protected.
 - Removed unused `activity::sync_change`, `sync_sandbox_command`, and `sync_terminal` in commit `a8ee1e4`. These called `update_source` only. Kept `update_source` itself pending separate evidence-based cleanup, along with active recorders, `sync_process(es)`, and helpers. Imports unchanged pending compiler validation.
