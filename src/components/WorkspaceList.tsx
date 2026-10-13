@@ -25,19 +25,6 @@ type WorkspaceListProps = {
   onRetryHealth: (workspaceId: string) => void;
 };
 
-function accessLabel(accessMode: WorkspaceAccessMode): string {
-  return accessMode === "readWrite" ? "Read + write" : "Read only";
-}
-
-function changePolicyLabel(changePolicy: WorkspaceChangePolicy): string {
-  return changePolicy === "automatic" ? "Apply edits automatically" : "Review edits first";
-}
-
-function commandPolicyLabel(commandPolicy: CommandPolicy): string {
-  if (commandPolicy === "disabled") return "Commands disabled";
-  return commandPolicy === "review" ? "Review commands" : "Run commands automatically";
-}
-
 function WorkspaceList({
   workspaces,
   adding,
