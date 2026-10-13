@@ -1,3 +1,7 @@
+## SOLID CARD COLOUR ADJUSTMENT — 2026-10-13
+- User rejected pale gradient/tinted wash on metric cards and requested solid, brighter primary colours. Added a final CSS override in `src/theme.css`: solid green for healthy gateway, blue for connected remote/projects/normal tool calls, yellow for warnings, red reserved for failure indicators, neutral slate for disconnected. Ensured high-contrast white or dark foreground and no gradients.
+- Validate: `git pull --ff-only && npm run build` on `ui/dashboard-restoration`; visually review light and dark Home. Consider varying colour only when semantics justify it; avoid decorative status colour.
+
 ## SEMANTIC DASHBOARD COLOR — 2026-10-13
 - User confirmed Home activity panel is working and requested more colour, not bright/saturated. Added subdued semantic accents to Home cards (gateway green when running, remote teal when ready, projects violet, tool calls blue or amber when failures exist), connection/project panel borders, and activity status badges. Both light and dark palettes are defined in `src/theme.css`.
 - No changes to security, capture, approvals, or backend. User also wants opt-in window-scoped screenshot viewing through RazedTunnel in a future phase, not unrestricted desktop access.
