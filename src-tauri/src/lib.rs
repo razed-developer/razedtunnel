@@ -74,6 +74,8 @@ mod runtime_commands;
 mod versioning;
 #[cfg(any(windows, test))]
 mod windows_uia;
+#[cfg(windows)]
+mod windows_capture;
 mod workflow;
 
 use app_state::AppState;
