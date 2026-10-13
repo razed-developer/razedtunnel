@@ -6007,3 +6007,73 @@ textarea:focus-visible {
     padding: 18px;
   }
 }
+
+/* Connections: dashboard-consistent Visual Access layout. */
+.page-stack > .visual-access-panel {
+  padding: 22px 24px;
+  min-width: 0;
+}
+.visual-access-panel .home-section-title {
+  margin-bottom: 18px;
+}
+.visual-access-panel .home-section-title h3 abbr,
+.visual-access-panel .home-detail-row abbr,
+.visual-access-panel h4 abbr {
+  margin-left: 5px;
+  color: var(--text-secondary);
+  font-size: .85em;
+  text-decoration: none;
+  cursor: help;
+}
+.visual-access-panel .visual-access-apps {
+  margin: 12px 0 18px;
+}
+.visual-access-panel .visual-access-apps > div {
+  border-bottom: 1px solid var(--border);
+}
+.visual-access-panel .visual-access-apps > div:last-child {
+  border-bottom: 0;
+}
+.visual-access-panel .visual-access-apps .home-detail-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  padding: 13px 0;
+}
+.visual-access-panel .visual-access-apps .home-detail-row > span:first-child {
+  flex: 1 1 190px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.visual-access-panel .visual-access-apps .home-detail-row > span.home-muted {
+  flex: 1 1 155px;
+  min-width: 0;
+  font-weight: 400;
+}
+.visual-access-panel button {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.visual-access-panel button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.visual-access-panel button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+.visual-access-panel .visual-access-ignored-settings {
+  padding-top: 12px;
+}
+.visual-access-panel > h4 {
+  margin: 24px 0 10px;
+}
+@media (max-width: 650px) {
+  .page-stack > .visual-access-panel { padding: 18px; }
+}
