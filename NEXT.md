@@ -1,3 +1,8 @@
+## RESTART-SAFE VISUAL MONITORING FOUNDATION — 2026-10-13
+- Added Windows executable identity lookup using OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) and QueryFullProcessImageNameW, isolated via spawn_blocking. Exposed local IPC get_visual_access_application_identity and Identify button per discovered app.
+- This is an identity validation milestone only: monitoring, persistent consent, restart reattachment, and 60-second RAM buffer are NOT implemented yet. Do not infer app identity from title or PID. Verify returned path for Notepad and a dev app, then implement opt-in persistent target store, unique verified reattachment, lifecycle states, bounded RAM frames and controls.
+- Build/test required: git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && npm run build. On Windows, click Identify next to Notepad and report executable path or error.
+
 ## VISUAL MONITORING RESTART RESILIENCE — requirement 2026-10-13
 - User requires opt-in window monitoring to survive monitored app closing/restarting during development/builds without reconfiguration.
 - Persist only monitoring target identity and consent/settings across process/window restarts, NOT screenshot history. Match on verified executable path / app identity plus optional project/build target; never on transient PID, HWND, or changing window title alone. Revalidate identity and permission before auto-reattachment; avoid attaching to unrelated/reused PID or lookalike process. If multiple candidate windows match, pause for user selection.
