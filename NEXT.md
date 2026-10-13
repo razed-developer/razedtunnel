@@ -1,3 +1,10 @@
+## Rust compilation cleanup: GitHub/integration/AI Workspace desktop wrappers (awaiting validation)
+- User confirmed prior project-lifecycle/temp-workspace wrapper cleanup passed; compiler warnings decreased from 387 to **376** (437 original, 61 fewer).
+- Inspected `github_commands.rs` (42 lines), `integration_commands.rs` (67 lines), `ai_workspace_commands.rs` (146 lines), `lib.rs`, and `mcp_server.rs`. No direct references to these wrapper module names from MCP; confirmed no `generate_handler!` registrations remain for these wrappers in `lib.rs`.
+- Commit `c1fbae7` removes only `mod github_commands;`, `mod integration_commands;`, `mod ai_workspace_commands;` from `lib.rs`. Core `github`, `integrations`, `gmail_access`, `desktop_control`, `ai_workspace`, `browser`, and MCP remain compiled. Source files retained. This does not remove persistent credentials, gateway, access controls, or MCP functions.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; verify Projects/Connections/tray/MCP and report warning count against 376 baseline. Assistant has not compiled locally.
+- Next audit remaining unregistered wrappers and their cross-module references before exclusion; preserve active desktop commands and all MCP functionality. Do not merge.
+
 ## Rust compilation cleanup: project lifecycle and temporary-workspace desktop wrappers (awaiting validation)
 - User validated prior editor/filesystem/diagnostics cleanup after stale handler fix; Rust warning count fell from 407 to **387** (original 437; 50 fewer).
 - Reviewed `lib.rs` Tauri `generate_handler!`, `project_lifecycle_commands.rs` (76 lines), `temp_workspace_commands.rs` (103 lines), and searched `mcp_server.rs`, `app_state.rs`, `workspace_management_commands.rs`, `workspace_policy_commands.rs` for direct wrapper references. No registration or direct references to these two wrappers found in inspected modules.
