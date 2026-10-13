@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — activity sync wrappers
+- User validated previous launch/browser wrapper removal: default Cargo check PASS (136 warnings), legacy feature PASS (97 warnings), audit 1,822 declarations / 23 review candidates / 310 protected.
+- Removed unused `activity::sync_change`, `sync_sandbox_command`, and `sync_terminal` in commit `a8ee1e4`. These called `update_source` only. Kept `update_source` itself pending separate evidence-based cleanup, along with active recorders, `sync_process(es)`, and helpers. Imports unchanged pending compiler validation.
+- Run `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services && node scripts/audit-rust-functions.mjs`. Expect 20 review candidates. Do not merge; preserve local `Cargo.lock`, `github.rs`, and audit output files.
+
 ## CURRENT HANDOFF — 2026-10-13 — unused activity launch/browser sync wrappers
 - User supplied local validation output after removing `activity::sync_git`: default Cargo check PASS with 138 warnings, legacy-feature Cargo check PASS with 99 warnings, audit 1,824 declarations / 335 zero refs / 25 review candidates / 310 protected.
 - Inspected `activity.rs` and removed only unused `sync_launch` and `sync_browser` wrappers (commit `5ee6cad`). Both only delegated to unused `update_source`. Preserved active `record_launch_record`, `record_browser_record`, `sync_process(es)`, activity history persistence, and tests. Imports not touched to avoid removing shared types inadvertently.
