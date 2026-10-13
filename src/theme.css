@@ -179,3 +179,92 @@
 @media (prefers-reduced-motion:no-preference) {
   .home-metric { transition:filter 150ms ease; }
 }
+
+/* Public MCP dashboard: final appearance layer, after legacy workspace.css. */
+:root[data-theme="light"] .public-overview .connection-heading h2 {
+  color: var(--rt-text) !important;
+  opacity: 1;
+}
+:root[data-theme="light"] .public-overview .public-health-grid {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  gap: 12px;
+}
+:root[data-theme="light"] .public-overview .public-health-grid > div {
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+  box-shadow: none !important;
+}
+:root[data-theme="light"] .public-overview .public-health-grid span,
+:root[data-theme="light"] .public-overview .public-usage-strip span {
+  color: var(--rt-text-3) !important;
+}
+:root[data-theme="light"] .public-overview .public-health-grid strong,
+:root[data-theme="light"] .public-overview .public-usage-strip strong {
+  color: var(--rt-text) !important;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+  box-shadow: none !important;
+  padding: 14px 16px;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 5px;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint span,
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint small {
+  color: var(--rt-text-3) !important;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint code {
+  color: var(--rt-text) !important;
+  font-size: 12px !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.secondary-button,
+:root[data-theme="light"] .public-overview .public-mcp-endpoint button.secondary-button {
+  background: #eef4fd !important;
+  color: #185bb4 !important;
+  border: 1px solid #c5d8ef !important;
+  box-shadow: none !important;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.danger-outline {
+  background: #fff2f3 !important;
+  color: #a72e3d !important;
+  border-color: #e9b9c0 !important;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.secondary-button:hover:not(:disabled),
+:root[data-theme="light"] .public-overview .public-mcp-endpoint button.secondary-button:hover:not(:disabled) {
+  background: #dfebfa !important;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.danger-outline:hover:not(:disabled) {
+  background: #fbe3e6 !important;
+}
+:root[data-theme="light"] .public-overview .public-usage-strip {
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+}
+:root[data-theme="light"] .public-overview .public-usage-strip a {
+  color: #185bb4 !important;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch {
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch button {
+  color: var(--rt-text-2) !important;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch button.active {
+  background: #e5effe !important;
+  color: #185bb4 !important;
+  border-color: #b8d2f7 !important;
+}
