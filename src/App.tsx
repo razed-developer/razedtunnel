@@ -572,10 +572,12 @@ function App() {
 
     if (activeView === "settings") {
       return (
-        <div className="page-stack">
-          <div className="home-intro"><div><span className="home-eyebrow">PREFERENCES</span><h2>Settings</h2><p>Configure startup and application visibility without changing project permissions.</p></div></div>
-          <StartupPanel />
-          <VisualAccessSettings />
+        <div className="home-dashboard">
+          <div className="home-intro"><div><span className="home-eyebrow">PREFERENCES</span><h2>Settings</h2></div></div>
+          <div className="home-detail-grid">
+            <StartupPanel />
+            <VisualAccessSettings />
+          </div>
         </div>
       );
     }
