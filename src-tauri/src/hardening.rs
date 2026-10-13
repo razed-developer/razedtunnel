@@ -313,6 +313,9 @@ pub(crate) fn set_launch_at_login(app: &AppHandle, enabled: bool) -> Result<(), 
     {
         let mut command = Command::new("reg.exe");
         if enabled {
+            if cfg!(debug_assertions) {
+                return Err("Launch at login requires an installed release build; development builds cannot be registered.".to_string());
+            }
             let executable = env::current_exe()
                 .map_err(|error| format!("Could not locate RazedTunnel executable: {error}"))?;
             let executable = executable.to_str()
