@@ -158,3 +158,11 @@ pub(crate) async fn set_visual_application_ignored(
     .await
     .map_err(|error| format!("Ignored applications worker failed: {error}"))?
 }
+
+#[cfg(windows)]
+#[tauri::command]
+pub(crate) async fn list_visual_access_windows() -> Result<Vec<crate::windows_uia::WindowsUiaWindow>, String> {
+    tauri::async_runtime::spawn_blocking(crate::windows_uia::list_top_level_windows)
+        .await
+        .map_err(|error| format!("Window discovery worker failed: {error}"))?
+}
