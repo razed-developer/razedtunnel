@@ -21,7 +21,6 @@ mod desktop_control;
 mod direct_https;
 mod environment;
 mod execution;
-mod execution_commands;
 mod external_access;
 mod filesystem;
 mod gateway;
@@ -216,12 +215,6 @@ pub fn run() {
                 change_commands::undo_change,
                 // History, checkpoints and safety scan have no mounted desktop UI.
                 // Their underlying modules and MCP dependencies remain compiled.
-                execution_commands::get_execution_status,
-                execution_commands::list_command_presets,
-                execution_commands::run_workspace_command,
-                execution_commands::list_command_history,
-                execution_commands::approve_command,
-                execution_commands::reject_command,
                 terminal_commands::run_terminal_command,
                 terminal_commands::run_local_terminal_command,
                 terminal_commands::list_terminal_history,
