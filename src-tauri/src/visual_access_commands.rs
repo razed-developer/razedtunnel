@@ -13,5 +13,10 @@ pub(crate) fn set_visual_access_enabled(app: AppHandle, enabled: bool) -> Result
 
 #[tauri::command]
 pub(crate) fn list_visual_access_applications(app: AppHandle) -> Result<Vec<DesktopControlApplication>, String> {
-    desktop_control::list(&app, "")
+    std::thread::Builder::new()
+        .name("visual-access-uia".to_string())
+        .spawn(move || desktop_control::list(&app, ""))
+        .map_err(|error| format!("Could not start UI Automation worker: {error}"))?
+        .join()
+        .map_err(|_| "UI Automation worker stopped unexpectedly.".to_string())?
 }
