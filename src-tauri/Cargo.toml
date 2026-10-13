@@ -36,6 +36,7 @@ tokio = { version = "1", features = ["net", "rt-multi-thread", "sync", "time"] }
 getrandom = "0.4.3"
 sha2 = "0.11.0"
 base64 = "0.23.1"
+png = "0.18"
 subtle = "2.6.1"
 libc = "0.2"
 resvg = "0.47.0"
@@ -63,6 +64,8 @@ objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std"
 uiautomation = { version = "0.25.1", default-features = false, features = ["control", "input"] }
 windows-sys = { version = "0.61.2", features = [
   "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_UI_WindowsAndMessaging",
   "Win32_Security",
   "Win32_Security_Isolation",
   "Win32_System_Console",
