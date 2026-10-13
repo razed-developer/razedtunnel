@@ -117,15 +117,14 @@ export default function VisualAccessPanel() {
     <section className="home-card visual-access-panel">
       <div className="home-section-title">
         <div>
-          <h3>Visual Access</h3>
-          <p>Windows application discovery and screenshot permission</p>
+          <h3>Visual Access <abbr title="Desktop Access is global for approved projects and allows interaction as well as screenshots. Captures are on demand, with no background recording or desktop fallback.">ⓘ</abbr></h3>
+          
         </div>
         <button type="button" disabled={busy} onClick={() => void refresh()}>Refresh apps</button>
       </div>
-      <p>Desktop Access is currently a global permission for all approved projects.
-        Enabling it permits application interaction as well as screenshots; it is not view-only.</p>
+      
       <div className="home-detail-row">
-        <span>Desktop Access</span>
+        <span>Desktop Access <abbr title="Enabling Desktop Access permits control as well as screenshots for approved projects.">ⓘ</abbr></span>
         <button type="button" disabled={busy} onClick={() => void toggle()}
           aria-pressed={enabled}>{busy ? "Working…" : enabled ? "Enabled — turn off" : "Disabled — enable"}</button>
       </div>
@@ -143,18 +142,17 @@ export default function VisualAccessPanel() {
               <button type="button" disabled={busy || capturingId !== null} onClick={() => void inspectIdentity(app)}>Identify</button>
               <button type="button" disabled={!enabled || busy || capturingId !== null} onClick={() => void capture(app)}>{capturingId === app.id ? "Capturing…" : "Capture Now"}</button>
             </div>
-            {expandedApp === app.id ? <div style={{ paddingLeft: 16 }}><p>Choose a specific project window before monitoring. Window titles are labels, not trusted project identities.</p>{windows.filter((entry) => entry.applicationId === app.id).map((entry, index) => <p key={`${entry.applicationId}-${index}`}>{entry.title}</p>)}</div> : null}
+            {expandedApp === app.id ? <div style={{ paddingLeft: 16 }}>{windows.filter((entry) => entry.applicationId === app.id).map((entry, index) => <p key={`${entry.applicationId}-${index}`}>{entry.title}</p>)}</div> : null}
             </div>
           ))}
         </div>
       )}
       <div className="visual-access-ignored-settings">
         <button type="button" aria-expanded={showIgnored} onClick={() => setShowIgnored(!showIgnored)}>{showIgnored ? "Hide" : "Manage"} ignored apps ({ignoredApps.length})</button>
-        {showIgnored ? <div><h4>Ignored applications</h4><p>Hidden from this Visual Access list, including after application restarts. This does not revoke Desktop Access permissions.</p>{ignoredApps.length === 0 ? <p>No ignored applications.</p> : ignoredApps.map((entry) => <div className="home-detail-row" key={entry.executablePath}><span>{entry.name} <small style={{ overflowWrap: "anywhere" }}>{entry.executablePath}</small></span><button type="button" disabled={busy} onClick={() => void changeIgnored({ executablePath: entry.executablePath, ignored: false })}>Restore</button></div>)}</div> : null}
+        {showIgnored ? <div><h4>Ignored applications <abbr title="Ignored applications stay hidden after restarts; this does not revoke Desktop Access.">ⓘ</abbr></h4>{ignoredApps.length === 0 ? <p>No ignored applications.</p> : ignoredApps.map((entry) => <div className="home-detail-row" key={entry.executablePath}><span>{entry.name} <small style={{ overflowWrap: "anywhere" }}>{entry.executablePath}</small></span><button type="button" disabled={busy} onClick={() => void changeIgnored({ executablePath: entry.executablePath, ignored: false })}>Restore</button></div>)}</div> : null}
       </div>
       {identity ? <p><strong>Executable identity for {identity.name}:</strong> <code style={{ overflowWrap: "anywhere" }}>{identity.path}</code></p> : null}
       {preview ? <div className="visual-access-preview"><h4>Preview: {previewName}</h4><p>{preview.width} × {preview.height} · {(preview.sizeBytes / 1024).toFixed(0)} KB · Local window capture</p><img src={`data:image/png;base64,${preview.dataBase64}`} alt={`Captured window: ${previewName}`} style={{ display: "block", width: "100%", maxWidth: 900, height: "auto", borderRadius: 8, border: "1px solid var(--border, #d1d5db)" }} /><button type="button" onClick={() => setPreview(null)}>Clear preview</button></div> : null}
-      <p>Captures are on demand and shown only in this local preview. No background recording or desktop fallback.</p>
     </section>
   );
 }
