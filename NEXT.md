@@ -1,3 +1,10 @@
+## Rust IPC audit: integration settings desktop registrations (awaiting validation)
+- User confirmed previous AI Workspace IPC cleanup passed; prior total removed: 67.
+- Checked mounted App.tsx, WorkspaceList, ChatConnectionPanel, PublicTunnelPanel, GatewayPanel: no calls to integration settings desktop IPC. Commit `21fd1ca` unregisters seven Tauri IPC entries: list/set deep integrations (2), list/get/set desktop control (3), get/set Gmail access (2).
+- Only desktop command registrations changed. `integration_commands` Rust module and MCP-side integration implementations/access policy are untouched; no changes to persistent integration settings, gateway, or project permissions. No claim that these capabilities are no longer reachable via MCP.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml` plus Projects/Connections/tray/MCP access. Assistant did not compile locally.
+- Next: inventory Rust module dependencies and startup activity before deleting any implementations; prioritize lean tray gateway, preserve MCP capabilities. No merge.
+
 ## Rust IPC audit: AI Workspace desktop registrations (awaiting validation)
 - User confirmed prior GitHub account IPC cleanup passed; prior total removed: 61.
 - Reviewed mounted App, ChatConnectionPanel, PublicTunnelPanel, GatewayPanel. No mounted UI calls `ai_workspace_commands` or `integration_commands`. Commit `fa1bfdd` unregisters six AI Workspace desktop IPC commands (status/start/stop/frame/action/sequence) associated with the removed editor UI. Kept all integration registrations for a separate audit.
