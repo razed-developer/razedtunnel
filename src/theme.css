@@ -41,3 +41,51 @@
 .theme-picker { display:inline-flex; align-items:center; gap:7px; color:var(--rt-text-3); font-size:11px; white-space:nowrap; }
 .theme-picker select { border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel-2); color:var(--rt-text); padding:6px 8px; font-size:11px; cursor:pointer; }
 .theme-picker select:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+
+
+/* The legacy stylesheet uses !important in later shell rules; explicitly
+   bridge those rules until the old dark-only styling is retired. */
+:root[data-theme="light"] .app-sidebar,
+:root[data-theme="light"] .desktop-shell .app-sidebar {
+  background:#fff !important;
+  border-right-color:var(--rt-line) !important;
+}
+:root[data-theme="light"] .sidebar-brand-copy strong,
+:root[data-theme="light"] .sidebar-brand-copy span,
+:root[data-theme="light"] .sidebar-nav-group-label { color:var(--rt-text-2) !important; }
+:root[data-theme="light"] .sidebar-brand-copy strong { color:var(--rt-text) !important; }
+:root[data-theme="light"] .sidebar-nav-item { background:transparent !important; color:var(--rt-text-2) !important; }
+:root[data-theme="light"] .sidebar-nav-item:hover { background:#f0f5fc !important; color:var(--rt-text) !important; }
+:root[data-theme="light"] .sidebar-nav-item.active { background:#e9f1ff !important; border-color:#d5e4fc !important; color:#165dc8 !important; }
+:root[data-theme="light"] .sidebar-nav-item.active svg,
+:root[data-theme="light"] .page-tab.active svg { color:#2169e8 !important; }
+:root[data-theme="light"] .main-view,
+:root[data-theme="light"] .page-scroll { background:var(--rt-bg) !important; }
+:root[data-theme="light"] .page-header { background:#fff !important; border-bottom-color:var(--rt-line) !important; box-shadow:none !important; }
+:root[data-theme="light"] .page-tab h1 { color:var(--rt-text) !important; }
+:root[data-theme="light"] .page-tab,
+:root[data-theme="light"] .page-tab svg { color:var(--rt-text-2) !important; }
+:root[data-theme="light"] .toolbar-status,
+:root[data-theme="light"] .focus-mode-toggle { background:#f7faff !important; color:var(--rt-text-2) !important; border-color:var(--rt-line) !important; }
+:root[data-theme="light"] .sidebar-runtime { border-top-color:var(--rt-line) !important; color:var(--rt-text-2); }
+:root[data-theme="light"] .sidebar-runtime button { color:var(--rt-text-3); }
+:root[data-theme="light"] .sidebar-runtime button:hover { background:#edf3fa; color:var(--rt-text); }
+:root[data-theme="light"] .gateway-panel,
+:root[data-theme="light"] .workspace-section,
+:root[data-theme="light"] .connection-panel,
+:root[data-theme="light"] .project-overview-section,
+:root[data-theme="light"] .workflow-section,
+:root[data-theme="light"] .execution-section,
+:root[data-theme="light"] .git-section,
+:root[data-theme="light"] .change-section,
+:root[data-theme="light"] .production-panel,
+:root[data-theme="light"] .panel { background:var(--rt-panel) !important; border-color:var(--rt-line) !important; }
+:root[data-theme="light"] .section-kicker,
+:root[data-theme="light"] .section-heading p { color:var(--rt-text-3) !important; }
+:root[data-theme="light"] .section-heading h2 { color:var(--rt-text) !important; }
+/* The overview can use the available desktop width, while setup pages
+   retain their existing constrained form layout. */
+.page-content.home-page-content { width:min(1440px,calc(100% - 64px)) !important; padding-top:30px; }
+.home-page-content .home-dashboard { width:100%; }
+@media(max-width:1300px) { .page-content.home-page-content { width:calc(100% - 40px) !important; } }
+@media(max-width:1100px) { .page-content.home-page-content { width:calc(100% - 24px) !important; } }
