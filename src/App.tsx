@@ -14,6 +14,7 @@ import WindowChrome from "./components/WindowChrome";
 import PublicTunnelPanel from "./components/PublicTunnelPanel";
 import WorkspaceList from "./components/WorkspaceList";
 import {
+  getActivityTimeline,
   addWorkspace,
   cloneGitWorkspace,
   getAiAccessStatus,
@@ -40,6 +41,7 @@ import {
   updateWorkspaceCommandPolicy,
 } from "./lib/backend";
 import type {
+  ActivityTimeline,
   ChatConnectionStatus,
   CommandPolicy,
   GatewayStatus,
@@ -102,6 +104,21 @@ function errorMessage(error: unknown): string {
 
 function App() {
   const [activeView, setActiveView] = useState<AppView>("home");
+  const [activity, setActivity] = useState<ActivityTimeline | null>(null);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState<string | null>(null);
+  const refreshActivity = useCallback(async () => {
+    setActivityLoading(true);
+    try { setActivity(await getActivityTimeline()); setActivityError(null); }
+    catch (error) { setActivityError(errorMessage(error)); }
+    finally { setActivityLoading(false); }
+  }, []);
+  useEffect(() => {
+    if (activeView !== "home") return;
+    void refreshActivity();
+    const timer = window.setInterval(() => void refreshActivity(), 30000);
+    return () => window.clearInterval(timer);
+  }, [activeView, refreshActivity]);
   const [themePreference, setThemePreference] = useState<ThemePreference>(() => {
     try {
       const saved = window.localStorage.getItem("razedtunnel.theme");
@@ -525,7 +542,7 @@ function App() {
 
   function renderPage() {
     if (activeView === "home") {
-      return <HomeDashboard gateway={gatewayStatus} tunnel={publicTunnelStatus} chat={connectionStatus} workspaces={workspaces} aiAccessPaused={aiAccessPaused} onNavigate={setActiveView} />;
+      return <HomeDashboard gateway={gatewayStatus} tunnel={publicTunnelStatus} chat={connectionStatus} workspaces={workspaces} aiAccessPaused={aiAccessPaused} activity={activity} activityLoading={activityLoading} activityError={activityError} onRefreshActivity={() => void refreshActivity()} onNavigate={setActiveView} />;
     }
     if (activeView === "projects") {
       return (
