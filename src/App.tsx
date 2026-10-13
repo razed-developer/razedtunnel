@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import AppHeader from "./components/AppHeader";
+import HomeDashboard from "./components/HomeDashboard";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AppSidebar, { type AppView } from "./components/AppSidebar";
 import ChatConnectionPanel from "./components/ChatConnectionPanel";
@@ -99,13 +100,13 @@ function errorMessage(error: unknown): string {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState<AppView>("projects");
+  const [activeView, setActiveView] = useState<AppView>("home");
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     let disposed = false;
     void listen<string>("razedtunnel:open-page", (event) => {
-      if (event.payload === "projects" || event.payload === "connections") {
+      if (event.payload === "home" || event.payload === "projects" || event.payload === "connections") {
         setActiveView(event.payload);
       }
     }).then((cleanup) => {
@@ -505,6 +506,9 @@ function App() {
   }
 
   function renderPage() {
+    if (activeView === "home") {
+      return <HomeDashboard gateway={gatewayStatus} tunnel={publicTunnelStatus} chat={connectionStatus} workspaces={workspaces} aiAccessPaused={aiAccessPaused} onNavigate={setActiveView} />;
+    }
     if (activeView === "projects") {
       return (
         <div className="page-stack projects-page-stack">
@@ -598,7 +602,7 @@ function App() {
 
           <AppErrorBoundary
             resetKey={activeView}
-            onGoHome={() => setActiveView("projects")}
+            onGoHome={() => setActiveView("home")}
           >
           {loading ? (
             <section className="loading-state" aria-live="polite">
