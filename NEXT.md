@@ -1,3 +1,11 @@
+## CURRENT HANDOFF — 2026-10-13 — Rust desktop IPC pruning, validation pending
+- Branch `cleanup/dead-video-view`; DO NOT MERGE. User confirmed frontend reduction/dependency cleanup. CodeMirror packages removed in user-pushed commit `547c4360`; frontend test script now uses `vitest run --passWithNoTests`.
+- Rust Tauri command registry cleanup: browser desktop commands (25) commit `5a2406e` user validated, terminal desktop commands (14) commit `f10b55b` and remaining retired desktop commands (22) commit `8aa4f8b` are **pending combined validation**. The 22 cover file-change (11), workspace project creation (1), workspace access check (1), HTTPS setup UI (4), and update UI (5). Underlying Rust and MCP services remain compiled; no Rust implementation deleted.
+- Latest confirmed Rust warning count after browser registration removal: ~400, up from ~369. Warning growth can follow removal of Tauri reachability; do not equate warnings with runtime failure. Confirm combined batch compiles and smoke-test MCP operations before deeper Rust pruning.
+- Validation once for this batch: `git pull --ff-only && npm run check && npm run test:frontend && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. User finds repeated Rust checks slow; batch safe registry changes, but check implementation/security/MCP changes individually.
+- Remaining active frontend `src/lib/backend.ts` is ~139 lines (26 wrappers) after `1a8d502`, user validated. `src/lib/applicationFamilies.ts` remains orphaned (64 lines); deletion repeatedly blocked by tool safety checks. Do not claim removed.
+- Next: assess warnings and command references, then plan Rust module cleanup based on Tauri registration, MCP dispatch, and actual call graph; preserve Projects/Connections/tray, gateway, HTTPS/public tunnel, security/access controls and MCP. Do not overwrite unrelated local edits to Cargo.lock/github.rs. Keep NEXT.md current.
+
 ## CURRENT HANDOFF — 2026-10-13 — frontend component cleanup complete, validation pending
 - Branch `cleanup/dead-video-view`; DO NOT merge. User validates locally: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`.
 - Last user-confirmed validation passed after deleting `HttpsSetupGuide.test.tsx` and `HttpsSetupGuide.tsx` (commits `f608987`, `b93e3d1`).
