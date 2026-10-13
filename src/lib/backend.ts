@@ -18,6 +18,10 @@ export async function selectWorkspace(): Promise<string | null> {
   return invoke<string | null>("select_workspace");
 }
 
+export async function openWorkspaceFolder(workspaceId: string): Promise<void> {
+  return invoke<void>("open_workspace_folder", { workspaceId });
+}
+
 export async function listWorkspaces(): Promise<Workspace[]> {
   return invoke<Workspace[]>("list_workspaces");
 }
