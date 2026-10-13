@@ -1,3 +1,9 @@
+## Fix: orphaned desktop open-path helper after editor wrapper exclusion (awaiting validation)
+- User reported `cargo check` E0433 at `workspace_policy_commands.rs:105`: `open_workspace_path_local` referenced excluded `crate::editor_commands::local_user_workspace`; frontend check/build passed. The command's Tauri IPC registration had already been removed in a prior stage.
+- Commit `33ecbed` removes this unregistered `open_workspace_path_local` desktop-only function and its now-unused `launcher`, `LaunchActionOutcome`, `approved_workspace` imports. Retains live workspace policy setters and all MCP path-opening/launcher implementations unchanged. `editor_commands` remains excluded from compilation.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. The prior compiler warning count of 407 is the latest successful baseline; failed compile's 2 warnings are not comparable.
+- Avoid declaring success until user confirms. Next examine remaining desktop wrapper module references before further exclusion. Do not merge.
+
 ## Rust compilation cleanup: editor/filesystem/diagnostics wrappers (awaiting validation)
 - User confirmed previous history/checkpoint/safety wrapper cleanup passed; compiler warnings fell from 422 to 407 (437 original).
 - Reviewed `editor_commands.rs` (245 lines), `filesystem_commands.rs` (35 lines), `workspace_diagnostics_commands.rs` (82 lines), `mcp_server.rs`, `change_commands.rs`, and `lib.rs`. No direct MCP or remaining wrapper references to these desktop modules found in inspected files; desktop IPC entries were previously removed.
