@@ -15,6 +15,7 @@ type WorkspaceListProps = {
   workspaceHealth: Record<string, WorkspaceHealth>;
   relocatingWorkspaceId: string | null;
   onAdd: () => void;
+  onOpenFolder: (workspace: Workspace) => void;
   onClone: (url: string) => Promise<void>;
   onRemove: (workspace: Workspace) => void;
   onAccessChange: (workspace: Workspace, accessMode: WorkspaceAccessMode) => void;
@@ -45,6 +46,7 @@ function WorkspaceList({
   workspaceHealth,
   relocatingWorkspaceId,
   onAdd,
+  onOpenFolder,
   onClone,
   onRemove,
   onAccessChange,
@@ -124,7 +126,9 @@ function WorkspaceList({
 
             return (
               <article className={`workspace-card ${unavailable ? "workspace-card-missing" : ""}`} key={workspace.id}>
-                <div className="workspace-icon" aria-hidden="true">&lt;/&gt;</div>
+                <button className="workspace-icon workspace-folder-button" type="button" onClick={() => onOpenFolder(workspace)} disabled={unavailable} aria-label={`Open ${workspace.name} folder`} title={unavailable ? "Folder unavailable" : "Open folder in file manager"}>
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                </button>
                 <div className="workspace-details">
                   <div className="workspace-title-row">
                     <h3>{workspace.name}</h3>
@@ -132,13 +136,7 @@ function WorkspaceList({
                   </div>
                   <p title={workspace.path}>{workspace.path}</p>
                   {unavailable ? <div className="workspace-path-warning">{health?.message ?? "This project folder cannot be reached."}</div> : null}
-                  <div className="workspace-security" aria-label="Current project permissions">
-                    <span>{accessLabel(workspace.accessMode)}</span>
-                    <span aria-hidden="true">•</span>
-                    <span>{changePolicyLabel(workspace.changePolicy)}</span>
-                    <span aria-hidden="true">•</span>
-                    <span>{commandPolicyLabel(workspace.commandPolicy)}</span>
-                    <span aria-hidden="true">•</span>
+                  <div className="workspace-security" aria-label="Project security status">
                     <span>Secrets blocked</span>
                   </div>
                 </div>
