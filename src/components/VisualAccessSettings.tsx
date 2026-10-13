@@ -38,13 +38,11 @@ export default function VisualAccessSettings() {
       <div className="home-section-title">
         <div>
           <h3>Ignored applications</h3>
-          <p>Manage applications hidden from Visual Access discovery.</p>
         </div>
         <button type="button" disabled={busy} onClick={() => void refresh()}>Refresh</button>
       </div>
-      <p>Ignoring hides an application from the Visual Access list. It does not revoke Desktop Access or block MCP control.</p>
       {error ? <p role="alert">{error}</p> : null}
-      {ignored.length === 0 ? <p>No applications are ignored. Use Ignore in Connections → Visual Access to add one.</p> : (
+      {ignored.length === 0 ? <p>No ignored applications.</p> : (
         <div className="visual-access-apps">
           {ignored.map((entry) => (
             <div className="home-detail-row" key={entry.executablePath}>
