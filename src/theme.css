@@ -144,3 +144,36 @@
 .activity-status-running,.activity-status-observed { color:var(--home-blue); background:var(--home-blue-wash); }
 .activity-status-pending { color:var(--home-amber); background:var(--home-amber-wash); }
 .activity-status-failed,.activity-status-rejected,.activity-status-stopped { color:var(--home-red); background:var(--home-red-wash); }
+
+
+/* Solid, vivid status cards. No gradient washes or translucent fills. */
+:root {
+  --metric-blue:#225bd3;
+  --metric-green:#168b4e;
+  --metric-yellow:#f3bd32;
+  --metric-red:#c83d45;
+  --metric-neutral:#475569;
+}
+.home-metric {
+  background:var(--metric-solid,var(--metric-blue)) !important;
+  border:1px solid var(--metric-solid,var(--metric-blue)) !important;
+  border-top:3px solid var(--metric-solid,var(--metric-blue)) !important;
+  box-shadow:none;
+  color:#fff;
+}
+.home-metric::after { background:currentColor; opacity:.75; }
+.home-metric .home-card-label,
+.home-metric .home-card-label svg,
+.home-metric strong,
+.home-metric p { color:inherit !important; }
+.metric-healthy { --metric-solid:var(--metric-green); color:#fff; }
+.metric-connected { --metric-solid:var(--metric-blue); color:#fff; }
+.metric-projects { --metric-solid:var(--metric-blue); color:#fff; }
+.metric-tools { --metric-solid:var(--metric-blue); color:#fff; }
+.metric-warning { --metric-solid:var(--metric-yellow); color:#252018; }
+.metric-neutral { --metric-solid:var(--metric-neutral); color:#fff; }
+:root[data-theme="light"] .home-metric,
+:root[data-theme="dark"] .home-metric { background:var(--metric-solid) !important; }
+@media (prefers-reduced-motion:no-preference) {
+  .home-metric { transition:filter 150ms ease; }
+}
