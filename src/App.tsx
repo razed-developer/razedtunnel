@@ -6,6 +6,7 @@ import AppSidebar, { type AppView } from "./components/AppSidebar";
 import ChatConnectionPanel from "./components/ChatConnectionPanel";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 import GatewayPanel from "./components/GatewayPanel";
+import StartupPanel from "./components/StartupPanel";
 
 import WindowChrome from "./components/WindowChrome";
 import PublicTunnelPanel from "./components/PublicTunnelPanel";
@@ -549,6 +550,7 @@ function App() {
             onRevoke={handleRevokeMcpAccess}
             onForget={handlePublicTunnelForget}
           />
+          <StartupPanel />
           <details className="connection-advanced-details">
             <summary>Advanced: OpenAI Secure Tunnel</summary>
           <ChatConnectionPanel
