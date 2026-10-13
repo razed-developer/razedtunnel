@@ -1,3 +1,9 @@
+## Frontend component inventory (awaiting local output)
+- User validated previous model-trial helper/test cleanup.
+- Added `scripts/audit-frontend.mjs` (d2d32a7, corrected escape sequences 33548ca): read-only TypeScript AST import/export graph from `src/main.tsx`; lists all `src/components/*.ts(x)` files, line counts, inbound static imports, and reachable vs unreachable from the active entrypoint. It also scans literal dynamic imports and CSS @import. Uses existing `typescript` dev dependency. No app runtime, Rust, MCP, or dependencies changed.
+- Ask user to run `git pull --ff-only && node scripts/audit-frontend.mjs` and share output. Do not delete further files until complete inventory reviewed. Caveats: runtime computed imports, non-main entrypoints and tests need manual inspection; tsconfig includes all src.
+- Next classify unreachable groups and their tests/exclusive helpers, then remove in validation batches. Keep cleanup/dead-video-view unmerged.
+
 ## Model trial cleanup test dependency fix
 - User's `npm run check` failed after deleting `src/lib/modelTrial.ts` because `src/lib/modelTrial.test.ts` still imported it. Reviewed test: it exclusively exercises removed `modelTrialKey`/`sameModelIdentity` helpers. Deleted orphan test in commit 7f24cb3. This does not remove tests for active code.
 - Await validation: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`.
