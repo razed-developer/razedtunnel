@@ -11,8 +11,8 @@ use crate::{
     continuity,
     models::{
         ActivityEvent, ActivityGroup, ActivityKind, ActivityStatus, ActivityTimeline,
-        BrowserActionRecord, BrowserActionStatus, ChangeOutcome, ChangeRecord, ChangeStatus,
-        CommandOutcome, CommandRecord, CommandStatus, GitActionRecord, GitActionStatus,
+        BrowserActionRecord, BrowserActionStatus, ChangeOutcome, ChangeStatus,
+        CommandOutcome, CommandStatus, GitActionRecord, GitActionStatus,
         LaunchActionRecord, LaunchActionStatus, ManagedProcessOutcome, ManagedProcessRecord,
         ManagedProcessStatus, TerminalCommandOutcome, TerminalCommandRecord, TerminalCommandStatus,
         Workspace,
@@ -252,62 +252,6 @@ pub(crate) fn record(
     drop(_guard);
     continuity::capture_activity_groups(app, &continuity_groups);
     let _ = app.emit("repotunnel://activity-updated", ());
-    Ok(())
-}
-
-pub(crate) fn update_source(
-    app: &AppHandle,
-    source_id: &str,
-    status: ActivityStatus,
-    detail: Option<String>,
-) -> Result<(), String> {
-    let _guard = activity_lock()
-        .lock()
-        .map_err(|_| "RepoTunnel activity history is temporarily unavailable.".to_string())?;
-    let mut groups = load(app)?;
-    let now = now_millis();
-    let mut changed = false;
-    let mut affected_workspaces = std::collections::BTreeSet::new();
-    for group in &mut groups {
-        let mut group_changed = false;
-        for event in &mut group.events {
-            if event.source_id.as_deref() == Some(source_id) {
-                event.status = status;
-                if let Some(detail) = detail.as_ref() {
-                    event.detail = Some(bounded(detail, MAX_DETAIL_CHARS));
-                }
-                event.updated_at = now;
-                group.updated_at = now;
-                group_changed = true;
-                changed = true;
-            }
-        }
-        if group_changed {
-            affected_workspaces.insert(group.workspace_id.clone());
-            refresh_version_links(app, group);
-        }
-    }
-    if changed {
-        if let Ok(settings) = storage::load_history_settings(app) {
-            if let Some(limit) = settings.version_history_limit {
-                for workspace_id in &affected_workspaces {
-                    prune_workspace_groups(&mut groups, workspace_id, limit);
-                }
-            }
-        }
-        trim_global_groups(&mut groups);
-        let continuity_groups = groups
-            .iter()
-            .filter(|group| {
-                affected_workspaces.contains(&group.workspace_id) && group.updated_at == now
-            })
-            .cloned()
-            .collect::<Vec<_>>();
-        save(app, &groups)?;
-        drop(_guard);
-        continuity::capture_activity_groups(app, &continuity_groups);
-        let _ = app.emit("repotunnel://activity-updated", ());
-    }
     Ok(())
 }
 
