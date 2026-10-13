@@ -5,6 +5,8 @@ import {
   getVisualAccessApplicationIdentity,
   getVisualAccessStatus,
   listIgnoredVisualApplications,
+  listVisualAccessWindows,
+  type VisualAccessWindow,
   setVisualApplicationIgnored,
   type IgnoredVisualApplication,
   listVisualAccessApplications,
@@ -19,6 +21,8 @@ function message(error: unknown): string {
 export default function VisualAccessPanel() {
   const [enabled, setEnabled] = useState(false);
   const [apps, setApps] = useState<VisualAccessApplication[]>([]);
+  const [windows, setWindows] = useState<VisualAccessWindow[]>([]);
+  const [expandedApp, setExpandedApp] = useState<string | null>(null);
   const [ignoredApps, setIgnoredApps] = useState<IgnoredVisualApplication[]>([]);
   const [showIgnored, setShowIgnored] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -31,14 +35,16 @@ export default function VisualAccessPanel() {
   const refresh = useCallback(async () => {
     setBusy(true);
     try {
-      const [status, discovered, ignored] = await Promise.all([
+      const [status, discovered, ignored, discoveredWindows] = await Promise.all([
         getVisualAccessStatus(),
         listVisualAccessApplications(),
         listIgnoredVisualApplications(),
+        listVisualAccessWindows(),
       ]);
       setEnabled(status);
       setApps(discovered);
       setIgnoredApps(ignored);
+      setWindows(discoveredWindows);
       setError(null);
     } catch (cause) {
       setError(message(cause));
@@ -128,12 +134,16 @@ export default function VisualAccessPanel() {
       {apps.length === 0 ? <p>No applications detected. Open Notepad and select Refresh apps.</p> : (
         <div className="visual-access-apps">
           {apps.map((app) => (
-            <div className="home-detail-row" key={app.id}>
+            <div key={app.id}>
+            <div className="home-detail-row">
               <span>{app.name}</span>
               <span className="home-muted">{app.windowCount} window{app.windowCount === 1 ? "" : "s"} · {app.accessibility ? "Accessible" : "Limited accessibility"}</span>
+              <button type="button" aria-expanded={expandedApp === app.id} onClick={() => setExpandedApp(expandedApp === app.id ? null : app.id)}>Windows ({windows.filter((entry) => entry.applicationId === app.id).length})</button>
               <button type="button" disabled={busy || capturingId !== null} onClick={() => void changeIgnored({ applicationId: app.id, name: app.name, ignored: true })}>Ignore</button>
               <button type="button" disabled={busy || capturingId !== null} onClick={() => void inspectIdentity(app)}>Identify</button>
               <button type="button" disabled={!enabled || busy || capturingId !== null} onClick={() => void capture(app)}>{capturingId === app.id ? "Capturing…" : "Capture Now"}</button>
+            </div>
+            {expandedApp === app.id ? <div style={{ paddingLeft: 16 }}><p>Choose a specific project window before monitoring. Window titles are labels, not trusted project identities.</p>{windows.filter((entry) => entry.applicationId === app.id).map((entry, index) => <p key={`${entry.applicationId}-${index}`}>{entry.title}</p>)}</div> : null}
             </div>
           ))}
         </div>
