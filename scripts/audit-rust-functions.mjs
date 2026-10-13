@@ -47,6 +47,16 @@ const out = path.join(process.cwd(), "docs/audits");
 fs.mkdirSync(out, { recursive: true });
 fs.writeFileSync(path.join(out, "rust-function-references.json"), JSON.stringify(report, null, 2) + "\n");
 console.log(JSON.stringify(report.counts, null, 2));
+console.log("Review candidates (manual inspection required):");
+for (const row of rows.filter((x) => x.reviewCandidate)) {
+  console.log("  " + row.file + ":" + row.line + " " + row.name);
+}
+console.log("Protected zero-reference functions by flag:");
+for (const flag of ["isMcpTool", "isTauri", "isTest"]) {
+  const protectedRows = rows.filter((x) => x.references.length === 0 && x[flag]);
+  console.log("  " + flag + ": " + protectedRows.length);
+  for (const row of protectedRows.slice(0, 8)) console.log("    " + row.file + ":" + row.line + " " + row.name);
+}
 console.log("History settings symbols:");
 for (const name of ["load_history_settings", "save_history_settings", "history_settings_path"]) {
   for (const row of rows.filter((x) => x.name === name)) console.log("  " + row.file + ":" + row.line + " " + name + " <- " + (row.references.map((x) => x.file + " (" + x.count + ")").join(", ") || "no other textual references"));
