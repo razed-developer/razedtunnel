@@ -268,3 +268,41 @@
   color: #185bb4 !important;
   border-color: #b8d2f7 !important;
 }
+
+/* Dedicated Public MCP action buttons, avoiding inherited legacy dark button styles. */
+.public-overview .public-dashboard-actions .public-action-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 15px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.public-overview .public-dashboard-actions .public-action-button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-restart {
+  background: #e7f0fd !important;
+  border-color: #bed5f5 !important;
+  color: #174f9a !important;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-danger {
+  background: #fff1f2 !important;
+  border-color: #edc1c7 !important;
+  color: #a12c3b !important;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-restart:hover:not(:disabled) {
+  background: #d5e6fc !important;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-danger:hover:not(:disabled) {
+  background: #fbdfe3 !important;
+}
