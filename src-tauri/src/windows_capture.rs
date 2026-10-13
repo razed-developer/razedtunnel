@@ -6,9 +6,9 @@ use windows_sys::Win32::{
     Foundation::{HWND, RECT},
     Graphics::Gdi::{
         CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits,
-        SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
+        SelectObject, GetDC, ReleaseDC, PrintWindow, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
     },
-    UI::WindowsAndMessaging::{GetDC, GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, PrintWindow, ReleaseDC},
+    UI::WindowsAndMessaging::{GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible},
 };
 
 use crate::{desktop_control::DesktopScreenshot, windows_uia};
