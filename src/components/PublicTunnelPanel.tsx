@@ -96,15 +96,12 @@ function PublicTunnelPanel({
     : credentialValid && (provider === "ngrok" || publicUrlValid);
 
   return (
-    <section className="connection-panel public-tunnel-panel" aria-labelledby="public-tunnel-title">
+    <section className="connection-panel public-tunnel-panel home-card public-overview" aria-labelledby="public-tunnel-title">
       <div className="connection-heading">
         <div>
-          <span className="section-kicker">Remote MCP connection</span>
-          <h2 id="public-tunnel-title">Public MCP endpoint</h2>
-          <p>
-            Use Direct HTTPS for a no-relay connection when your network has a routable IPv4/IPv6,
-            or keep ngrok / Cloudflare as fallbacks. RepoTunnel keeps the MCP gateway on localhost.
-          </p>
+          
+          <h2 id="public-tunnel-title">Public MCP Endpoint <abbr title="Secure remote access to the localhost MCP gateway. Direct HTTPS avoids a relay; ngrok and Cloudflare are alternatives.">ⓘ</abbr></h2>
+
         </div>
         <span className={`connection-state ${status.ready ? "ready" : status.running ? "starting" : ""}`}>
           <span className="status-dot" aria-hidden="true" />
@@ -285,7 +282,9 @@ function PublicTunnelPanel({
           ) : null}
 
           {status.provider === "direct" ? (
-            <div className="connection-callout">
+            <details className="public-overview-details">
+              <summary>Direct HTTPS setup and certificate</summary>
+              <div className="connection-callout">
               <strong>Direct network path</strong>
               <p>
                 Router mappings: public <code>443 → {status.directHttpsPort}</code> and public <code>80 → {status.directHttpChallengePort}</code>
@@ -305,7 +304,8 @@ function PublicTunnelPanel({
                   </button>
                 </div>
               ) : null}
-            </div>
+              </div>
+            </details>
           ) : null}
 
           <div className="public-usage-strip">
@@ -318,7 +318,9 @@ function PublicTunnelPanel({
             </a>
           </div>
 
-          <div className="connection-next-step">
+          <details className="public-overview-details">
+            <summary>Connection details <abbr title="Ready does not prove an external client connected. Request counts do not confirm tool execution.">ⓘ</abbr></summary>
+            <div className="connection-next-step">
             <strong>
               {status.provider === "direct"
                 ? status.ready ? "Direct HTTPS is confirmed" : "Direct HTTPS is prepared locally"
@@ -330,6 +332,9 @@ function PublicTunnelPanel({
                 : "Use Restart connection if setup needs attention.")}
             </p>
           </div>
+
+            </div>
+          </details>
 
           <div className="public-connection-actions">
             <button className="secondary-button" type="button" onClick={() => void onRestart()} disabled={busy}>
