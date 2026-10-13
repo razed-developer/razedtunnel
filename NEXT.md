@@ -1,3 +1,11 @@
+## Startup dependency audit: monitoring and terminal (audit only; no runtime change)
+- User validated integration IPC removal; prior total 74 desktop IPC registrations removed.
+- Reviewed `src-tauri/src/lib.rs`, `monitoring.rs`, `terminal.rs`, and `app_state.rs` before attempting actual Rust module/startup removal.
+- `monitoring::initialize(app)` is **not** just a no-op: it loads persisted monitored project IDs, prunes stale entries, and resumes enabled project watchers with `start_internal`. Disabling it could silently change MCP monitoring behavior. `monitoring::stop_all_activity()` joins watcher threads on exit.
+- `terminal::initialize(app)` marks interrupted running terminal commands failed in persistent history and refreshes managed processes; shutdown calls `terminal::stop_transient_activity_for_shutdown()`. Removing it could compromise MCP command/process lifecycle recovery.
+- `initialize_connection_runtime` auto-starts configured public tunnel; keep it. The `legacy_background_services` flag already gates GitHub status prewarm, AI Workspace recovery, and ChatGPT bridge startup. `model_hub::stop_owned_local_runtimes()` is called on exit; do not remove until ownership/dependency audit.
+- **No Rust code changed this stage:** preserving behavior takes priority over speculative startup optimization. Next perform a cross-module MCP reference audit and isolate a truly unused implementation before deleting code. Do not remove monitoring/terminal init just because their desktop pages are gone. No merge.
+
 ## Rust IPC audit: integration settings desktop registrations (awaiting validation)
 - User confirmed previous AI Workspace IPC cleanup passed; prior total removed: 67.
 - Checked mounted App.tsx, WorkspaceList, ChatConnectionPanel, PublicTunnelPanel, GatewayPanel: no calls to integration settings desktop IPC. Commit `21fd1ca` unregisters seven Tauri IPC entries: list/set deep integrations (2), list/get/set desktop control (3), get/set Gmail access (2).
