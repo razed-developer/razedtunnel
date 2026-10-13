@@ -153,11 +153,12 @@ fn initialize_connection_runtime(app: &tauri::AppHandle) {
     // The MCP/Direct HTTPS transport is RepoTunnel's recovery/control channel.
     // Keep it independent from optional product features so connection recovery cannot
     // strand the application with Direct HTTPS and MCP unavailable.
-    if public_tunnel::load_config(app)
+    let configured = public_tunnel::load_config(app)
         .ok()
         .flatten()
-        .is_some_and(|config| config.auto_start)
-    {
+        .is_some_and(|config| config.auto_start);
+    app.state::<AppState>().set_public_connection_desired(configured);
+    if configured {
         let app_handle = app.clone();
         if let Err(error) = std::thread::Builder::new()
             .name("repotunnel-auto-connect".to_string())
@@ -185,6 +186,34 @@ fn initialize_connection_runtime(app: &tauri::AppHandle) {
         {
             eprintln!("RepoTunnel auto-connect worker warning: {error}");
         }
+    }
+    // Keep the transport available after longer outages, even when the window is hidden.
+    // An intentional gateway stop clears the desired flag; exit cancels the loop.
+    let app_handle = app.clone();
+    if let Err(error) = std::thread::Builder::new()
+        .name("repotunnel-connection-watch".to_string())
+        .spawn(move || {
+            let state = app_handle.state::<AppState>();
+            while !state.shutting_down() {
+                std::thread::sleep(std::time::Duration::from_secs(15));
+                if state.shutting_down() || !state.public_connection_desired() {
+                    continue;
+                }
+                match state.public_tunnel_status(&app_handle) {
+                    Ok(status) if !status.running => {
+                        if let Err(error) = state.start_public_tunnel(app_handle.clone()) {
+                            hardening::log_event(&app_handle, "WARN", "public_tunnel.recover", &error);
+                        }
+                    }
+                    Err(error) => {
+                        hardening::log_event(&app_handle, "WARN", "public_tunnel.status", &error);
+                    }
+                    _ => {}
+                }
+            }
+        })
+    {
+        eprintln!("RepoTunnel connection recovery worker warning: {error}");
     }
 }
 
@@ -339,6 +368,7 @@ pub fn run() {
         .expect("failed to build RepoTunnel")
         .run(|app_handle, event| {
             if let tauri::RunEvent::ExitRequested { .. } = event {
+                app_handle.state::<AppState>().mark_shutting_down();
                 monitoring::stop_all_activity();
                 terminal::stop_transient_activity_for_shutdown();
                 browser::stop_all_activity();
