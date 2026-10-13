@@ -63,10 +63,6 @@ fn cache_status(status: &GithubConnectionStatus) {
     }
 }
 
-pub(crate) fn cached_status() -> Option<GithubConnectionStatus> {
-    status_cache().lock().ok()?.clone()
-}
-
 fn executable_name() -> &'static str {
     if cfg!(windows) {
         "gh.exe"
