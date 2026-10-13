@@ -261,6 +261,7 @@ pub fn run() {
                 visual_access_commands::capture_visual_access_window,
                 visual_access_commands::get_visual_access_application_identity,
                 visual_access_commands::list_ignored_visual_applications,
+                visual_access_commands::list_visual_access_windows,
                 visual_access_commands::set_visual_application_ignored,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
