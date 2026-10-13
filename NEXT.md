@@ -1,3 +1,8 @@
+## ACTIVITY MONITORING PATCH — 2026-10-13
+- Added read-only `get_activity_timeline` Tauri command via `activity_commands.rs` using existing `activity::timeline`; registered in `lib.rs` and added typed frontend adapter. Dashboard shows last 12 factual events, loading/error/empty states, refresh button and 30-second polling while Home is visible. No approval mutation or simulated data.
+- Validate on `ui/dashboard-restoration`: `git pull --ff-only && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Launch and inspect Home activity (especially empty and active history). Rust build not yet verified locally.
+- Next: audit actual approval storage and MCP decision handlers before exposing any approve/reject controls; avoid bypassing authorization, event logging, or workspace policy. Consider a dedicated approvals IPC after security review.
+
 ## LIGHT SHELL CONSISTENCY PATCH — 2026-10-13
 - Screenshot showed light dashboard with dark sidebar/top header, low-contrast branding, and overly narrow overview. Added stronger light-mode shell overrides in `src/theme.css` to bridge legacy hard-coded dark styles and `!important` rules. Widened only Home overview via `home-page-content` class; existing Projects/Connections content width retained.
 - Validate locally on `ui/dashboard-restoration`: `git pull --ff-only && npm run build`. Inspect light/dark/System Home, sidebar and top toolbar, then Projects/Connections. Report screenshots of any remaining hard-coded dark cards or low contrast. No Rust/backend changes.
