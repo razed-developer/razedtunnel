@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — trait dispatch audit
+- User recovered local `github.rs` change using file-scoped stash/pull/pop and reports both Cargo checks PASS: 139 default warnings, 100 legacy warnings. Function audit: 1,825 declarations, 336 zero textual refs, 27 review candidates, 309 protected.
+- Confirmed `browser::deref` is `impl Deref for BrowserScope`, so it is trait-dispatched rather than dead. Audit now protects that exact implementation via `isTraitImpl`, commit `b6ac0c9` (after superseding a too-broad heuristic in `49f59bc`). No runtime Rust code changed. **Not yet locally validated.**
+- Next: `git pull --ff-only && node scripts/audit-rust-functions.mjs`; expect review candidates 26 and protected 310 if detection matches. If local github.rs conflicts again, stop and preserve local changes; do not reset. Continue inspecting compiler warnings and avoid removing feature-gated functionality wholesale. DO NOT MERGE.
+
 ## CURRENT HANDOFF — 2026-10-13 — unused GitHub cache accessor
 - Branch `cleanup/dead-video-view`; DO NOT MERGE. User's latest audit: 1,826 declarations, 337 zero textual references, 28 review candidates, 309 protected; `workspace_policy_commands::check_workspace_access` correctly flagged as unregistered Tauri command.
 - Reviewed `github::cached_status`: compiler warns unused, textual audit confirms zero references. Removed only its 3-line accessor, commit `8a97b55`. Kept `status_cache`, `cache_status`, GitHub CLI authentication, connection lifecycle and status handling intact. **Not locally validated yet.**
