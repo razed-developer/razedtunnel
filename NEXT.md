@@ -1,3 +1,8 @@
+## PUBLIC MCP ENDPOINT UI — 2026-10-13
+- Updated PublicTunnelPanel to dashboard-style card with compact heading and help hint; kept provider switching, forms, URL copy, status metrics, usage, and security controls.
+- Moved connection details and Direct HTTPS certificate guidance into expandable details; CSS provides responsive metric grid and spacing.
+- Windows npm run build and visual verification still required. Next: address feedback, then continue UI consistency across remaining pages; Visual Access monitoring remains paused.
+
 ## LOCAL GATEWAY UI REDESIGN — 2026-10-13
 - Replaced dense Local Gateway layout with dashboard card: running/offline status, local endpoint + Copy, three metrics (projects, remote endpoint, AI access), Start/Stop, collapsible Diagnostics preserving authenticated remote request counts, instrumented task counts, client readiness caveats, and policy explanation in hover hints. Backend behavior unchanged.
 - Added responsive CSS in src/styles.css. Next: user Windows npm run build and visual check; then apply matching treatment to Public MCP Endpoint.
