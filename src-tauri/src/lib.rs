@@ -220,12 +220,8 @@ pub fn run() {
                 // Preserve its Rust implementation for MCP tool dependencies.
                 // Legacy desktop diagnostics IPC removed; workspace health remains
                 // registered above for Projects, and MCP diagnostics stay compiled.
-                temp_workspace_commands::create_temp_workspace,
-                temp_workspace_commands::list_temp_workspaces,
-                temp_workspace_commands::inspect_temp_workspace,
-                temp_workspace_commands::set_temp_workspace_preserved,
-                temp_workspace_commands::cleanup_temp_workspace,
-                temp_workspace_commands::temp_workspace_file_action,
+                // Temporary workspace desktop controls are unmounted; preserve
+                // temporary workspace implementation for MCP project tooling.
                 change_commands::create_file,
                 change_commands::write_file,
                 change_commands::patch_file,
