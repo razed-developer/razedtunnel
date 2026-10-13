@@ -1,3 +1,9 @@
+## VISUAL ACCESS IGNORE LIST — 2026-10-13
+- Added persistent ignored executable identities stored in app data `visual-access-ignored.json`. UI application discovery hides matching executable paths, never title or transient PID. Unknown executable identities remain visible.
+- Connections → Visual Access now offers Ignore per app and expandable Manage ignored apps with Restore. This is a UI discovery filter, not a security denial for MCP/Desktop Control; do not describe it as blocking capture or control.
+- Commands: list_ignored_visual_applications, set_visual_application_ignored. Changes persist across app restarts. Not yet compiled/tested on Windows.
+- Validate cargo check + npm build; ignore Notepad, refresh and restart app, confirm hidden; restore and confirm reappears. Consider moving management to a dedicated Settings view later if needed.
+
 ## RESTART-SAFE VISUAL MONITORING FOUNDATION — 2026-10-13
 - Added Windows executable identity lookup using OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) and QueryFullProcessImageNameW, isolated via spawn_blocking. Exposed local IPC get_visual_access_application_identity and Identify button per discovered app.
 - This is an identity validation milestone only: monitoring, persistent consent, restart reattachment, and 60-second RAM buffer are NOT implemented yet. Do not infer app identity from title or PID. Verify returned path for Notepad and a dev app, then implement opt-in persistent target store, unique verified reattachment, lifecycle states, bounded RAM frames and controls.
