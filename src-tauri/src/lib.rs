@@ -11,7 +11,6 @@ mod ai_access_commands;
 mod browser;
 mod changes;
 mod chatgpt_bridge;
-mod checkpoint;
 mod connection;
 mod continuity;
 mod desktop_control;
