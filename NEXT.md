@@ -1,3 +1,9 @@
+## Frontend cleanup batch 3 — model trial (awaiting validation)
+- User confirmed prior editor-cluster deletion passed local check/build/cargo check.
+- `tsconfig.json` includes all of `src`, so unmounted components still need valid imports. Inspected `src/components/ModelTrial.tsx` (97 lines) and `src/lib/modelTrial.ts` (15 lines). ModelTrial was only a child of deleted ModelHub UI; its helper contains only selection comparison utilities. Deleted both (commits be48b6a, 6842931). No Rust/MCP changes.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`.
+- Still pending: comprehensive `src/components` directory inventory and transitive import reachability graph. `tsconfig` includes src, so validate every deletion batch. Do not assume that unmounted means safe to delete if another legacy component imports it. Keep cleanup/dead-video-view unmerged.
+
 ## Frontend cleanup batch 2 — editor dependency cluster (awaiting validation)
 - User confirmed prior restored-DeveloperDock state passes check/build/cargo check.
 - Inspected current `WorkspaceEditor.tsx` (510 lines), `CodeMirrorSurface.tsx` (427 lines), `DeveloperDock.tsx` (894 lines): WorkspaceEditor imports both CodeMirrorSurface and DeveloperDock; CodeMirrorSurface imports the EditorProblem type from DeveloperDock. None is imported by current `src/App.tsx` or `src/main.tsx` entrypoint. Deleted all three as a single legacy editor cluster (commits 5f6e8d9, 622c483, 216c651), rather than leaving broken internal imports. `ModelHub.tsx` remains deleted from prior batch. No Rust/MCP changes.
