@@ -1,3 +1,8 @@
+## Model trial cleanup test dependency fix
+- User's `npm run check` failed after deleting `src/lib/modelTrial.ts` because `src/lib/modelTrial.test.ts` still imported it. Reviewed test: it exclusively exercises removed `modelTrialKey`/`sameModelIdentity` helpers. Deleted orphan test in commit 7f24cb3. This does not remove tests for active code.
+- Await validation: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`.
+- Future cleanup must inspect associated `*.test.ts(x)` files before deleting exclusive helpers; full component inventory still outstanding.
+
 ## Frontend cleanup batch 3 — model trial (awaiting validation)
 - User confirmed prior editor-cluster deletion passed local check/build/cargo check.
 - `tsconfig.json` includes all of `src`, so unmounted components still need valid imports. Inspected `src/components/ModelTrial.tsx` (97 lines) and `src/lib/modelTrial.ts` (15 lines). ModelTrial was only a child of deleted ModelHub UI; its helper contains only selection comparison utilities. Deleted both (commits be48b6a, 6842931). No Rust/MCP changes.
