@@ -1,3 +1,10 @@
+## UI RESTORATION HANDOFF — 2026-10-13
+- UI work is isolated on branch `ui/dashboard-restoration`, based on `cleanup/dead-video-view`. Do not merge the Rust cleanup branch as part of UI validation.
+- First UI slice: added Home navigation and landing page with actual gateway status, remote tunnel/chat readiness, project count and permissions, MCP tool success/failure totals. No fabricated activity or approvals. Projects and Connections setup flows unchanged.
+- Validate locally: `git fetch origin && git switch ui/dashboard-restoration && npm run build`. Run the desktop app and inspect Home, Projects, Connections; check narrower window behavior.
+- Next UI slice after validation: theme system (light/dark/system), then real activity/approval data adapters and tray-friendly compact view. Existing `src/workspace.css` is very large; keep new CSS scoped and plan extraction, do not pile all future styles into it.
+- User's visual reference: clean rounded-card dashboard, light and dark, monitoring-first, tray-first, few controls after setup.
+
 ## CURRENT HANDOFF — 2026-10-13 — Pause backend minimization; prioritize UI
 - User wants to take a break from minimization and restore/redesign the UI, which now feels like a shell of original RepoTunnel. Do not continue dead-code deletion after this patch without discussing UI priorities.
 - Removed disconnected FFmpeg provisioning cluster in commit 16fc130; preserved managed-data-dir-first/PATH discovery of existing FFmpeg and FFprobe, including executable naming and Unix permissions.
