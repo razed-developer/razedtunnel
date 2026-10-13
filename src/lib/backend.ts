@@ -142,3 +142,25 @@ export async function setLaunchAtLogin(enabled: boolean): Promise<RuntimeDiagnos
 export async function getActivityTimeline(): Promise<ActivityTimeline> {
   return invoke<ActivityTimeline>("get_activity_timeline");
 }
+
+export type VisualAccessApplication = {
+  id: string;
+  name: string;
+  running: boolean;
+  accessibility: boolean;
+  windowCount: number;
+  enabled: boolean;
+  message: string;
+};
+
+export async function getVisualAccessStatus(): Promise<boolean> {
+  return invoke<boolean>("get_visual_access_status");
+}
+
+export async function setVisualAccessEnabled(enabled: boolean): Promise<boolean> {
+  return invoke<boolean>("set_visual_access_enabled", { enabled });
+}
+
+export async function listVisualAccessApplications(): Promise<VisualAccessApplication[]> {
+  return invoke<VisualAccessApplication[]>("list_visual_access_applications");
+}
