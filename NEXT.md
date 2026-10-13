@@ -1,3 +1,10 @@
+## LIVE MCP VISUAL ACCESS VERIFIED — 2026-10-13
+- User confirmed Connections freeze resolved and local Capture Now preview works.
+- Live RepoTunnel MCP connected in ChatGPT. `list_workspaces` returned approved projects; `list_desktop_applications` returned Windows Notepad (uia-pid-6936).
+- Called `desktop_take_screenshot` for Notepad through approved workspace; received actual image/png (686x796, 14882 bytes), rendered in ChatGPT and read text `Hi. Can you see this?`.
+- End-to-end app-window screenshot flow is working without manual uploads. No new code patch required for MCP image transport.
+- Next: decide whether to add per-app opt-in capture authorization and the proposed bounded RAM-only 60-second recent-frame buffer. Keep capture window-only, never automatic desktop fallback; avoid collecting other apps without explicit approval. Do not conflate global Desktop Control permission with view-only capture consent.
+
 ## CONNECTIONS FREEZE FIX — 2026-10-13
 - User confirmed Capture Now preview works, but Connections freezes for a long time on entry.
 - Root cause likely synchronous `list_visual_access_applications` IPC waiting on UIA worker `join()` on a Tauri command thread.
