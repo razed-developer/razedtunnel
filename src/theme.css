@@ -1,0 +1,43 @@
+/* Appearance layer. Scoped overrides for legacy hard-coded dark surfaces. */
+:root[data-theme="light"] {
+  color-scheme:light;
+  --rt-bg:#f4f7fb; --rt-bg-deep:#edf2f8; --rt-sidebar:#fff; --rt-projects:#f6f8fb;
+  --rt-panel:#fff; --rt-panel-2:#f4f7fb; --rt-hover:#eaf1fa;
+  --rt-line:#dce5f0; --rt-line-soft:#e8edf4;
+  --rt-text:#172436; --rt-text-2:#394b60; --rt-text-3:#687b90; --rt-text-4:#8795a5;
+  --rt-blue:#2169e8; --rt-blue-soft:rgba(33,105,232,.09);
+  --rt-green:#15815a; --rt-red:#ca414a; --rt-yellow:#a96c12;
+  --surface:#fff; --surface-soft:#f5f7fb; --border:#dce5f0;
+  --text-primary:#172436; --text-secondary:#394b60; --text-muted:#687b90; --accent:#2169e8;
+}
+:root[data-theme="light"],:root[data-theme="light"] body,:root[data-theme="light"] #root { background:var(--rt-bg-deep); color:var(--rt-text); }
+:root[data-theme="light"] .desktop-app,:root[data-theme="light"] .desktop-shell { background:var(--rt-bg); }
+:root[data-theme="light"] .window-chrome { background:#fff; border-color:var(--rt-line); }
+:root[data-theme="light"] .window-title { color:var(--rt-text); }
+:root[data-theme="light"] .window-controls button { color:var(--rt-text-2); }
+:root[data-theme="light"] .window-controls button:hover { background:#eaf0f7; color:var(--rt-text); }
+:root[data-theme="light"] .window-controls .window-close:hover { background:#b93d42; color:#fff; }
+:root[data-theme="light"] .app-sidebar { background:#fff; border-color:var(--rt-line); }
+:root[data-theme="light"] .sidebar-brand-copy strong { color:var(--rt-text); }
+:root[data-theme="light"] .sidebar-brand-copy span,:root[data-theme="light"] .sidebar-nav-group-label { color:var(--rt-text-3); }
+:root[data-theme="light"] .sidebar-nav-item { color:var(--rt-text-2); }
+:root[data-theme="light"] .sidebar-nav-item svg { color:var(--rt-text-3); }
+:root[data-theme="light"] .sidebar-nav-item:hover { background:#edf3fa; color:var(--rt-text); }
+:root[data-theme="light"] .sidebar-nav-item.active { background:#e9f1ff; color:#165dc8; }
+:root[data-theme="light"] .sidebar-nav-item.active svg { color:#2169e8; }
+:root[data-theme="light"] .main-view,:root[data-theme="light"] .page-scroll,:root[data-theme="light"] .page-content { background:var(--rt-bg); color:var(--rt-text); }
+:root[data-theme="light"] .page-header { background:#fff; border-color:var(--rt-line); }
+:root[data-theme="light"] .page-tab,:root[data-theme="light"] .page-tab h1 { color:var(--rt-text); }
+:root[data-theme="light"] .toolbar-status,:root[data-theme="light"] .focus-mode-toggle { color:var(--rt-text-2); border-color:var(--rt-line); }
+:root[data-theme="light"] .home-card { box-shadow:0 5px 20px rgba(33,56,89,.045); }
+:root[data-theme="light"] .home-section-title button,:root[data-theme="light"] .home-empty button { background:#f6f9fe; }
+:root[data-theme="light"] .gateway-panel,:root[data-theme="light"] .workspace-section { background:#fff; border-color:var(--rt-line); box-shadow:0 5px 22px rgba(33,56,89,.05); }
+:root[data-theme="light"] .gateway-copy h2,:root[data-theme="light"] .section-heading h2 { color:var(--rt-text); }
+:root[data-theme="light"] .gateway-copy p,:root[data-theme="light"] .section-heading p { color:var(--rt-text-3); }
+:root[data-theme="light"] .primary-button { background:#2169e8; color:#fff; }
+:root[data-theme="light"] .primary-button:hover:not(:disabled) { background:#1859c9; }
+:root[data-theme="light"] .secondary-button { background:#f5f8fc; color:var(--rt-text-2); border-color:var(--rt-line); }
+:root[data-theme="light"] .secondary-button:hover:not(:disabled) { background:#eaf1fa; }
+.theme-picker { display:inline-flex; align-items:center; gap:7px; color:var(--rt-text-3); font-size:11px; white-space:nowrap; }
+.theme-picker select { border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel-2); color:var(--rt-text); padding:6px 8px; font-size:11px; cursor:pointer; }
+.theme-picker select:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
