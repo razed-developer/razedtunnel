@@ -1,3 +1,10 @@
+## Fix Windows Git discovery for MCP (awaiting user rebuild/restart)
+- MCP connectivity and `list_workspaces` succeeded, but MCP `git_status` returned unavailable and `git_log`/`git_diff` returned `Git was not found in PATH`. User confirmed PowerShell `Get-Command git` and `where.exe git` resolve `C:\\Program Files\\Git\\cmd\\git.exe`.
+- Root cause in `src-tauri/src/git.rs`: `git_binary()` checked `directory.join("git")` with `is_file()`, which does not use Windows PATHEXT and misses `git.exe`. This was a pre-existing detection bug, not evidence that removing `git_commands` broke MCP.
+- Commit `11205bf` changes Windows PATH search to explicit `git.exe`, retains Unix `git`, and adds fallback to `ProgramFiles/Git/cmd/git.exe` or `ProgramFiles(x86)/Git/cmd/git.exe` for tray processes with reduced PATH. No shell invocation or change to project access policy. Git core/MCP remains intact.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, **restart the running Tauri/tray process** to load the updated binary, then use ChatGPT MCP `list_workspaces`, `git_status`, `git_log`, `git_diff` read-only on an approved Git project. No local compilation performed by assistant.
+- Note: Git repository check requires `.git` directory inside approved workspace; git worktrees with `.git` files are currently unsupported separately. Next continue dependency/size audit after successful MCP test. Do not merge.
+
 ## Rust compilation cleanup: desktop Git wrapper (awaiting validation)
 - User validated monitoring wrapper removal; warning count remained **359** for two consecutive wrapper-removal stages (437 initial, 78 fewer). Do not use warnings as the sole optimization metric.
 - Audited `lib.rs`, `git_commands.rs` (96 lines), `mcp_server.rs`, `app_state.rs`, `src/App.tsx`. Desktop Git wrapper had ten Tauri handler registrations but no direct references in inspected MCP/AppState/App modules.
