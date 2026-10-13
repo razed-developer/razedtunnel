@@ -37,12 +37,6 @@ function commandPolicyLabel(commandPolicy: CommandPolicy): string {
   return commandPolicy === "review" ? "Review commands" : "Run commands automatically";
 }
 
-function nextCommandPolicy(commandPolicy: CommandPolicy): CommandPolicy {
-  if (commandPolicy === "review") return "automatic";
-  if (commandPolicy === "automatic") return "disabled";
-  return "review";
-}
-
 function WorkspaceList({
   workspaces,
   adding,
@@ -127,8 +121,6 @@ function WorkspaceList({
             const updating = updatingId === workspace.id;
             const health = workspaceHealth[workspace.id];
             const unavailable = health?.available === false;
-            const nextMode: WorkspaceAccessMode =
-              workspace.accessMode === "readWrite" ? "readOnly" : "readWrite";
 
             return (
               <article className={`workspace-card ${unavailable ? "workspace-card-missing" : ""}`} key={workspace.id}>
@@ -159,40 +151,28 @@ function WorkspaceList({
                       <button className="policy-button" type="button" onClick={() => onRetryHealth(workspace.id)}>Recheck</button>
                     </>
                   ) : (<div className="workspace-policy-controls" aria-label={`Permissions for ${workspace.name}`}>
-                  <button
-                    className={`policy-button ${workspace.changePolicy === "automatic" ? "automatic" : ""}`}
-                    type="button"
-                    disabled={updating}
-                    onClick={() =>
-                      onChangePolicyChange(
-                        workspace,
-                        workspace.changePolicy === "automatic" ? "review" : "automatic",
-                      )
-                    }
-                    title="Toggle whether MCP file changes require local approval"
-                  >
-                    {changePolicyLabel(workspace.changePolicy)}
-                  </button>
-                  <button
-                    className={`policy-button ${workspace.commandPolicy === "automatic" ? "automatic" : ""}`}
-                    type="button"
-                    disabled={updating || workspace.changePolicy === "automatic"}
-                    onClick={() => onCommandPolicyChange(workspace, nextCommandPolicy(workspace.commandPolicy))}
-                    title={workspace.changePolicy === "automatic"
-                      ? "Automatic edit mode also enables automatic command execution"
-                      : "Cycle command policy: review, automatic execution, or disabled"}
-                  >
-                    {commandPolicyLabel(workspace.commandPolicy)}
-                  </button>
-                  <button
-                    className="access-button"
-                    type="button"
-                    disabled={updating}
-                    onClick={() => onAccessChange(workspace, nextMode)}
-                    title={`Switch ${workspace.name} to ${accessLabel(nextMode).toLowerCase()}`}
-                  >
-                    {updating ? "Updating…" : accessLabel(workspace.accessMode)}
-                  </button>
+                  <div className="workspace-permission-field">
+                    <span>Edit approval</span>
+                    <div className="workspace-segmented" role="group" aria-label={`Edit approval for ${workspace.name}`}>
+                      <button type="button" className={workspace.changePolicy === "review" ? "selected" : ""} aria-pressed={workspace.changePolicy === "review"} disabled={updating} onClick={() => onChangePolicyChange(workspace, "review")}>Review</button>
+                      <button type="button" className={workspace.changePolicy === "automatic" ? "selected" : ""} aria-pressed={workspace.changePolicy === "automatic"} disabled={updating} onClick={() => onChangePolicyChange(workspace, "automatic")}>Automatic</button>
+                    </div>
+                  </div>
+                  <div className="workspace-permission-field">
+                    <span>Commands</span>
+                    <div className="workspace-segmented" role="group" aria-label={`Command execution for ${workspace.name}`}>
+                      {(["disabled", "review", "automatic"] as const).map((policy) => (
+                        <button key={policy} type="button" className={workspace.commandPolicy === policy ? "selected" : ""} aria-pressed={workspace.commandPolicy === policy} disabled={updating || workspace.changePolicy === "automatic"} title={workspace.changePolicy === "automatic" ? "Automatic edits also enable automatic command execution" : undefined} onClick={() => onCommandPolicyChange(workspace, policy)}>{policy === "disabled" ? "Off" : policy === "review" ? "Review" : "Auto"}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="workspace-permission-field">
+                    <span>File access</span>
+                    <div className="workspace-segmented" role="group" aria-label={`File access for ${workspace.name}`}>
+                      <button type="button" className={workspace.accessMode === "readOnly" ? "selected" : ""} aria-pressed={workspace.accessMode === "readOnly"} disabled={updating} onClick={() => onAccessChange(workspace, "readOnly")}>Read only</button>
+                      <button type="button" className={workspace.accessMode === "readWrite" ? "selected" : ""} aria-pressed={workspace.accessMode === "readWrite"} disabled={updating} onClick={() => onAccessChange(workspace, "readWrite")}>Read + write</button>
+                    </div>
+                  </div>
                   </div>)}
                   <button
                     className="icon-button"
