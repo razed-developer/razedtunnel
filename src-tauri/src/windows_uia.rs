@@ -399,6 +399,40 @@ mod runtime {
         Ok(grouped.into_values().collect())
     }
 
+    #[derive(Clone, Debug, serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub(crate) struct WindowsUiaWindow {
+        pub(crate) application_id: String,
+        pub(crate) title: String,
+        pub(crate) window_id: String,
+    }
+
+    pub(crate) fn list_top_level_windows() -> Result<Vec<WindowsUiaWindow>, String> {
+        let (automation, walker, cache) = automation()?;
+        let root = automation.get_root_element()
+            .map_err(|error| uia_error("Could not read UIA desktop root", error))?;
+        let children = walker.get_children_build_cache(&root, &cache)
+            .ok_or_else(|| "UIA returned no desktop windows.".to_string())?;
+        let own_pid = std::process::id() as i32;
+        let mut windows = Vec::new();
+        for window in children {
+            let pid = window.get_cached_process_id().unwrap_or_default();
+            if pid <= 0 || pid == own_pid || window.is_cached_offscreen().unwrap_or(true) {
+                continue;
+            }
+            let title = cached_name(&window);
+            if title.is_empty() { continue; }
+            windows.push(WindowsUiaWindow {
+                application_id: format!("uia-pid-{pid}"),
+                title,
+                window_id: format!("uia-window-{}", element_signature(
+                    "0", 50032, &cached_name(&window), ""
+                )),
+            });
+        }
+        Ok(windows)
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn walk_cached(
         walker: &UITreeWalker,
