@@ -591,6 +591,16 @@ impl AppState {
             .public_tunnel
             .lock()
             .map_err(|_| "Public tunnel state is unavailable.".to_string())?;
+        if tunnel
+            .runtime
+            .as_ref()
+            .is_some_and(|runtime| runtime.worker.is_finished())
+        {
+            if let Some(mut finished) = tunnel.runtime.take() {
+                public_tunnel::stop(&mut finished);
+                let _ = finished.worker.join();
+            }
+        }
         if tunnel.runtime.is_some() {
             return Ok(());
         }
