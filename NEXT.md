@@ -1,3 +1,9 @@
+## Rust IPC audit: temporary workspace desktop registrations (awaiting validation)
+- User confirmed seven-command diagnostics cleanup passed; total prior desktop IPC registrations removed: 51.
+- Commit `79346b6` unregisters six temporary-workspace desktop IPC entries (create/list/inspect/preserve/cleanup/file action). None are used by mounted Projects/Connections pages. The underlying temporary workspace implementation and MCP tools are unchanged; only Tauri command exposure removed.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, and Projects/Connections/tray/MCP access. Assistant did not compile locally.
+- Next inspect remaining desktop-only command groups and startup services, preserving MCP tools and all live gateway functionality. Do not merge branch.
+
 ## Rust IPC audit: diagnostics desktop registrations (awaiting validation)
 - User confirmed project lifecycle IPC removal passed. Previous cleanup total 44 registrations removed.
 - Inspected mounted App, WorkspaceList, ChatConnectionPanel, GatewayPanel, PublicTunnelPanel. None reference seven `workspace_diagnostics_commands` IPC entries. Commit `b6c44df` unregisters inspect_project, get_workflow_readiness, get_environment_diagnostics, list_tool_capabilities, get_system_resource_snapshot, list_launchable_applications, get_file_info (7).
