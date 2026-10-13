@@ -258,6 +258,7 @@ pub fn run() {
                 visual_access_commands::get_visual_access_status,
                 visual_access_commands::set_visual_access_enabled,
                 visual_access_commands::list_visual_access_applications,
+                visual_access_commands::capture_visual_access_window,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
                 activity_commands::get_activity_timeline,
