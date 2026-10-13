@@ -442,6 +442,51 @@ mod runtime {
         }
     }
 
+    /// Resolve only a current, visible top-level window of an approved UIA
+    /// application. The public window ID is recomputed from the same snapshot
+    /// identity used by inspect(); arbitrary HWND values are never accepted.
+    pub(crate) fn resolve_capture_window(
+        application_id: &str,
+        requested_window_id: Option<&str>,
+    ) -> Result<(UIElement, String), String> {
+        let pid = parse_application_pid(application_id)?;
+        let (automation, walker, cache) = automation()?;
+        let windows = app_windows(&automation, &walker, &cache, pid)?;
+        let mut visible = Vec::new();
+        for (index, window) in windows.into_iter().enumerate() {
+            if window.is_cached_offscreen().unwrap_or(true) {
+                continue;
+            }
+            if cached_bounds(&window).is_none() {
+                continue;
+            }
+            let path = format!("w{index}");
+            let id = format!(
+                "uia-window-{}",
+                element_signature(
+                    &path,
+                    cached_control_type_id(&window),
+                    &cached_name(&window),
+                    &cached_automation_id(&window),
+                )
+            );
+            if window.get_process_id().ok() != Some(pid as u32) {
+                continue;
+            }
+            visible.push((window, id));
+        }
+        match requested_window_id {
+            Some(id) => visible
+                .into_iter()
+                .find(|(_, candidate)| candidate == id)
+                .ok_or_else(|| "That approved window is no longer available. Inspect it again.".to_string()),
+            None => visible
+                .into_iter()
+                .next()
+                .ok_or_else(|| "The approved application has no visible window to capture.".to_string()),
+        }
+    }
+
     pub(crate) fn inspect(application_id: &str, limit: usize) -> Result<Value, String> {
         let pid = parse_application_pid(application_id)?;
         let (automation, walker, cache) = automation()?;
@@ -831,7 +876,7 @@ mod runtime {
 }
 
 #[cfg(windows)]
-pub(crate) use runtime::{action, inspect, list, semantic_sequence};
+pub(crate) use runtime::{action, inspect, list, resolve_capture_window, semantic_sequence};
 
 #[cfg(test)]
 mod tests {
