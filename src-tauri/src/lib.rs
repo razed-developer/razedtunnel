@@ -259,20 +259,8 @@ pub fn run() {
                 change_commands::undo_change,
                 // History, checkpoints and safety scan have no mounted desktop UI.
                 // Their underlying modules and MCP dependencies remain compiled.
-                terminal_commands::run_terminal_command,
-                terminal_commands::run_local_terminal_command,
-                terminal_commands::list_terminal_history,
-                terminal_commands::approve_terminal_command,
-                terminal_commands::reject_terminal_command,
-                terminal_commands::start_managed_process,
-                terminal_commands::start_local_managed_process,
-                terminal_commands::list_managed_processes,
-                terminal_commands::read_managed_process_output,
-                terminal_commands::wait_managed_process,
-                terminal_commands::approve_managed_process,
-                terminal_commands::reject_managed_process,
-                terminal_commands::stop_managed_process,
-                terminal_commands::restart_managed_process,
+                // Terminal desktop IPC was retired with the terminal UI.
+                // Terminal services and MCP command execution remain compiled.
                 // Legacy GitHub account-management desktop IPC is unmounted.
                 // GitHub and git MCP implementations remain available.
                 // Deep integration / desktop control / Gmail settings IPC belonged
