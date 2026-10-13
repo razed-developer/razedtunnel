@@ -26,7 +26,6 @@ mod git;
 mod github;
 mod gmail_access;
 mod hardening;
-mod https_setup;
 mod integrations;
 mod large_project_read;
 mod launcher;
