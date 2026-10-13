@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — Rust function reference audit
+- Branch `cleanup/dead-video-view`; DO NOT MERGE. User confirmed both cargo checks PASSED after checkpoint response-model removal.
+- Inspected `models.rs` and `storage.rs`: `HistorySettings` and `load_history_settings`/`save_history_settings` remain. Avoid deleting until cross-file callers are verified. Added `scripts/audit-rust-functions.mjs` commit `aa53e7e`, a read-only inventory of Rust function declarations and textual references across top-level `.rs` files. Outputs `docs/audits/rust-function-references.json`, prints counts and history-setting symbol callers. It is heuristic only; never remove code based solely on zero references. **Not yet locally validated.**
+- Next validation: `git pull --ff-only && node scripts/audit-rust-functions.mjs`. Inspect history-setting results and prioritize conservative dead-function candidates in non-MCP modules, guarding macros, startup hooks, traits, feature gates, and tests. Active MCP/gateway/security/tunnels/Projects/Connections/tray preserved.
+
 ## CURRENT HANDOFF — 2026-10-13 — checkpoint-only response models pruned
 - Branch `cleanup/dead-video-view`; DO NOT MERGE. User confirmed both default and `legacy_background_services` cargo checks PASSED after removal of `checkpoint.rs`.
 - Removed four legacy checkpoint response types from `src-tauri/src/models.rs` in commit `b9f99f7`: `CheckpointSummary`, `CheckpointComparison`, `CheckpointRestoreResult`, `CheckpointClearResult`. These were owned by retired one-click checkpoint operations. Kept `HistorySettings` and `storage.rs` history load/save routines intact pending independent caller/compatibility analysis; no saved user data modified.
