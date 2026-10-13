@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   captureVisualAccessWindow,
   type VisualAccessScreenshot,
+  getVisualAccessApplicationIdentity,
   getVisualAccessStatus,
   listVisualAccessApplications,
   setVisualAccessEnabled,
@@ -19,6 +20,7 @@ export default function VisualAccessPanel() {
   const [capturingId, setCapturingId] = useState<string | null>(null);
   const [preview, setPreview] = useState<VisualAccessScreenshot | null>(null);
   const [previewName, setPreviewName] = useState("");
+  const [identity, setIdentity] = useState<{ name: string; path: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -39,6 +41,19 @@ export default function VisualAccessPanel() {
   }, []);
 
   useEffect(() => { void refresh(); }, [refresh]);
+
+  async function inspectIdentity(app: VisualAccessApplication) {
+    setBusy(true);
+    setError(null);
+    try {
+      const path = await getVisualAccessApplicationIdentity(app.id);
+      setIdentity({ name: app.name, path });
+    } catch (cause) {
+      setError(`Could not identify ${app.name}: ${message(cause)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function capture(app: VisualAccessApplication) {
     setCapturingId(app.id);
@@ -95,11 +110,13 @@ export default function VisualAccessPanel() {
             <div className="home-detail-row" key={app.id}>
               <span>{app.name}</span>
               <span className="home-muted">{app.windowCount} window{app.windowCount === 1 ? "" : "s"} · {app.accessibility ? "Accessible" : "Limited accessibility"}</span>
+              <button type="button" disabled={busy || capturingId !== null} onClick={() => void inspectIdentity(app)}>Identify</button>
               <button type="button" disabled={!enabled || busy || capturingId !== null} onClick={() => void capture(app)}>{capturingId === app.id ? "Capturing…" : "Capture Now"}</button>
             </div>
           ))}
         </div>
       )}
+      {identity ? <p><strong>Executable identity for {identity.name}:</strong> <code style={{ overflowWrap: "anywhere" }}>{identity.path}</code></p> : null}
       {preview ? <div className="visual-access-preview"><h4>Preview: {previewName}</h4><p>{preview.width} × {preview.height} · {(preview.sizeBytes / 1024).toFixed(0)} KB · Local window capture</p><img src={`data:image/png;base64,${preview.dataBase64}`} alt={`Captured window: ${previewName}`} style={{ display: "block", width: "100%", maxWidth: 900, height: "auto", borderRadius: 8, border: "1px solid var(--border, #d1d5db)" }} /><button type="button" onClick={() => setPreview(null)}>Clear preview</button></div> : null}
       <p>Captures are on demand and shown only in this local preview. No background recording or desktop fallback.</p>
     </section>
