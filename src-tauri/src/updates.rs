@@ -9,7 +9,7 @@ use tauri::{path::BaseDirectory, AppHandle, Manager};
 
 use crate::{
     app_state::AppState,
-    browser, conversation, hardening, model_trial,
+    browser, hardening,
     models::{ManagedProcessStatus, TerminalCommandStatus},
     public_tunnel, storage, terminal,
 };
@@ -361,13 +361,6 @@ fn platform_install_block_reason() -> Option<String> {
 fn active_work_reason(app: &AppHandle, app_state: &AppState) -> Option<String> {
     if let Some(reason) = platform_install_block_reason() {
         return Some(reason);
-    }
-
-    if conversation::has_active_generation() {
-        return Some("A Home AI response is still running. Stop it before updating.".to_string());
-    }
-    if model_trial::is_running() {
-        return Some("A Model Trial is still running. Stop it before updating.".to_string());
     }
 
     if terminal::list_processes(app, None, 200)
