@@ -184,12 +184,30 @@ fn remove_request(app: &AppHandle, id: &str) {
 fn git_binary() -> Result<PathBuf, String> {
     let path_value = env::var_os("PATH").unwrap_or_default();
     for directory in env::split_paths(&path_value) {
+        // Windows installs Git as git.exe; checking only "git" misses it even
+        // when PowerShell and where.exe resolve it from this exact directory.
+        #[cfg(target_os = "windows")]
+        let candidate = directory.join("git.exe");
+        #[cfg(not(target_os = "windows"))]
         let candidate = directory.join("git");
         if candidate.is_file() {
             return Ok(candidate);
         }
     }
-    Err("Git was not found in PATH.".to_string())
+
+    // The tray process may inherit a narrower PATH than an interactive shell.
+    // Prefer the conventional Git for Windows installation if present.
+    #[cfg(target_os = "windows")]
+    for base in ["ProgramFiles", "ProgramFiles(x86)"] {
+        if let Some(root) = env::var_os(base) {
+            let candidate = PathBuf::from(root).join("Git").join("cmd").join("git.exe");
+            if candidate.is_file() {
+                return Ok(candidate);
+            }
+        }
+    }
+
+    Err("Git executable was not found in PATH or the standard Git installation directory.".to_string())
 }
 
 fn workspace_root(workspace: &Workspace) -> Result<PathBuf, String> {
