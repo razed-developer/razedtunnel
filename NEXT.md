@@ -1,3 +1,10 @@
+## Rust compilation cleanup: project lifecycle and temporary-workspace desktop wrappers (awaiting validation)
+- User validated prior editor/filesystem/diagnostics cleanup after stale handler fix; Rust warning count fell from 407 to **387** (original 437; 50 fewer).
+- Reviewed `lib.rs` Tauri `generate_handler!`, `project_lifecycle_commands.rs` (76 lines), `temp_workspace_commands.rs` (103 lines), and searched `mcp_server.rs`, `app_state.rs`, `workspace_management_commands.rs`, `workspace_policy_commands.rs` for direct wrapper references. No registration or direct references to these two wrappers found in inspected modules.
+- Commit `06c0f10` removes only `mod project_lifecycle_commands;` and `mod temp_workspace_commands;` from `lib.rs`, excluding two obsolete desktop wrappers from compilation. Files remain in Git. Core `project_setup`, `project_memory`, `continuity`, `temp_workspace`, and MCP implementation remain unchanged.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, then Projects/Connections/tray/MCP access; report new warning count compared to 387 baseline. Assistant did not compile locally.
+- Continue auditing all Rust dependencies and registrations before removing additional modules. Do not merge branch.
+
 ## Follow-up fix: remove stale Tauri handler registration (awaiting validation)
 - User's rerun after `6ad388e` failed E0433: `lib.rs` still registered `workspace_policy_commands::open_workspace_path_local` in `tauri::generate_handler!` although the function had been removed. Previous checkpoint incorrectly described it as already unregistered.
 - Commit `83cfbb8` removes that exact handler entry; no other command registrations, MCP implementations, or runtime logic changed.
