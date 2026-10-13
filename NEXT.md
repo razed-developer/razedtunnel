@@ -1,3 +1,9 @@
+## CURRENT HANDOFF — 2026-10-13 — unregistered Tauri command audit
+- User's checks PASSED after removing unused MCP `success_result`: default Cargo 140 warnings, legacy feature 101 warnings. Rust audit: 1,826 declarations, 337 zero textual references, 29 review candidates, 308 protected entry points.
+- Inspected review candidate `workspace_policy_commands::check_workspace_access`: it has `#[tauri::command]` but is not in the registered `generate_handler!` list. Treat it as an unregistered Tauri endpoint, not a routine dead helper; no runtime code removed.
+- Updated `scripts/audit-rust-functions.mjs` to classify `isUnregisteredTauri` separately from registered `isTauri`, and to protect both from automatic review-candidate labeling. Commit `5cbdf5f`. **Not yet run locally.**
+- Next: `git pull --ff-only && node scripts/audit-rust-functions.mjs`. Then manually inspect other high-confidence compiler-confirmed unused functions. Preserve activity/history semantics, update handling, GitHub authentication, MCP and connection/security surfaces unless clearly disconnected and intentionally retired. DO NOT MERGE branch.
+
 ## CURRENT HANDOFF — 2026-10-13 — compiler-confirmed unused MCP wrapper
 - Branch `cleanup/dead-video-view`; DO NOT MERGE. User confirmed default and legacy-feature Cargo checks PASS after removal of five unregistered updater IPC wrappers. Rust audit now: 1,827 declarations, 338 no textual references, 308 protected, 30 review candidates. Default check produced 141 warnings; legacy feature 102 warnings. Warnings are useful evidence but don't automatically authorize broad removal.
 - Inspected `mcp_server.rs`: `success_result<T: Serialize>` was flagged unused by compiler and textual audit. Removed **only** that wrapper, commit `2f4c12f`. Kept `serialize_success_payload`, `error_result`, MCP tool handlers, result schemas and other response helpers unchanged. **Not yet locally compiled.**
