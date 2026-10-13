@@ -6093,3 +6093,79 @@ textarea:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .visual-access-panel .visual-access-apps > div { transition: none; }
 }
+
+/* Compact Local Gateway dashboard card. */
+.page-stack > .gateway-overview {
+  padding: 24px;
+  min-width: 0;
+}
+.gateway-overview .gateway-overview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.gateway-overview abbr[title] {
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: help;
+  margin-left: 4px;
+}
+.gateway-overview-endpoint {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.gateway-overview-endpoint > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.gateway-overview-endpoint code {
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+.gateway-overview-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.gateway-overview-metrics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.gateway-overview-metrics strong { font-size: 1.12rem; }
+.gateway-overview-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.gateway-overview-footer > button { flex-shrink: 0; }
+.gateway-overview-diagnostics { flex: 1; min-width: 0; }
+.gateway-overview-diagnostics summary {
+  cursor: pointer;
+  color: var(--accent);
+  padding: 10px 0;
+}
+.gateway-overview-diagnostics[open] .home-detail-row { padding: 12px 0; }
+.gateway-overview-diagnostics p { margin: 8px 0 14px; }
+@media (max-width: 650px) {
+  .page-stack > .gateway-overview { padding: 18px; }
+  .gateway-overview-metrics { grid-template-columns: 1fr; }
+  .gateway-overview-footer { flex-wrap: wrap; }
+}
