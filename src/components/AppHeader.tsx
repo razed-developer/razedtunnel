@@ -14,8 +14,8 @@ function AppHeader({ view, gatewayRunning, connectionReady, aiAccessPaused, focu
   return (
     <header className="page-header">
       <div className="page-tab active">
-        <NavIcon name={view === "connections" ? "link" : "folder"} size={18} />
-        <h1>{view === "connections" ? "Connections" : "Projects"}</h1>
+        <NavIcon name={view === "home" ? "home" : view === "connections" ? "link" : "folder"} size={18} />
+        <h1>{view === "home" ? "Home" : view === "connections" ? "Connections" : "Projects"}</h1>
       </div>
       <div className="page-statuses" aria-label="Connection status">
         <button
