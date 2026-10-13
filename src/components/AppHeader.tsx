@@ -16,8 +16,8 @@ function AppHeader({ view, themeControl, gatewayRunning, connectionReady, aiAcce
   return (
     <header className="page-header">
       <div className="page-tab active">
-        <NavIcon name={view === "home" ? "home" : view === "connections" ? "link" : "folder"} size={18} />
-        <h1>{view === "home" ? "Home" : view === "connections" ? "Connections" : "Projects"}</h1>
+        <NavIcon name={view === "home" ? "home" : view === "connections" ? "link" : view === "settings" ? "settings" : "folder"} size={18} />
+        <h1>{view === "home" ? "Home" : view === "connections" ? "Connections" : view === "settings" ? "Settings" : "Projects"}</h1>
       </div>
       <div className="page-statuses" aria-label="Connection status">
         {themeControl}
