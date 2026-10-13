@@ -20,3 +20,17 @@ pub(crate) fn list_visual_access_applications(app: AppHandle) -> Result<Vec<Desk
         .join()
         .map_err(|_| "UI Automation worker stopped unexpectedly.".to_string())?
 }
+
+#[tauri::command]
+pub(crate) async fn capture_visual_access_window(
+    app: AppHandle,
+    application_id: String,
+) -> Result<desktop_control::DesktopScreenshot, String> {
+    // The existing screenshot service enforces local Desktop Access and validates
+    // the selected application/window. UIA must initialize on a fresh COM thread.
+    tauri::async_runtime::spawn_blocking(move || {
+        desktop_control::screenshot(&app, "", &application_id, None)
+    })
+    .await
+    .map_err(|error| format!("Window capture worker failed: {error}"))?
+}
