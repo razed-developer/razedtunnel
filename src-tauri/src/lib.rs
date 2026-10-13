@@ -32,6 +32,7 @@ mod launcher;
 mod macos_ax;
 mod mcp_auth;
 mod mcp_server;
+mod mcp_task_metrics;
 mod mcp_git_helpers;
 mod mcp_time;
 mod mcp_workspace_params;
