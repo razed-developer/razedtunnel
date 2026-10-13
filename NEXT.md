@@ -1,3 +1,10 @@
+## Desktop launcher wrapper cleanup (awaiting validation)
+- User confirmed live MCP Git status, log, and compact diff all passed on approved `story-gospel-according-to-ashe` after Windows `git.exe` discovery fix. Branch main, clean worktree. Last compiler warning count 359.
+- Inspected `lib.rs` and `launcher_commands.rs` (67 lines). Old desktop launcher wrapper still registered six Tauri IPC commands; not mounted in current Projects/Connections interface. Core `launcher` remains separate for MCP. Also inspected `execution_commands.rs` and `runtime_commands.rs` but did not alter them: `set_launch_at_login` may be needed for tray-first startup.
+- Commit `9c5c010` removes all six `launcher_commands::*` handler registrations and `mod launcher_commands;` from `lib.rs`. Source file remains in Git. Core `launcher`, access checks, activity history, MCP tools remain unchanged.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; report warning count and verify Projects/Connections/tray. If possible test read-only MCP launcher history; avoid triggering external launches just for testing. Assistant has not compiled locally.
+- Next audit backend compiled dependency graph/size, rather than optimize warning count alone; preserve MCP functionality and tray startup. Do not merge.
+
 ## Fix Windows Git discovery for MCP (awaiting user rebuild/restart)
 - MCP connectivity and `list_workspaces` succeeded, but MCP `git_status` returned unavailable and `git_log`/`git_diff` returned `Git was not found in PATH`. User confirmed PowerShell `Get-Command git` and `where.exe git` resolve `C:\\Program Files\\Git\\cmd\\git.exe`.
 - Root cause in `src-tauri/src/git.rs`: `git_binary()` checked `directory.join("git")` with `is_file()`, which does not use Windows PATHEXT and misses `git.exe`. This was a pre-existing detection bug, not evidence that removing `git_commands` broke MCP.
