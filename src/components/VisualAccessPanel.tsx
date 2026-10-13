@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  captureVisualAccessWindow,
+  type VisualAccessScreenshot,
   getVisualAccessStatus,
   listVisualAccessApplications,
   setVisualAccessEnabled,
@@ -14,6 +16,9 @@ export default function VisualAccessPanel() {
   const [enabled, setEnabled] = useState(false);
   const [apps, setApps] = useState<VisualAccessApplication[]>([]);
   const [busy, setBusy] = useState(false);
+  const [capturingId, setCapturingId] = useState<string | null>(null);
+  const [preview, setPreview] = useState<VisualAccessScreenshot | null>(null);
+  const [previewName, setPreviewName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -35,11 +40,28 @@ export default function VisualAccessPanel() {
 
   useEffect(() => { void refresh(); }, [refresh]);
 
+  async function capture(app: VisualAccessApplication) {
+    setCapturingId(app.id);
+    setPreview(null);
+    setError(null);
+    try {
+      const result = await captureVisualAccessWindow(app.id);
+      if (result.mimeType !== "image/png") throw new Error("Unexpected capture format.");
+      setPreview(result);
+      setPreviewName(app.name);
+    } catch (cause) {
+      setError(`Could not capture ${app.name}: ${message(cause)}`);
+    } finally {
+      setCapturingId(null);
+    }
+  }
+
   async function toggle() {
     setBusy(true);
     try {
       const next = await setVisualAccessEnabled(!enabled);
       setEnabled(next);
+      if (!next) setPreview(null);
       setApps(await listVisualAccessApplications());
       setError(null);
     } catch (cause) {
@@ -73,11 +95,13 @@ export default function VisualAccessPanel() {
             <div className="home-detail-row" key={app.id}>
               <span>{app.name}</span>
               <span className="home-muted">{app.windowCount} window{app.windowCount === 1 ? "" : "s"} · {app.accessibility ? "Accessible" : "Limited accessibility"}</span>
+              <button type="button" disabled={!enabled || busy || capturingId !== null} onClick={() => void capture(app)}>{capturingId === app.id ? "Capturing…" : "Capture Now"}</button>
             </div>
           ))}
         </div>
       )}
-      <p>Captures are requested through an approved MCP project. A local Capture Now preview will follow after the first end-to-end test.</p>
+      {preview ? <div className="visual-access-preview"><h4>Preview: {previewName}</h4><p>{preview.width} × {preview.height} · {(preview.sizeBytes / 1024).toFixed(0)} KB · Local window capture</p><img src={`data:image/png;base64,${preview.dataBase64}`} alt={`Captured window: ${previewName}`} style={{ display: "block", width: "100%", maxWidth: 900, height: "auto", borderRadius: 8, border: "1px solid var(--border, #d1d5db)" }} /><button type="button" onClick={() => setPreview(null)}>Clear preview</button></div> : null}
+      <p>Captures are on demand and shown only in this local preview. No background recording or desktop fallback.</p>
     </section>
   );
 }
