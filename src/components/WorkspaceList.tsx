@@ -63,7 +63,6 @@ function WorkspaceList({
   const [gitUrl, setGitUrl] = useState("");
   const [cloning, setCloning] = useState(false);
   const [cloneError, setCloneError] = useState<string | null>(null);
-  const [expandedPolicies, setExpandedPolicies] = useState<Record<string, boolean>>({});
   async function submitClone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCloning(true);
@@ -152,9 +151,6 @@ function WorkspaceList({
                   </div>
                 </div>
                 <div className="workspace-actions workspace-card-actions">
-                  <button className="workspace-manage-button" type="button" aria-expanded={Boolean(expandedPolicies[workspace.id])} aria-controls={`workspace-policies-${workspace.id}`} onClick={() => setExpandedPolicies((current) => ({ ...current, [workspace.id]: !current[workspace.id] }))}>
-                    {expandedPolicies[workspace.id] ? "Hide permissions" : "Manage permissions"}
-                  </button>
                   {unavailable ? (
                     <>
                       <button className="access-button recovery" type="button" onClick={() => onRelocate(workspace)} disabled={relocatingWorkspaceId === workspace.id}>
@@ -162,7 +158,7 @@ function WorkspaceList({
                       </button>
                       <button className="policy-button" type="button" onClick={() => onRetryHealth(workspace.id)}>Recheck</button>
                     </>
-                  ) : expandedPolicies[workspace.id] ? (<div className="workspace-policy-controls" id={`workspace-policies-${workspace.id}`}>
+                  ) : (<div className="workspace-policy-controls" aria-label={`Permissions for ${workspace.name}`}>
                   <button
                     className={`policy-button ${workspace.changePolicy === "automatic" ? "automatic" : ""}`}
                     type="button"
@@ -197,7 +193,7 @@ function WorkspaceList({
                   >
                     {updating ? "Updating…" : accessLabel(workspace.accessMode)}
                   </button>
-                  </div>) : <div id={`workspace-policies-${workspace.id}`} hidden />}
+                  </div>)}
                   <button
                     className="icon-button"
                     type="button"
