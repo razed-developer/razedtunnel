@@ -70,17 +70,6 @@ static SELF_CONTINUATION_CURRENT_RESOURCE_READ_COUNT: AtomicU64 = AtomicU64::new
 static SELF_CONTINUATION_LAST_RESOURCE_READ_AT: AtomicU64 = AtomicU64::new(0);
 static SELF_CONTINUATION_ATTEMPT_COUNT: AtomicU64 = AtomicU64::new(0);
 static SELF_CONTINUATION_LAST_ATTEMPT_AT: AtomicU64 = AtomicU64::new(0);
-static AI_WORKSPACE_APP_SESSION_SEQUENCE: AtomicU64 = AtomicU64::new(0);
-
-fn next_ai_workspace_app_session_id() -> String {
-    let sequence = AI_WORKSPACE_APP_SESSION_SEQUENCE.fetch_add(1, Ordering::Relaxed) + 1;
-    format!(
-        "aiwapp-mcp-{}-{}-{sequence}",
-        std::process::id(),
-        crate::mcp_time::unix_epoch_millis()
-    )
-}
-
 fn is_self_continuation_resource_uri(uri: &str) -> bool {
     matches!(
         uri,
@@ -2837,7 +2826,7 @@ impl RepoTunnelMcp {
                         }
                     }
 
-                    let reserved_app_session_id = next_ai_workspace_app_session_id();
+                    let reserved_app_session_id = crate::mcp_app_session_ids::next_app_session_id();
                     ai_resources::claim_ai_workspace_app(
                         &workspace.id,
                         client_key,
