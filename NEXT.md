@@ -1,3 +1,10 @@
+## Opt-in Windows login startup (awaiting validation)
+- User confirmed ChatGPT MCP `list_workspaces` works while main window hidden; tray-first startup validated. Idle baseline 47.30 MB working set / 7.70 MB private.
+- Audited `hardening.rs`: existing `runtime_commands::set_launch_at_login` supported Linux only; Windows returned unsupported. Added Windows HKCU Run-key handling with `reg.exe` in commits `79bc58e` and `0aa9509`; existing Linux path unchanged. Detection uses `reg query`, opt-in enable uses `reg add`, disable uses `reg delete`. Executable path is quoted. Does NOT auto-enable on startup or modify registry until existing Tauri command is explicitly invoked.
+- **Important:** existing Projects/Connections UI does not expose this control yet. Do not invoke enable from a development executable: the registered path would point to the debug binary. Next stage should add a deliberate UI control in Connections or tray and guard dev builds/confirm correct installed executable before enabling.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`; verify tray hidden start and MCP. No registry change expected from just building/running. Assistant cannot compile locally. Warning baseline 368.
+- Next: add safe opt-in UI and guard development startup paths, then test Windows login behavior. Keep cleanup/dead-video-view unmerged.
+
 ## Tray-first startup (awaiting validation)
 - Idle baseline: 47.30 MB working set, 7.70 MB private memory for RazedTunnel process; WebView2 separate.
 - Commit a88fe12 adds `visible: false` to the main Tauri window config. Existing tray Open, Projects, Connections, Quit, double-click, and close-to-hide logic remains unchanged. MCP initialization remains unchanged.
