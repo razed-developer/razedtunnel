@@ -42,11 +42,20 @@ pub(crate) struct AppState {
     tunnel: Mutex<TunnelState>,
     public_tunnel: Mutex<PublicTunnelState>,
     ai_access_paused: AtomicBool,
+    public_connection_desired: AtomicBool,
     remote_request_count: AtomicU64,
     last_remote_request_at: AtomicU64,
 }
 
 impl AppState {
+    pub(crate) fn public_connection_desired(&self) -> bool {
+        self.public_connection_desired.load(Ordering::SeqCst)
+    }
+
+    pub(crate) fn set_public_connection_desired(&self, desired: bool) {
+        self.public_connection_desired.store(desired, Ordering::SeqCst);
+    }
+
     pub(crate) fn ai_access_paused(&self) -> bool {
         self.ai_access_paused.load(Ordering::SeqCst)
     }
@@ -255,6 +264,7 @@ impl AppState {
     }
 
     pub(crate) fn stop_gateway(&self) -> Result<(bool, Option<u16>), String> {
+        self.set_public_connection_desired(false);
         self.stop_public_tunnel()?;
         self.stop_chat_connection()?;
         self.stop_gateway_runtime()?;
@@ -300,7 +310,7 @@ impl AppState {
                     "The public connection stopped unexpectedly. Restart it from Connect."
                         .to_string()
                 });
-                auto_start
+                auto_start && self.public_connection_desired()
             } else {
                 false
             }
@@ -493,6 +503,7 @@ impl AppState {
         public_url: Option<String>,
     ) -> Result<PublicTunnelStatus, String> {
         let config = public_tunnel::config_for_provider(provider, credential, public_url)?;
+        self.set_public_connection_desired(true);
         let previous_config = public_tunnel::load_config(&app)?;
         self.stop_public_tunnel()?;
         let port = match self.ensure_public_gateway(app.clone(), provider) {
@@ -685,6 +696,7 @@ impl AppState {
     }
 
     pub(crate) fn clear_public_tunnel(&self, app: &AppHandle) -> Result<(), String> {
+        self.set_public_connection_desired(false);
         self.stop_public_tunnel()?;
         public_tunnel::clear_config(app)
     }
