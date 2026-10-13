@@ -1,3 +1,9 @@
+## CURRENT HANDOFF — 2026-10-13 — Pause backend minimization; prioritize UI
+- User wants to take a break from minimization and restore/redesign the UI, which now feels like a shell of original RepoTunnel. Do not continue dead-code deletion after this patch without discussing UI priorities.
+- Removed disconnected FFmpeg provisioning cluster in commit 16fc130; preserved managed-data-dir-first/PATH discovery of existing FFmpeg and FFprobe, including executable naming and Unix permissions.
+- Validate: `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services && node scripts/audit-rust-functions.mjs`.
+- Next: compare current frontend against original RepoTunnel UX, identify missing navigation, panels, status surfaces and flows, and make a UI restoration plan before editing. Keep backend cleanup branch unmerged; consider a separate UI branch from the desired baseline after validation.
+
 ## CURRENT HANDOFF — 2026-10-13 — FFmpeg wrapper
 - User validated prior activity cleanup: default cargo check PASS with 132 warnings; legacy PASS with 93 warnings; audit 1,818 declarations, 20 review candidates, 310 protected.
 - Inspected media_tools.rs and media_inspection.rs. Active media inspection only calls available_ffmpeg_program and available_ffprobe_program, and explicitly does not auto-install FFmpeg. Removed unreferenced ensure_ffmpeg_program wrapper in commit 2ee8edd; retained installer and security helpers pending wider dependency verification, and retained all active discovery.
