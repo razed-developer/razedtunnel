@@ -334,14 +334,14 @@ function PublicTunnelPanel({
           </div>
           </details>
 
-          <div className="public-connection-actions">
-            <button className="secondary-button" type="button" onClick={() => void onRestart()} disabled={busy}>
+          <div className="public-connection-actions public-dashboard-actions">
+            <button className="public-action-button public-action-restart" type="button" onClick={() => void onRestart()} disabled={busy}>
               {busy ? "Working…" : "Restart connection"}
             </button>
-            <button className="secondary-button danger-outline" type="button" onClick={() => void onRevoke()} disabled={busy}>
+            <button className="public-action-button public-action-danger" type="button" onClick={() => void onRevoke()} disabled={busy}>
               Revoke MCP access
             </button>
-            <button className="secondary-button danger-outline" type="button" onClick={() => void onForget()} disabled={busy}>
+            <button className="public-action-button public-action-danger" type="button" onClick={() => void onForget()} disabled={busy}>
               Forget public setup
             </button>
           </div>
