@@ -98,42 +98,6 @@ pub(crate) struct AiAccessStatus {
     pub(crate) paused: bool,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CheckpointSummary {
-    pub(crate) id: String,
-    pub(crate) workspace_id: String,
-    pub(crate) workspace_name: String,
-    #[serde(default)]
-    pub(crate) name: Option<String>,
-    #[serde(default)]
-    pub(crate) pinned: bool,
-    pub(crate) created_at: u64,
-    pub(crate) file_count: usize,
-    pub(crate) total_bytes: u64,
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CheckpointComparison {
-    pub(crate) checkpoint: CheckpointSummary,
-    pub(crate) added_count: usize,
-    pub(crate) modified_count: usize,
-    pub(crate) deleted_count: usize,
-    pub(crate) added: Vec<String>,
-    pub(crate) modified: Vec<String>,
-    pub(crate) deleted: Vec<String>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CheckpointRestoreResult {
-    pub(crate) checkpoint: CheckpointSummary,
-    pub(crate) pre_restore_checkpoint: CheckpointSummary,
-    pub(crate) restored_files: usize,
-    pub(crate) removed_files: usize,
-}
-
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HistorySettings {
@@ -211,12 +175,6 @@ pub(crate) struct HistoryClearResult {
     pub(crate) removed_changes: usize,
     pub(crate) removed_activities: usize,
     pub(crate) removed_operational_records: usize,
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CheckpointClearResult {
-    pub(crate) removed_checkpoints: usize,
 }
 
 #[derive(Clone, Debug, Serialize)]
