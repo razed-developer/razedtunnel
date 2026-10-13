@@ -1,3 +1,7 @@
+## LOCAL GATEWAY UI REDESIGN — 2026-10-13
+- Replaced dense Local Gateway layout with dashboard card: running/offline status, local endpoint + Copy, three metrics (projects, remote endpoint, AI access), Start/Stop, collapsible Diagnostics preserving authenticated remote request counts, instrumented task counts, client readiness caveats, and policy explanation in hover hints. Backend behavior unchanged.
+- Added responsive CSS in src/styles.css. Next: user Windows npm run build and visual check; then apply matching treatment to Public MCP Endpoint.
+
 ## CONNECTIONS VISUAL POLISH — 2026-10-13
 - User supplied screenshots of Connections: Gateway and Public Tunnel visually denser, Visual Access had default buttons, edge-to-edge text and rows. Applied first Visual Access pass: padded card, wrapped app rows, consistent button styling, hover help instead of lengthy explanations, responsive padding. Existing behavior unchanged.
 - Next: audit and simplify GatewayPanel and PublicTunnelPanel with same visual language; keep critical security states/actions visible, collapse optional diagnostics and verbose technical copy. Verify with Windows npm run build and screenshot at desktop and narrow width.
