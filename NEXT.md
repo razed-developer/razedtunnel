@@ -1,3 +1,8 @@
+## SEMANTIC DASHBOARD COLOR — 2026-10-13
+- User confirmed Home activity panel is working and requested more colour, not bright/saturated. Added subdued semantic accents to Home cards (gateway green when running, remote teal when ready, projects violet, tool calls blue or amber when failures exist), connection/project panel borders, and activity status badges. Both light and dark palettes are defined in `src/theme.css`.
+- No changes to security, capture, approvals, or backend. User also wants opt-in window-scoped screenshot viewing through RazedTunnel in a future phase, not unrestricted desktop access.
+- Validate on `ui/dashboard-restoration`: `git pull --ff-only && npm run build`, then inspect light/dark Home, especially offline/failure states. No build result yet from this patch.
+
 ## ACTIVITY MONITORING PATCH — 2026-10-13
 - Added read-only `get_activity_timeline` Tauri command via `activity_commands.rs` using existing `activity::timeline`; registered in `lib.rs` and added typed frontend adapter. Dashboard shows last 12 factual events, loading/error/empty states, refresh button and 30-second polling while Home is visible. No approval mutation or simulated data.
 - Validate on `ui/dashboard-restoration`: `git pull --ff-only && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Launch and inspect Home activity (especially empty and active history). Rust build not yet verified locally.
