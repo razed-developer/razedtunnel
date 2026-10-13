@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import AppHeader from "./components/AppHeader";
 import HomeDashboard from "./components/HomeDashboard";
+import ThemePicker, { type ThemePreference } from "./components/ThemePicker";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AppSidebar, { type AppView } from "./components/AppSidebar";
 import ChatConnectionPanel from "./components/ChatConnectionPanel";
@@ -101,6 +102,23 @@ function errorMessage(error: unknown): string {
 
 function App() {
   const [activeView, setActiveView] = useState<AppView>("home");
+  const [themePreference, setThemePreference] = useState<ThemePreference>(() => {
+    try {
+      const saved = window.localStorage.getItem("razedtunnel.theme");
+      return saved === "light" || saved === "dark" ? saved : "system";
+    } catch { return "system"; }
+  });
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyTheme = () => {
+      document.documentElement.dataset.theme = themePreference === "system" ? (media.matches ? "dark" : "light") : themePreference;
+      document.documentElement.style.colorScheme = document.documentElement.dataset.theme;
+    };
+    applyTheme();
+    media.addEventListener("change", applyTheme);
+    try { window.localStorage.setItem("razedtunnel.theme", themePreference); } catch { /* persistence is optional */ }
+    return () => media.removeEventListener("change", applyTheme);
+  }, [themePreference]);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -585,6 +603,7 @@ function App() {
 
         <main className="main-view">
           <AppHeader
+            themeControl={<ThemePicker value={themePreference} onChange={setThemePreference} />}
             view={activeView}
             gatewayRunning={gatewayStatus.running}
             connectionReady={publicTunnelStatus.ready || connectionStatus.ready}
