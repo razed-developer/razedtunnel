@@ -178,3 +178,7 @@ export type VisualAccessScreenshot = {
 export async function captureVisualAccessWindow(applicationId: string): Promise<VisualAccessScreenshot> {
   return invoke<VisualAccessScreenshot>("capture_visual_access_window", { applicationId });
 }
+
+export async function getVisualAccessApplicationIdentity(applicationId: string): Promise<string> {
+  return invoke<string>("get_visual_access_application_identity", { applicationId });
+}
