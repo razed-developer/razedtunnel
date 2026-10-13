@@ -630,7 +630,7 @@ function App() {
             </section>
           ) : (
             <div className="page-scroll">
-              <div className="page-content">{renderPage()}</div>
+              <div className={`page-content ${activeView === "home" ? "home-page-content" : ""}`}>{renderPage()}</div>
             </div>
           )}
           </AppErrorBoundary>
