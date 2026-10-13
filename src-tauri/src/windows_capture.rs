@@ -8,7 +8,7 @@ use windows_sys::Win32::{
         CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits,
         SelectObject, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
     },
-    UI::WindowsAndMessaging::{GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, PrintWindow},
+    UI::WindowsAndMessaging::{GetDC, GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, PrintWindow, ReleaseDC},
 };
 
 use crate::{desktop_control::DesktopScreenshot, windows_uia};
@@ -42,13 +42,15 @@ pub(crate) fn capture(application_id: &str, window_id: Option<&str>) -> Result<D
             i64::from(width) * i64::from(height) > MAX_PIXELS {
             return Err("Window dimensions exceed capture limits.".into());
         }
-        let dc = CreateCompatibleDC(std::ptr::null_mut());
-        if dc.is_null() { return Err("Could not create capture device context.".into()); }
-        let bitmap = CreateCompatibleBitmap(dc, width, height);
-        if bitmap.is_null() { DeleteDC(dc); return Err("Could not allocate window bitmap.".into()); }
+        let window_dc = GetDC(hwnd);
+        if window_dc.is_null() { return Err("Could not open window device context.".into()); }
+        let dc = CreateCompatibleDC(window_dc);
+        if dc.is_null() { ReleaseDC(hwnd, window_dc); return Err("Could not create capture device context.".into()); }
+        let bitmap = CreateCompatibleBitmap(window_dc, width, height);
+        if bitmap.is_null() { DeleteDC(dc); ReleaseDC(hwnd, window_dc); return Err("Could not allocate window bitmap.".into()); }
         let previous = SelectObject(dc, bitmap as _);
         if previous.is_null() {
-            DeleteObject(bitmap as _); DeleteDC(dc);
+            DeleteObject(bitmap as _); DeleteDC(dc); ReleaseDC(hwnd, window_dc);
             return Err("Could not select window bitmap.".into());
         }
         // PrintWindow requests the approved window to draw into our private bitmap.
@@ -63,12 +65,13 @@ pub(crate) fn capture(application_id: &str, window_id: Option<&str>) -> Result<D
             },
             ..std::mem::zeroed()
         };
+        SelectObject(dc, previous);
         let rows = if printed != 0 {
             GetDIBits(dc, bitmap, 0, height as u32, pixels.as_mut_ptr() as _, &mut info, DIB_RGB_COLORS)
         } else { 0 };
-        SelectObject(dc, previous);
         DeleteObject(bitmap as _);
         DeleteDC(dc);
+        ReleaseDC(hwnd, window_dc);
         if printed == 0 || rows != height as i32 {
             return Err("Window declined or failed isolated capture; no desktop fallback is permitted.".into());
         }
