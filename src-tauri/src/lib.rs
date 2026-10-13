@@ -15,6 +15,7 @@ mod chatgpt_bridge;
 mod connection;
 mod continuity;
 mod desktop_control;
+mod visual_access_commands;
 mod direct_https;
 mod environment;
 mod execution;
@@ -254,6 +255,9 @@ pub fn run() {
                 // Browser engine and MCP operations remain compiled and available.
                 // Legacy video Tauri commands intentionally not registered in lean gateway.
                 // Their implementations remain for now; restore from Git history if needed.
+                visual_access_commands::get_visual_access_status,
+                visual_access_commands::set_visual_access_enabled,
+                visual_access_commands::list_visual_access_applications,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
                 activity_commands::get_activity_timeline,
