@@ -907,7 +907,7 @@ mod runtime {
 }
 
 #[cfg(windows)]
-pub(crate) use runtime::{action, inspect, list, resolve_capture_window, semantic_sequence};
+pub(crate) use runtime::{action, inspect, list, list_top_level_windows, resolve_capture_window, semantic_sequence, WindowsUiaWindow};
 
 #[cfg(test)]
 mod tests {
