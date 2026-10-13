@@ -1,3 +1,8 @@
+## CONNECTIONS BUTTONS / PROJECTS HANDOFF — 2026-10-13
+- Public MCP action buttons now have dedicated public-action-* classes with light blue Restart and pale red Revoke/Forget in final-loaded theme.css, avoiding inherited dark secondary-button rules. Windows visual verification pending.
+- OpenAI Secure Tunnel is optional and distinct from managed public MCP; keep it collapsed, no runtime removal or API-key assumption.
+- Next UI focus: Projects / WorkspaceList (add folder, clone Git, per-workspace access and policies, health). Preserve permissions and controls; improve layout and contrast to match Home and Connections.
+
 ## PUBLIC MCP ENDPOINT UI — 2026-10-13
 - Updated PublicTunnelPanel to dashboard-style card with compact heading and help hint; kept provider switching, forms, URL copy, status metrics, usage, and security controls.
 - Moved connection details and Direct HTTPS certificate guidance into expandable details; CSS provides responsive metric grid and spacing.
