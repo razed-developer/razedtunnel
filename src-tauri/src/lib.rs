@@ -1,5 +1,6 @@
 mod access;
 mod activity;
+mod activity_commands;
 mod ai_resources;
 mod ai_workspace;
 mod app_state;
@@ -253,6 +254,7 @@ pub fn run() {
                 // Their implementations remain for now; restore from Git history if needed.
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
+                activity_commands::get_activity_timeline,
                 gateway_commands::get_gateway_status,
                 gateway_commands::start_gateway,
                 gateway_commands::stop_gateway,
