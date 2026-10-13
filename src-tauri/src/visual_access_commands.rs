@@ -12,13 +12,12 @@ pub(crate) fn set_visual_access_enabled(app: AppHandle, enabled: bool) -> Result
 }
 
 #[tauri::command]
-pub(crate) fn list_visual_access_applications(app: AppHandle) -> Result<Vec<DesktopControlApplication>, String> {
-    std::thread::Builder::new()
-        .name("visual-access-uia".to_string())
-        .spawn(move || desktop_control::list(&app, ""))
-        .map_err(|error| format!("Could not start UI Automation worker: {error}"))?
-        .join()
-        .map_err(|_| "UI Automation worker stopped unexpectedly.".to_string())?
+pub(crate) async fn list_visual_access_applications(app: AppHandle) -> Result<Vec<DesktopControlApplication>, String> {
+    // UI Automation needs a fresh COM apartment, and enumeration must not block
+    // the Tauri UI thread while Connections mounts.
+    tauri::async_runtime::spawn_blocking(move || desktop_control::list(&app, ""))
+        .await
+        .map_err(|error| format!("UI Automation discovery worker failed: {error}"))?
 }
 
 #[tauri::command]
