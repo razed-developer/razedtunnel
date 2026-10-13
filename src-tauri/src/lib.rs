@@ -279,31 +279,8 @@ pub fn run() {
                 // to removed desktop pages; preserve MCP-side access controls.
                 // AI Workspace frame/action desktop IPC belonged to the removed editor.
                 // Preserve AI workspace implementation and MCP tool dependencies.
-                browser_commands::list_automation_browsers,
-                browser_commands::get_browser_automation_status,
-                browser_commands::start_browser_automation,
-                browser_commands::stop_browser_automation,
-                browser_commands::list_browser_tabs,
-                browser_commands::browser_open_tab,
-                browser_commands::browser_activate_tab,
-                browser_commands::browser_close_tab,
-                browser_commands::browser_navigate,
-                browser_commands::browser_click,
-                browser_commands::browser_type,
-                browser_commands::browser_scroll,
-                browser_commands::browser_reload,
-                browser_commands::browser_configure_downloads,
-                browser_commands::list_browser_downloads,
-                browser_commands::cancel_browser_download,
-                browser_commands::browser_upload_file,
-                browser_commands::browser_inspect_page,
-                browser_commands::browser_pick_element,
-                browser_commands::get_browser_visual_selection,
-                browser_commands::browser_take_screenshot,
-                browser_commands::get_browser_diagnostics,
-                browser_commands::list_browser_history,
-                browser_commands::approve_browser_action,
-                browser_commands::reject_browser_action,
+                // Browser desktop IPC was retired with the browser UI.
+                // Browser engine and MCP operations remain compiled and available.
                 // Legacy video Tauri commands intentionally not registered in lean gateway.
                 // Their implementations remain for now; restore from Git history if needed.
                 ai_access_commands::get_ai_access_status,
