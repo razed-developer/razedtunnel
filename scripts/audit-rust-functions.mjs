@@ -19,13 +19,29 @@ const registeredCommands = new Set([...handler.matchAll(/::([A-Za-z_]\w*)\b/g)].
 const externallyExposed = (fn) => {
   const code = sources.get(fn.file) ?? "";
   const lines = code.split("\n");
-  const before = lines.slice(Math.max(0, fn.line - 13), fn.line - 1).join("\n");
-  const near = before.slice(-1300);
-  const isMcpTool = /#\[tool(?:\s*\(|\s*\])/.test(near) && fn.file.startsWith("mcp_");
-  const isTauri = registeredCommands.has(fn.name) && /#\[tauri::command\]/.test(near);
-  const isTest = /#\[(?:tokio::)?test(?:\s*\(|\s*\])/.test(near);
-  // Methods and trait hooks still require manual review; no guess from nearby "impl".
-  return { isMcpTool, isTauri, isTest };
+  const preceding = lines.slice(Math.max(0, fn.line - 18), fn.line - 1);
+  // Walk only consecutive attribute lines immediately before the declaration.
+  // Multi-line attribute arguments are included by balancing brackets.
+  let i = preceding.length - 1;
+  while (i >= 0 && !preceding[i].trim()) i--;
+  const attributes = [];
+  let depth = 0;
+  while (i >= 0) {
+    const line = preceding[i].trim();
+    if (line.startsWith("#[") || depth > 0 || line.endsWith("]")) {
+      attributes.unshift(line);
+      depth += (line.match(/\\]/g) ?? []).length - (line.match(/\\[/g) ?? []).length;
+      i--;
+      if (depth > 0) continue;
+    } else break;
+  }
+  const attrs = attributes.join(" ");
+  const isMcpTool = fn.file.startsWith("mcp_") && /#\\[tool(?:\\s*\\(|\\s*\\])/.test(attrs);
+  const isTauri = registeredCommands.has(fn.name) && /#\\[tauri::command\\]/.test(attrs);
+  const isTest = /#\\[(?:tokio::)?test(?:\\s*\\(|\\s*\\])/.test(attrs);
+  // Trait methods are dispatched by the runtime, not necessarily named in source.
+  const isMcpServerHandler = fn.file === "mcp_server.rs" && ["on_initialized", "get_info", "list_resources", "read_resource"].includes(fn.name);
+  return { isMcpTool, isTauri, isTest, isMcpServerHandler };
 };
 const rows = declarations.map((fn) => {
   const pattern = new RegExp("\\b" + fn.name + "\\b", "g");
@@ -52,7 +68,7 @@ for (const row of rows.filter((x) => x.reviewCandidate)) {
   console.log("  " + row.file + ":" + row.line + " " + row.name);
 }
 console.log("Protected zero-reference functions by flag:");
-for (const flag of ["isMcpTool", "isTauri", "isTest"]) {
+for (const flag of ["isMcpTool", "isTauri", "isTest", "isMcpServerHandler"]) {
   const protectedRows = rows.filter((x) => x.references.length === 0 && x[flag]);
   console.log("  " + flag + ": " + protectedRows.length);
   for (const row of protectedRows.slice(0, 8)) console.log("    " + row.file + ":" + row.line + " " + row.name);
