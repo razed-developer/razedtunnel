@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — FFmpeg wrapper
+- User validated prior activity cleanup: default cargo check PASS with 132 warnings; legacy PASS with 93 warnings; audit 1,818 declarations, 20 review candidates, 310 protected.
+- Inspected media_tools.rs and media_inspection.rs. Active media inspection only calls available_ffmpeg_program and available_ffprobe_program, and explicitly does not auto-install FFmpeg. Removed unreferenced ensure_ffmpeg_program wrapper in commit 2ee8edd; retained installer and security helpers pending wider dependency verification, and retained all active discovery.
+- Validate: `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services && node scripts/audit-rust-functions.mjs`. Expected 19 review candidates and 310 protected. Do not merge; preserve local changes.
+
 ## CURRENT HANDOFF — 2026-10-13 — activity updater cleanup
 - User validated previous removal of three unused activity sync wrappers: default Cargo PASS (134 warnings), legacy PASS (95 warnings), audit 1,819 declarations / 21 review candidates / 310 protected.
 - Removed now-orphaned `activity::update_source` and unused `ChangeRecord`/`CommandRecord` imports in `ddf32c8`. Kept active recorders, continuity, process reconciliation, and retention logic.
