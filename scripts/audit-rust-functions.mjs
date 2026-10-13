@@ -24,9 +24,8 @@ const externallyExposed = (fn) => {
   const isMcpTool = /#\[tool(?:\s*\(|\s*\])/.test(near) && fn.file.startsWith("mcp_");
   const isTauri = registeredCommands.has(fn.name) && /#\[tauri::command\]/.test(near);
   const isTest = /#\[(?:tokio::)?test(?:\s*\(|\s*\])/.test(near);
-  // impl methods can be trait hooks even with no explicit call; avoid false removals.
-  const isTraitOrImplCandidate = /\bimpl\b/.test(code.slice(0, code.indexOf("\n", code.indexOf("fn " + fn.name)) < 0 ? 0 : Math.max(0, code.indexOf("fn " + fn.name) - 600))) && !/^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s/.test(lines[fn.line - 2] ?? "");
-  return { isMcpTool, isTauri, isTest, isTraitOrImplCandidate };
+  // Methods and trait hooks still require manual review; no guess from nearby "impl".
+  return { isMcpTool, isTauri, isTest };
 };
 const rows = declarations.map((fn) => {
   const pattern = new RegExp("\\b" + fn.name + "\\b", "g");
