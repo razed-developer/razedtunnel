@@ -6080,7 +6080,7 @@ textarea:focus-visible {
 
 /* Alternating Visual Access application rows, including their expanded window details. */
 .visual-access-panel .visual-access-apps > div:nth-child(even) {
-  background: color-mix(in srgb, var(--text-primary) 3%, transparent);
+  background: color-mix(in srgb, var(--text-primary) 7%, transparent);
 }
 .visual-access-panel .visual-access-apps > div:hover {
   background: color-mix(in srgb, var(--accent) 9%, transparent);
