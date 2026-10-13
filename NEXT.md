@@ -1,3 +1,9 @@
+## Frontend audit results and video UI cleanup (awaiting validation)
+- User ran `node scripts/audit-frontend.mjs`: 50 source files, 41 component TS/TSX files, 11 reachable from `src/main.tsx`, 30 unreachable. Inventory is static graph only; 11 reachable include AppErrorBoundary, AppHeader, AppSidebar, ChatConnectionPanel, ConfirmationDialog, GatewayPanel, PublicTunnelPanel, RepoTunnelLogo, StartupPanel, WindowChrome, WorkspaceList. Preserve those.
+- Removed four mutually related, unreachable video UI files including their exclusive tests: `VideoPanel.tsx` (521 lines), `VideoProductionPanel.tsx` (1180), `VideoPanel.test.tsx` (97), `VideoProductionPanel.test.tsx` (432). Commits d5c9d94, f6f70af, a7bd950, cd0c024. About 2,230 lines. MCP video services and Rust unchanged.
+- Await local validation `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Optionally run `npm run test:frontend` to detect stale test dependencies. Do not claim validated until user confirms.
+- Next: remove other unreachable component clusters in controlled batches, including tests; then prune exclusive lib helpers, backend wrappers and unused npm dependencies with separate checks. Keep cleanup/dead-video-view unmerged.
+
 ## Frontend component inventory (awaiting local output)
 - User validated previous model-trial helper/test cleanup.
 - Added `scripts/audit-frontend.mjs` (d2d32a7, corrected escape sequences 33548ca): read-only TypeScript AST import/export graph from `src/main.tsx`; lists all `src/components/*.ts(x)` files, line counts, inbound static imports, and reachable vs unreachable from the active entrypoint. It also scans literal dynamic imports and CSS @import. Uses existing `typescript` dev dependency. No app runtime, Rust, MCP, or dependencies changed.
