@@ -4,6 +4,7 @@ import App from "./App";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import "./styles.css";
 import "./workspace.css";
+import "./theme.css";
 
 const root = document.getElementById("root");
 
