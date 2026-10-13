@@ -26,7 +26,6 @@ mod external_access;
 mod filesystem;
 mod gateway;
 mod git;
-mod git_commands;
 mod github;
 mod gmail_access;
 mod hardening;
@@ -277,16 +276,6 @@ pub fn run() {
                 browser_commands::reject_browser_action,
                 // Legacy video Tauri commands intentionally not registered in lean gateway.
                 // Their implementations remain for now; restore from Git history if needed.
-                git_commands::get_git_status,
-                git_commands::get_git_diff,
-                git_commands::get_git_diff_check,
-                git_commands::get_git_log,
-                git_commands::request_git_stage,
-                git_commands::request_git_commit,
-                git_commands::list_git_actions,
-                git_commands::approve_git_action,
-                git_commands::reject_git_action,
-                git_commands::request_git_restore_file,
                 ai_access_commands::get_ai_access_status,
                 ai_access_commands::set_ai_access_paused,
                 gateway_commands::get_gateway_status,
