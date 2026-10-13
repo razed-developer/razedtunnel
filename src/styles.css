@@ -6260,3 +6260,72 @@ textarea:focus-visible {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
 }
+
+/* Public MCP endpoint: full light-theme contrast reset for legacy component rules. */
+:root[data-theme="light"] .public-overview,
+:root[data-theme="light"] .public-overview .connection-heading,
+:root[data-theme="light"] .public-overview .public-connected-card {
+  color: var(--text-primary);
+}
+:root[data-theme="light"] .public-overview .connection-heading h2,
+:root[data-theme="light"] .public-overview .connection-heading h2#public-tunnel-title {
+  color: #253247;
+  opacity: 1;
+}
+:root[data-theme="light"] .public-overview .public-mcp-endpoint.runtime-endpoint {
+  background: #f3f6fa;
+  border: 1px solid #d5e0ed;
+  box-shadow: none;
+}
+:root[data-theme="light"] .public-overview .public-mcp-endpoint.runtime-endpoint span,
+:root[data-theme="light"] .public-overview .public-mcp-endpoint.runtime-endpoint small {
+  color: #53657b;
+}
+:root[data-theme="light"] .public-overview .public-mcp-endpoint.runtime-endpoint code {
+  color: #253247;
+  font-size: 13px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+:root[data-theme="light"] .public-overview .public-health-grid > div span,
+:root[data-theme="light"] .public-overview .public-usage-strip span {
+  color: #53657b;
+}
+:root[data-theme="light"] .public-overview .public-health-grid > div strong,
+:root[data-theme="light"] .public-overview .public-usage-strip strong {
+  color: #253247;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.secondary-button,
+:root[data-theme="light"] .public-overview .public-mcp-endpoint button.secondary-button {
+  background: #f3f6fa;
+  color: #245f9c;
+  border: 1px solid #cddbeb;
+  box-shadow: none;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.danger-outline {
+  background: #fff7f7;
+  color: #a52b3c;
+  border-color: #ecc4ca;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.secondary-button:hover:not(:disabled),
+:root[data-theme="light"] .public-overview .public-mcp-endpoint button.secondary-button:hover:not(:disabled) {
+  background: #e7f0fa;
+  border-color: #245f9c;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.danger-outline:hover:not(:disabled) {
+  background: #fbe9eb;
+  border-color: #a52b3c;
+}
+:root[data-theme="light"] .public-overview .public-usage-strip {
+  background: #ffffff;
+  border: 1px solid #dce3ec;
+}
+:root[data-theme="light"] .public-overview .public-usage-strip a {
+  color: #245f9c;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch button {
+  color: #53657b;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch button.active {
+  color: #245f9c;
+}
