@@ -1,3 +1,9 @@
+## Tray-first startup (awaiting validation)
+- Idle baseline: 47.30 MB working set, 7.70 MB private memory for RazedTunnel process; WebView2 separate.
+- Commit a88fe12 adds `visible: false` to the main Tauri window config. Existing tray Open, Projects, Connections, Quit, double-click, and close-to-hide logic remains unchanged. MCP initialization remains unchanged.
+- Validate: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Fully quit/relaunch. Verify starts hidden with tray icon, Open/Projects/Connections show UI, closing hides, Quit exits, MCP works hidden. Warning baseline 368. No local compilation by assistant.
+- Next: audit autostart and reconnect behavior. Keep cleanup/dead-video-view branch unmerged.
+
 ## Backend lifecycle/dependency audit (no runtime change; next implementation decision)
 - User validated previous desktop execution wrapper cleanup: **368** compiler warnings (437 original; 69 fewer). Warnings can rise when wrappers disappear and core functions become dead-code warnings; not a reliable size metric.
 - Audited `src-tauri/src/lib.rs` (342 lines), `src-tauri/Cargo.toml`, `src-tauri/src/app_state.rs`, `src-tauri/src/model_hub.rs`, `src-tauri/src/updates.rs`, `src-tauri/src/system_tray.rs`.
