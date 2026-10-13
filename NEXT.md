@@ -1,3 +1,10 @@
+## Rust compilation cleanup: desktop Git wrapper (awaiting validation)
+- User validated monitoring wrapper removal; warning count remained **359** for two consecutive wrapper-removal stages (437 initial, 78 fewer). Do not use warnings as the sole optimization metric.
+- Audited `lib.rs`, `git_commands.rs` (96 lines), `mcp_server.rs`, `app_state.rs`, `src/App.tsx`. Desktop Git wrapper had ten Tauri handler registrations but no direct references in inspected MCP/AppState/App modules.
+- Commit `d53a63a` removes all ten `git_commands::*` handler entries and `mod git_commands;` **together**. `git_commands.rs` remains in Git. Core `git`, `mcp_git_helpers`, GitHub integration, project permissions, and MCP server remain untouched; no change to Git access or credentials intended.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, Projects/Connections/tray, and especially MCP Git status/diff if available. Report warnings vs 359. Assistant did not compile locally.
+- Next pivot from warning counting to compiled dependency/size and runtime-service audits; verify MCP feature coverage before removing core modules. Do not merge.
+
 ## Rust compilation cleanup: monitoring desktop wrapper only (awaiting validation)
 - User validated prior media wrapper exclusion; warning count remained **359** (baseline 437). No additional warnings eliminated by that change.
 - Inspected `lib.rs`, `monitoring_commands.rs`, `mcp_server.rs`, `app_state.rs` previously. Monitoring desktop wrapper consists of five Tauri IPC commands; no mounted Projects/Connections UI uses them. Distinguish the wrapper from core `monitoring` runtime, which resumes persisted watchers and is required by MCP.
