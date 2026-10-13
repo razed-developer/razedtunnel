@@ -1,3 +1,8 @@
+## WINDOWS CAPTURE IMPLEMENTATION — 2026-10-13
+- First implementation slice committed: `windows_uia::resolve_capture_window(application_id, requested_window_id)` resolves current visible, bounded top-level UIA windows, rejects own-process application IDs via existing `app_windows`, recomputes the same short window identity returned by inspect, and checks process ownership again. Does not accept arbitrary HWNDs. This resolver is preparatory and not yet wired to screenshot; Windows screenshot still explicitly returns not implemented.
+- Validate locally: `git pull --ff-only && cargo check --manifest-path src-tauri/Cargo.toml && cargo check --manifest-path src-tauri/Cargo.toml --features legacy_background_services && npm run build`.
+- Next: implement bounded Windows window-only capture and PNG encoding, using this resolver and existing `desktop_control::require_enabled`. Fail closed for hidden/minimized or stale windows and avoid capturing desktop/other windows. Then test MCP image return and build UI.
+
 ## VISUAL ACCESS — 2026-10-13
 - Softer opaque dashboard card colours pushed: green, blue, purple, orange; dark text. Verify with `git pull --ff-only && npm run build`.
 - Investigated Windows capture: `desktop_control::screenshot` is implemented for Linux only; Windows branch explicitly returns not implemented. Windows UIA inspection is present but does not provide image capture. Do not promise Windows screen viewing until implemented and tested.
