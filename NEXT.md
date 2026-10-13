@@ -1,3 +1,8 @@
+## CURRENT HANDOFF — 2026-10-13 — fix audit JS syntax regression
+- Previous trait classification patch accidentally inserted literal `\\n` into a JavaScript `//` comment, commenting out the function's return and causing `Object.values(undefined)` at line 56. User reported the failure after a successful pull.
+- Fixed actual newlines, corrected regex escapes for `impl Deref for BrowserScope`, and included `isTraitImpl` in protected-flag output; commit `a9d8f80`. No runtime Rust code changed. **Awaiting user validation**.
+- Next: `git pull --ff-only && node scripts/audit-rust-functions.mjs`; expected 26 review candidates and 310 protected. No Cargo check needed. Preserve local `github.rs` and `Cargo.lock`; DO NOT MERGE.
+
 ## CURRENT HANDOFF — 2026-10-13 — trait dispatch audit
 - User recovered local `github.rs` change using file-scoped stash/pull/pop and reports both Cargo checks PASS: 139 default warnings, 100 legacy warnings. Function audit: 1,825 declarations, 336 zero textual refs, 27 review candidates, 309 protected.
 - Confirmed `browser::deref` is `impl Deref for BrowserScope`, so it is trait-dispatched rather than dead. Audit now protects that exact implementation via `isTraitImpl`, commit `b6ac0c9` (after superseding a too-broad heuristic in `49f59bc`). No runtime Rust code changed. **Not yet locally validated.**
