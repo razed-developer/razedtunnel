@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  ActivityTimeline,
   AiAccessStatus,
   ChatConnectionStatus,
   CommandPolicy,
@@ -135,4 +136,9 @@ export async function getRuntimeDiagnostics(): Promise<RuntimeDiagnostics> {
 
 export async function setLaunchAtLogin(enabled: boolean): Promise<RuntimeDiagnostics> {
   return invoke<RuntimeDiagnostics>("set_launch_at_login", { enabled });
+}
+
+/** Read-only history for the monitoring dashboard. */
+export async function getActivityTimeline(): Promise<ActivityTimeline> {
+  return invoke<ActivityTimeline>("get_activity_timeline");
 }
