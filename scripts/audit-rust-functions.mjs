@@ -42,13 +42,7 @@ const externallyExposed = (fn) => {
   const isTest = /#\[(?:tokio::)?test(?:\s*\(|\s*\])/.test(attrs);
   // ServerHandler trait hooks are invoked by MCP runtime dispatch.
   const isMcpServerHandler = fn.file === "mcp_server.rs" && ["on_initialized", "get_info", "list_resources", "read_resource"].includes(fn.name);
-  // Rust trait implementations are dispatched through traits, not necessarily named calls.
-  // Restrict this classification to a directly preceding `impl Trait for Type` block.
-  const before = code.slice(0, code.split("\n").slice(0, fn.line - 1).join("\n").length);
-  const lastImpl = [...before.matchAll(/\bimpl(?:\s*<[^{}]*>)?\s+([\w:]+)\s+for\s+[\w:<>]+\s*\{/g)].at(-1);
-  const lastClose = before.lastIndexOf("}\n");
-  const isTraitImpl = Boolean(lastImpl && lastImpl.index > lastClose);
-  return { isMcpTool, isTauri, isUnregisteredTauri, isTest, isMcpServerHandler, isTraitImpl };
+  // Known Deref trait implementation: Rust invokes this through trait dispatch.\n  const isTraitImpl = fn.file === "browser.rs" && fn.name === "deref" && /impl Deref for BrowserScope\\s*\\{/.test(code);\n  return { isMcpTool, isTauri, isUnregisteredTauri, isTest, isMcpServerHandler, isTraitImpl };
 };
 const rows = declarations.map((fn) => {
   const pattern = new RegExp("\\b" + fn.name + "\\b", "g");
