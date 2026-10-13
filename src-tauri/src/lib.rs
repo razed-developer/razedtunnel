@@ -255,10 +255,8 @@ pub fn run() {
                 terminal_commands::reject_managed_process,
                 terminal_commands::stop_managed_process,
                 terminal_commands::restart_managed_process,
-                github_commands::get_github_connection_status,
-                github_commands::connect_github,
-                github_commands::cancel_github_connection,
-                github_commands::disconnect_github,
+                // Legacy GitHub account-management desktop IPC is unmounted.
+                // GitHub and git MCP implementations remain available.
                 integration_commands::list_deep_integrations,
                 integration_commands::set_deep_integration_enabled,
                 integration_commands::list_desktop_control_applications,
