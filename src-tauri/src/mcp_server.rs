@@ -158,17 +158,8 @@ fn self_continuation_resource_meta() -> MetaObject {
 
 const SERVER_INSTRUCTIONS: &str = include_str!("../resources/mcp_server_instructions.txt");
 
-// Partial diagnostics: only calls through the two task wrappers below.
-// These are not yet complete MCP tool-dispatch statistics.
-static TASK_TOOL_SUCCESSES: AtomicU64 = AtomicU64::new(0);
-static TASK_TOOL_FAILURES: AtomicU64 = AtomicU64::new(0);
-
-pub(crate) fn task_tool_outcomes() -> (u64, u64) {
-    (
-        TASK_TOOL_SUCCESSES.load(Ordering::Relaxed),
-        TASK_TOOL_FAILURES.load(Ordering::Relaxed),
-    )
-}
+pub(crate) use crate::mcp_task_metrics::task_tool_outcomes;
+use crate::mcp_task_metrics::record_task_outcome;
 
 #[derive(Clone)]
 pub(crate) struct RepoTunnelMcp {
@@ -544,16 +535,6 @@ fn error_result(message: impl Into<String>) -> CallToolResult {
     .unwrap_or_else(|_| "{\"ok\":false,\"error\":\"RepoTunnel operation failed.\"}".to_string());
 
     CallToolResult::error(vec![ContentBlock::text(content)])
-}
-
-// Shared outcome recording for instrumented task wrappers. This is not a
-// complete count of all MCP tools until instrumentation moves to dispatch.
-fn record_task_outcome(succeeded: bool) {
-    if succeeded {
-        TASK_TOOL_SUCCESSES.fetch_add(1, Ordering::Relaxed);
-    } else {
-        TASK_TOOL_FAILURES.fetch_add(1, Ordering::Relaxed);
-    }
 }
 
 async fn run_filesystem_task<T, F>(task: F) -> Result<CallToolResult, McpError>
