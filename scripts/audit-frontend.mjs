@@ -28,7 +28,7 @@ const incoming = new Map(files.map((file) => [file, []]));
 for (const file of files) {
   const deps = new Set();
   const content = fs.readFileSync(file, "utf8");
-  if (/\\.(?:ts|tsx|js|jsx)$/.test(file)) {
+  if (/\.(?:ts|tsx|js|jsx)$/.test(file)) {
     const ast = ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true, file.endsWith("tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     const visit = (node) => {
       if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
@@ -43,7 +43,7 @@ for (const file of files) {
     };
     visit(ast);
   } else if (file.endsWith(".css")) {
-    for (const match of content.matchAll(/@import\\s+(?:url\\()?["']([^"']+)["']/g)) {
+    for (const match of content.matchAll(/@import\s+(?:url\()?["']([^"']+)["']/g)) {
       const dep = resolve(file, match[1]);
       if (dep) deps.add(dep);
     }
@@ -60,17 +60,17 @@ function visit(file) {
 }
 visit(entry);
 const relative = (file) => path.relative(root, file).replaceAll(path.sep, "/");
-const components = files.filter((file) => relative(file).startsWith("src/components/") && /\\.tsx?$/.test(file));
+const components = files.filter((file) => relative(file).startsWith("src/components/") && /\.tsx?$/.test(file));
 const active = components.filter((file) => reachable.has(file));
 const inactive = components.filter((file) => !reachable.has(file));
-const lines = (file) => fs.readFileSync(file, "utf8").split("\\n").length;
+const lines = (file) => fs.readFileSync(file, "utf8").split("\n").length;
 console.log("Frontend import graph (static imports/exports and literal dynamic imports)");
 console.log(`Source files: ${files.length}; components: ${components.length}; reachable components: ${active.length}; unreachable components: ${inactive.length}`);
 for (const [label, group] of [["REACHABLE", active], ["NOT REACHABLE FROM MAIN", inactive]]) {
-  console.log(`\\n${label} (${group.length}):`);
+  console.log(`\n${label} (${group.length}):`);
   for (const file of group.sort()) {
     const parents = (incoming.get(file) ?? []).map(relative);
     console.log(`  ${relative(file)} (${lines(file)} lines) <- ${parents.join(", ") || "no static imports"}`);
   }
 }
-console.log("\\nUnreachable modules can still be imported by other unreachable modules, tests, or non-frontend entrypoints. Review before deleting.");
+console.log("\nUnreachable modules can still be imported by other unreachable modules, tests, or non-frontend entrypoints. Review before deleting.");
