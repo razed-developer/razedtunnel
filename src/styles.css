@@ -6169,3 +6169,27 @@ textarea:focus-visible {
   .gateway-overview-metrics { grid-template-columns: 1fr; }
   .gateway-overview-footer { flex-wrap: wrap; }
 }
+
+/* Public MCP Endpoint — dashboard-aligned, compact presentation. */
+.page-stack > .public-overview { padding: 24px; min-width: 0; }
+.public-overview .connection-heading { margin-bottom: 18px; align-items: center; }
+.public-overview .connection-heading h2 { margin: 0; }
+.public-overview abbr[title] { color: var(--text-secondary); text-decoration: none; cursor: help; font-size: .85em; margin-left: 5px; }
+.public-overview .public-provider-switch { margin-bottom: 18px; }
+.public-overview .public-connected-card { display: flex; flex-direction: column; gap: 16px; }
+.public-overview .public-health-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.public-overview .public-health-grid > div { min-width: 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-soft); }
+.public-overview .public-health-grid > div strong { overflow-wrap: anywhere; }
+.public-overview .public-mcp-endpoint { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 10px; }
+.public-overview .public-mcp-endpoint > div { min-width: 0; }
+.public-overview .public-mcp-endpoint code { overflow-wrap: anywhere; }
+.public-overview .public-overview-details { border-top: 1px solid var(--border); }
+.public-overview .public-overview-details summary { cursor: pointer; padding: 12px 0; color: var(--accent); }
+.public-overview .public-overview-details .connection-callout,
+.public-overview .public-overview-details .connection-next-step { margin-top: 8px; }
+.public-overview .public-connection-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 650px) {
+  .page-stack > .public-overview { padding: 18px; }
+  .public-overview .public-health-grid { grid-template-columns: 1fr; }
+  .public-overview .public-mcp-endpoint { flex-wrap: wrap; }
+}
