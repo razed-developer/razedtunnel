@@ -36,11 +36,13 @@ const externallyExposed = (fn) => {
   }
   const attrs = attributes.join(" ");
   const isMcpTool = fn.file.startsWith("mcp_") && /#\[tool(?:\s*\(|\s*\])/.test(attrs);
-  const isTauri = registeredCommands.has(fn.name) && /#\[tauri::command\]/.test(attrs);
+  const hasTauriAttribute = /#\[tauri::command\]/.test(attrs);
+  const isTauri = registeredCommands.has(fn.name) && hasTauriAttribute;
+  const isUnregisteredTauri = hasTauriAttribute && !registeredCommands.has(fn.name);
   const isTest = /#\[(?:tokio::)?test(?:\s*\(|\s*\])/.test(attrs);
   // ServerHandler trait hooks are invoked by MCP runtime dispatch.
   const isMcpServerHandler = fn.file === "mcp_server.rs" && ["on_initialized", "get_info", "list_resources", "read_resource"].includes(fn.name);
-  return { isMcpTool, isTauri, isTest, isMcpServerHandler };
+  return { isMcpTool, isTauri, isUnregisteredTauri, isTest, isMcpServerHandler };
 };
 const rows = declarations.map((fn) => {
   const pattern = new RegExp("\\b" + fn.name + "\\b", "g");
@@ -67,7 +69,7 @@ for (const row of rows.filter((x) => x.reviewCandidate)) {
   console.log("  " + row.file + ":" + row.line + " " + row.name);
 }
 console.log("Protected zero-reference functions by flag:");
-for (const flag of ["isMcpTool", "isTauri", "isTest", "isMcpServerHandler"]) {
+for (const flag of ["isMcpTool", "isTauri", "isUnregisteredTauri", "isTest", "isMcpServerHandler"]) {
   const protectedRows = rows.filter((x) => x.references.length === 0 && x[flag]);
   console.log("  " + flag + ": " + protectedRows.length);
   for (const row of protectedRows.slice(0, 8)) console.log("    " + row.file + ":" + row.line + " " + row.name);
