@@ -1,3 +1,11 @@
+## CURRENT HANDOFF — 2026-10-13 — frontend component cleanup complete, validation pending
+- Branch `cleanup/dead-video-view`; DO NOT merge. User validates locally: `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`.
+- Last user-confirmed validation passed after deleting `HttpsSetupGuide.test.tsx` and `HttpsSetupGuide.tsx` (commits `f608987`, `b93e3d1`).
+- Just removed final unreachable component `src/components/ProductionPanel.tsx` (339 lines) in commit `3f01cc2`; **await local validation**. Earlier removal was blocked, retry succeeded.
+- Previous full `node scripts/audit-frontend.mjs` inventory: 27 source files, 18 components, 11 reachable, 7 unreachable. All seven unreachable component/test files have now been deleted across commits: ProjectSetupPanel `390acf7`, PendingChangeReview `8121fef`, GitPanel `f2c56a5`, WorkspaceProductivity `8183269`, HttpsSetupGuide.test `f608987`, HttpsSetupGuide `b93e3d1`, ProductionPanel `3f01cc2`.
+- Next after validation: rerun `node scripts/audit-frontend.mjs` to verify 11 reachable/0 unreachable components. Audit other `src/lib` modules, unused backend wrappers, frontend dependencies, and associated tests before Rust cleanup. Keep active Projects/Connections/tray, gateway, HTTPS/public tunnel, MCP and security/access controls intact. Rust warning baseline 369; do not delete merely because of warnings.
+- User explicitly requested NEXT.md stay updated across chat length limits. Older handoff sections below are historical and may say awaiting validation incorrectly.
+
 ## CURRENT HANDOFF — 2026-10-13 — frontend cleanup (latest)
 - Branch: `cleanup/dead-video-view`, DO NOT merge. User has approved small, sequential commits and validates locally with `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`. Last validation: commit `f2c56a5` passed.
 - Fresh `node scripts/audit-frontend.mjs` output after prior cleanup: 27 source files, 18 components, 11 reachable, 7 unreachable. Preserve reachable: AppErrorBoundary, AppHeader, AppSidebar, ChatConnectionPanel, ConfirmationDialog, GatewayPanel, PublicTunnelPanel, RepoTunnelLogo, StartupPanel, WindowChrome, WorkspaceList.
