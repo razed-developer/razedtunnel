@@ -1,3 +1,9 @@
+## VISUAL ACCESS — 2026-10-13
+- Softer opaque dashboard card colours pushed: green, blue, purple, orange; dark text. Verify with `git pull --ff-only && npm run build`.
+- Investigated Windows capture: `desktop_control::screenshot` is implemented for Linux only; Windows branch explicitly returns not implemented. Windows UIA inspection is present but does not provide image capture. Do not promise Windows screen viewing until implemented and tested.
+- Added `docs/visual-access-plan.md` defining approved-window-only Windows capture, identity/permission revalidation, no unrestricted desktop, and later opt-in RAM-only 60-second buffer.
+- Next implementation task: implement Windows app-window capture via an app-owned HWND resolved from the current UI Automation application/window identity, with bounded PNG encoding and permission enforcement. Test on Windows; then expose Capture Now UI and verify MCP image return. No fake controls.
+
 ## SOLID CARD COLOUR ADJUSTMENT — 2026-10-13
 - User rejected pale gradient/tinted wash on metric cards and requested solid, brighter primary colours. Added a final CSS override in `src/theme.css`: solid green for healthy gateway, blue for connected remote/projects/normal tool calls, yellow for warnings, red reserved for failure indicators, neutral slate for disconnected. Ensured high-contrast white or dark foreground and no gradients.
 - Validate: `git pull --ff-only && npm run build` on `ui/dashboard-restoration`; visually review light and dark Home. Consider varying colour only when semantics justify it; avoid decorative status colour.
