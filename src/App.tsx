@@ -25,6 +25,7 @@ import {
   getWorkspaceHealth,
   getPublicTunnelStatus,
   listWorkspaces,
+  openWorkspaceFolder,
   removeWorkspace,
   relocateWorkspace,
   restartPublicTunnel,
@@ -277,6 +278,14 @@ function App() {
     const timer = window.setInterval(poll, 4000);
     return () => window.clearInterval(timer);
   }, [publicTunnelStatus.configured]);
+
+  async function handleOpenWorkspaceFolder(workspace: Workspace) {
+    try {
+      await openWorkspaceFolder(workspace.id);
+    } catch (error) {
+      setNotice(`Could not open project folder: ${errorMessage(error)}`);
+    }
+  }
 
   async function handleAddWorkspace() {
     setNotice(null);
@@ -557,6 +566,7 @@ function App() {
             workspaceHealth={workspaceHealth}
             relocatingWorkspaceId={relocatingWorkspaceId}
             onAdd={handleAddWorkspace}
+            onOpenFolder={(workspace) => void handleOpenWorkspaceFolder(workspace)}
             onClone={handleCloneGitWorkspace}
             onRemove={setWorkspaceToRemove}
             onAccessChange={handleAccessChange}
