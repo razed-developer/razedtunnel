@@ -1,3 +1,8 @@
+## WINDOW-AWARE MONITORING — FIRST PATCH 2026-10-13
+- Added async UIA top-level window discovery (separate entries for multiple VS Code windows) and expandable Windows list in Visual Access. This is read-only discovery; window titles are labels, NOT validated workspace identities or persistent capture targets. No monitoring or automatic reattachment has been enabled.
+- Next: bind each selected window to verified project identity using workspace folder evidence, not title alone. Obtain stable HWND-backed window ID and revalidate executable + project before capturing; ambiguous matches must pause. Add persistent explicit opt-in monitoring and restart state machine only after verification. Avoid using app-level Capture Now for specific-window monitoring.
+- Test on Windows: cargo check + npm run build, then open two VS Code projects and expand Windows for VS Code; ensure separate titles appear. Check UIA Windows list count and errors.
+
 ## VISUAL ACCESS IGNORE LIST — 2026-10-13
 - Added persistent ignored executable identities stored in app data `visual-access-ignored.json`. UI application discovery hides matching executable paths, never title or transient PID. Unknown executable identities remain visible.
 - Connections → Visual Access now offers Ignore per app and expandable Manage ignored apps with Restore. This is a UI discovery filter, not a security denial for MCP/Desktop Control; do not describe it as blocking capture or control.
