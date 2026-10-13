@@ -1,3 +1,11 @@
+## Rust compilation cleanup: media desktop IPC wrapper (awaiting validation)
+- User validated previous GitHub/integration/AI Workspace wrapper exclusion; warnings decreased from 376 to **359** (437 original; 78 fewer).
+- Audited `media_commands.rs` (58 lines), `lib.rs`, `mcp_server.rs`, and `app_state.rs`. The media desktop wrapper still had three Tauri `generate_handler!` registrations, unlike earlier wrappers. No direct references from inspected MCP or AppState modules.
+- Commit `93283c1` removes the three desktop media IPC registrations (`inspect_media_file`, `extract_media_frame`, `validate_media_decode`) **and** `mod media_commands;` together, excluding the wrapper from compilation. Source file remains. Core `media_inspection`, `media_tools`, project permission validation, and MCP remain untouched.
+- Did not remove `monitoring_commands` because its five registrations remain and monitoring initialization resumes persistent project watchers. Audit separately before touching monitoring.
+- Validate `git pull --ff-only && npm run check && npm run build && cargo check --manifest-path src-tauri/Cargo.toml`, check Projects/Connections/tray/MCP access, report warnings vs 359. No local compilation performed by assistant.
+- Next audit remaining wrappers and cross-module references; preserve MCP functionality. Do not merge.
+
 ## Rust compilation cleanup: GitHub/integration/AI Workspace desktop wrappers (awaiting validation)
 - User confirmed prior project-lifecycle/temp-workspace wrapper cleanup passed; compiler warnings decreased from 387 to **376** (437 original, 61 fewer).
 - Inspected `github_commands.rs` (42 lines), `integration_commands.rs` (67 lines), `ai_workspace_commands.rs` (146 lines), `lib.rs`, and `mcp_server.rs`. No direct references to these wrapper module names from MCP; confirmed no `generate_handler!` registrations remain for these wrappers in `lib.rs`.
