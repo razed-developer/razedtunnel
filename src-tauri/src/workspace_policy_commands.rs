@@ -33,10 +33,8 @@ pub fn update_workspace_change_policy(
 
         validate_workspace_root(workspace)?;
         workspace.change_policy = change_policy;
-        workspace.command_policy = match change_policy {
-            WorkspaceChangePolicy::Automatic => CommandPolicy::Automatic,
-            WorkspaceChangePolicy::Review => CommandPolicy::Review,
-        };
+        // File-change approval must not silently elevate command execution privileges.
+        // Command policy is managed independently by update_workspace_command_policy.
         Ok(workspace.clone())
     })
 }
@@ -54,11 +52,6 @@ pub fn update_workspace_command_policy(
             .ok_or_else(|| "That project is no longer registered with RepoTunnel.".to_string())?;
 
         validate_workspace_root(workspace)?;
-        if workspace.change_policy == WorkspaceChangePolicy::Automatic
-            && command_policy != CommandPolicy::Automatic
-        {
-            return Err("AI Auto always runs commands automatically. Switch the project to AI Review before changing command policy.".to_string());
-        }
         workspace.command_policy = command_policy;
         Ok(workspace.clone())
     })
