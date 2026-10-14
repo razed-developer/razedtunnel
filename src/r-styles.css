@@ -13,7 +13,59 @@
 
 /* 01. Design tokens and themes (pending migration) */
 
-/* 02. Application shell: WindowChrome, AppSidebar, AppHeader (pending) */
+/* 02. Application shell — WindowChrome migrated.
+ * Uses isolated r- classes; no legacy window selectors are required here.
+ */
+.r-window-chrome {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  height: 38px;
+  align-items: center;
+  border-bottom: 1px solid #1b2731;
+  background: linear-gradient(180deg, #111820 0%, #0d141b 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.015) inset;
+  user-select: none;
+}
+.r-window-title {
+  grid-column: 2;
+  color: #cbd6df;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .01em;
+  pointer-events: none;
+}
+.r-window-controls {
+  display: flex;
+  grid-column: 3;
+  justify-self: end;
+  height: 100%;
+}
+.r-window-controls button {
+  display: grid;
+  width: 46px;
+  height: 100%;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #abb4be;
+  cursor: pointer;
+}
+.r-window-controls button:hover { background: #1b222b; color: #fff; }
+.r-window-controls .r-window-close:hover { background: #b93d42; color: #fff; }
+.r-window-minimize { width: 12px; height: 1px; background: currentColor; }
+.r-window-maximize { width: 11px; height: 11px; border: 1px solid currentColor; border-radius: 1px; }
+.r-window-close span { margin-top: -1px; font-size: 21px; font-weight: 300; line-height: 1; }
+:root[data-theme="light"] .r-window-chrome {
+  background: #fff;
+  border-color: var(--rt-line);
+  box-shadow: none;
+}
+:root[data-theme="light"] .r-window-title { color: var(--rt-text); }
+:root[data-theme="light"] .r-window-controls button { color: var(--rt-text-2); }
+:root[data-theme="light"] .r-window-controls button:hover { background: #eaf0f7; color: var(--rt-text); }
+:root[data-theme="light"] .r-window-controls .r-window-close:hover { background: #b93d42; color: #fff; }
+
 
 /* 03. Home Dashboard (pending) */
 
