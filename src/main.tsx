@@ -5,6 +5,7 @@ import AppErrorBoundary from "./components/AppErrorBoundary";
 import "./styles.css";
 import "./workspace.css";
 import "./theme.css";
+import "./r-styles.css";
 
 const root = document.getElementById("root");
 
