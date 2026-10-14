@@ -105,14 +105,14 @@ function WorkspaceList({
           </button>
         </div>
       ) : (
-        <div className="workspace-list">
+        <div className="r-project-list">
           {workspaces.map((workspace) => {
             const updating = updatingId === workspace.id;
             const health = workspaceHealth[workspace.id];
             const unavailable = health?.available === false;
 
             return (
-              <article className={`workspace-card ${unavailable ? "workspace-card-missing" : ""}`} key={workspace.id}>
+              <article className={`r-project-card ${unavailable ? "r-project-card-missing" : ""}`} key={workspace.id}>
                 <button className="r-project-folder-button" type="button" onClick={() => onOpenFolder(workspace)} disabled={unavailable} aria-label={`Open ${workspace.name} folder`} title={unavailable ? "Folder unavailable" : "Open folder in file manager"}>
                   <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                 </button>
@@ -127,40 +127,40 @@ function WorkspaceList({
                     <span>Secrets blocked</span>
                   </div>
                 </div>
-                <div className="workspace-actions workspace-card-actions">
+                <div className="r-project-card-actions">
                   {unavailable ? (
                     <>
-                      <button className="access-button recovery" type="button" onClick={() => onRelocate(workspace)} disabled={relocatingWorkspaceId === workspace.id}>
+                      <button className="r-project-recovery" type="button" onClick={() => onRelocate(workspace)} disabled={relocatingWorkspaceId === workspace.id}>
                         {relocatingWorkspaceId === workspace.id ? "Locating…" : "Locate again"}
                       </button>
-                      <button className="policy-button" type="button" onClick={() => onRetryHealth(workspace.id)}>Recheck</button>
+                      <button className="r-project-recheck" type="button" onClick={() => onRetryHealth(workspace.id)}>Recheck</button>
                     </>
-                  ) : (<div className="workspace-policy-controls" aria-label={`Permissions for ${workspace.name}`}>
-                  <div className="workspace-permission-field">
+                  ) : (<div className="r-project-policy-controls" aria-label={`Permissions for ${workspace.name}`}>
+                  <div className="r-project-permission-field">
                     <span>Edit approval</span>
-                    <div className="workspace-segmented" role="group" aria-label={`Edit approval for ${workspace.name}`}>
+                    <div className="r-project-segmented" role="group" aria-label={`Edit approval for ${workspace.name}`}>
                       <button type="button" className={workspace.changePolicy === "review" ? "selected" : ""} aria-pressed={workspace.changePolicy === "review"} disabled={updating} onClick={() => onChangePolicyChange(workspace, "review")}>Review</button>
                       <button type="button" className={workspace.changePolicy === "automatic" ? "selected" : ""} aria-pressed={workspace.changePolicy === "automatic"} disabled={updating} onClick={() => onChangePolicyChange(workspace, "automatic")}>Automatic</button>
                     </div>
                   </div>
-                  <div className="workspace-permission-field">
+                  <div className="r-project-permission-field">
                     <span>Commands</span>
-                    <div className="workspace-segmented" role="group" aria-label={`Command execution for ${workspace.name}`}>
+                    <div className="r-project-segmented" role="group" aria-label={`Command execution for ${workspace.name}`}>
                       {(["disabled", "review", "automatic"] as const).map((policy) => (
                         <button key={policy} type="button" className={workspace.commandPolicy === policy ? "selected" : ""} aria-pressed={workspace.commandPolicy === policy} disabled={updating || workspace.changePolicy === "automatic"} title={workspace.changePolicy === "automatic" ? "Automatic edits also enable automatic command execution" : undefined} onClick={() => onCommandPolicyChange(workspace, policy)}>{policy === "disabled" ? "Off" : policy === "review" ? "Review" : "Auto"}</button>
                       ))}
                     </div>
                   </div>
-                  <div className="workspace-permission-field">
+                  <div className="r-project-permission-field">
                     <span>File access</span>
-                    <div className="workspace-segmented" role="group" aria-label={`File access for ${workspace.name}`}>
+                    <div className="r-project-segmented" role="group" aria-label={`File access for ${workspace.name}`}>
                       <button type="button" className={workspace.accessMode === "readOnly" ? "selected" : ""} aria-pressed={workspace.accessMode === "readOnly"} disabled={updating} onClick={() => onAccessChange(workspace, "readOnly")}>Read only</button>
                       <button type="button" className={workspace.accessMode === "readWrite" ? "selected" : ""} aria-pressed={workspace.accessMode === "readWrite"} disabled={updating} onClick={() => onAccessChange(workspace, "readWrite")}>Read + write</button>
                     </div>
                   </div>
                   </div>)}
                   <button
-                    className="icon-button"
+                    className="r-project-remove"
                     type="button"
                     aria-label={`Remove ${workspace.name}`}
                     title="Remove project"
