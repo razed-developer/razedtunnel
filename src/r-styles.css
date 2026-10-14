@@ -565,6 +565,23 @@
 
 
 
+/* Projects heading — preserve current hierarchy without global !important rules. */
+.r-project-heading { display:flex; min-height:54px; align-items:flex-start; justify-content:space-between; gap:18px; flex-wrap:wrap; padding:0 0 16px; border-bottom:1px solid var(--rt-line-soft); }
+.r-project-heading > div:first-child { min-width:0; flex:1 1 430px; }
+.r-project-kicker { display:none; }
+.r-project-heading h2 { margin:0; color:#e9eaed; font-size:17px; font-weight:600; line-height:1.25; letter-spacing:-.015em; }
+.r-project-heading p { max-width:760px; margin:5px 0 0; color:#6f727a; font-size:12px; line-height:1.55; }
+.r-project-heading-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; row-gap:8px; }
+.r-project-heading-button { display:inline-flex; min-height:40px; align-items:center; justify-content:center; gap:7px; padding:0 12px; border:1px solid #293a47; border-radius:8px; background:#111a22; color:var(--rt-text-2); font-size:12px; font-weight:600; cursor:pointer; }
+.r-project-heading-button:hover:not(:disabled) { border-color:#3b5264; background:#17232d; color:#edf3f7; }
+.r-project-heading-button:disabled { opacity:.55; cursor:not-allowed; }
+.r-project-heading-button:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+:root[data-theme="light"] .r-project-heading h2 { color:var(--rt-text); }
+:root[data-theme="light"] .r-project-heading p { color:var(--rt-text-3); }
+:root[data-theme="light"] .r-project-heading-button { background:#e7f0fd; border-color:#bed5f5; color:#174f9a; }
+:root[data-theme="light"] .r-project-heading-button:hover:not(:disabled) { background:#d9e8fc; }
+@media(max-width:900px) { .r-project-heading { gap:12px; } .r-project-heading-actions { justify-content:flex-start; } }
+
 /* 05. Connections (pending) */
 
 /* 06. Settings (pending) */
