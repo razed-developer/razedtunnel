@@ -313,11 +313,10 @@
 .workspace-section .workspace-details > p { overflow-wrap:anywhere; line-height:1.5; }
 .workspace-section .workspace-security { display:flex; flex-wrap:wrap; gap:7px 10px; line-height:1.6; }
 .workspace-section .workspace-card-actions { display:flex; flex-wrap:wrap; align-items:center; gap:9px; }
-.workspace-section .workspace-policy-controls { width:100%; padding:12px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
+.workspace-section .workspace-policy-controls { display:grid; width:100%; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; padding:12px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
 :root[data-theme="light"] .workspace-section .workspace-policy-controls { background:#f4f7fb; }
 @media(max-width:760px) { .workspace-section .workspace-card-actions { width:100%; } }
 
-.workspace-section .workspace-policy-controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
 .workspace-section .workspace-permission-field { display:flex; flex-direction:column; gap:7px; min-width:0; }
 .workspace-section .workspace-permission-field > span { font-size:12px; font-weight:650; color:var(--rt-text-2); }
 .workspace-section .workspace-segmented { display:flex; flex-wrap:wrap; gap:4px; padding:4px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel); }
