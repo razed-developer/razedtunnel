@@ -590,16 +590,16 @@ function App() {
   }
 
   return (
-    <div className="desktop-app">
+    <div className="r-desktop-app">
       <WindowChrome />
-      <div className="desktop-shell">
+      <div className="r-desktop-shell">
         <AppSidebar
           activeView={activeView}
           onNavigate={setActiveView}
         />
 
 
-        <main className="main-view">
+        <main className="r-main-view">
           <AppHeader
             themeControl={<ThemePicker value={themePreference} onChange={setThemePreference} />}
             view={activeView}
