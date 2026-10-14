@@ -11,13 +11,11 @@
   --text-primary:#172436; --text-secondary:#394b60; --text-muted:#687b90; --accent:#2169e8;
 }
 :root[data-theme="light"],:root[data-theme="light"] body,:root[data-theme="light"] #root { background:var(--rt-bg-deep); color:var(--rt-text); }
-:root[data-theme="light"] .desktop-app,:root[data-theme="light"] .desktop-shell { background:var(--rt-bg); }
 :root[data-theme="light"] .window-chrome { background:#fff; border-color:var(--rt-line); }
 :root[data-theme="light"] .window-title { color:var(--rt-text); }
 :root[data-theme="light"] .window-controls button { color:var(--rt-text-2); }
 :root[data-theme="light"] .window-controls button:hover { background:#eaf0f7; color:var(--rt-text); }
 :root[data-theme="light"] .window-controls .window-close:hover { background:#b93d42; color:#fff; }
-:root[data-theme="light"] .app-sidebar { background:#fff; border-color:var(--rt-line); }
 :root[data-theme="light"] .sidebar-brand-copy strong { color:var(--rt-text); }
 :root[data-theme="light"] .sidebar-brand-copy span,:root[data-theme="light"] .sidebar-nav-group-label { color:var(--rt-text-3); }
 :root[data-theme="light"] .sidebar-nav-item { color:var(--rt-text-2); }
@@ -26,9 +24,7 @@
 :root[data-theme="light"] .sidebar-nav-item.active { background:#e9f1ff; color:#165dc8; }
 :root[data-theme="light"] .sidebar-nav-item.active svg { color:#2169e8; }
 :root[data-theme="light"] .main-view,:root[data-theme="light"] .page-scroll,:root[data-theme="light"] .page-content { background:var(--rt-bg); color:var(--rt-text); }
-:root[data-theme="light"] .page-header { background:#fff; border-color:var(--rt-line); }
 :root[data-theme="light"] .page-tab,:root[data-theme="light"] .page-tab h1 { color:var(--rt-text); }
-:root[data-theme="light"] .toolbar-status,:root[data-theme="light"] .focus-mode-toggle { color:var(--rt-text-2); border-color:var(--rt-line); }
 :root[data-theme="light"] .home-card { box-shadow:0 5px 20px rgba(33,56,89,.045); }
 :root[data-theme="light"] .home-section-title button,:root[data-theme="light"] .home-empty button { background:#f6f9fe; }
 :root[data-theme="light"] .gateway-panel,:root[data-theme="light"] .workspace-section { background:#fff; border-color:var(--rt-line); box-shadow:0 5px 22px rgba(33,56,89,.05); }
@@ -43,13 +39,6 @@
 .theme-picker select:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
 
 
-/* The legacy stylesheet uses !important in later shell rules; explicitly
-   bridge those rules until the old dark-only styling is retired. */
-:root[data-theme="light"] .app-sidebar,
-:root[data-theme="light"] .desktop-shell .app-sidebar {
-  background:#fff !important;
-  border-right-color:var(--rt-line) !important;
-}
 :root[data-theme="light"] .sidebar-brand-copy strong,
 :root[data-theme="light"] .sidebar-brand-copy span,
 :root[data-theme="light"] .sidebar-nav-group-label { color:var(--rt-text-2) !important; }
@@ -61,12 +50,9 @@
 :root[data-theme="light"] .page-tab.active svg { color:#2169e8 !important; }
 :root[data-theme="light"] .main-view,
 :root[data-theme="light"] .page-scroll { background:var(--rt-bg) !important; }
-:root[data-theme="light"] .page-header { background:#fff !important; border-bottom-color:var(--rt-line) !important; box-shadow:none !important; }
 :root[data-theme="light"] .page-tab h1 { color:var(--rt-text) !important; }
 :root[data-theme="light"] .page-tab,
 :root[data-theme="light"] .page-tab svg { color:var(--rt-text-2) !important; }
-:root[data-theme="light"] .toolbar-status,
-:root[data-theme="light"] .focus-mode-toggle { background:#f7faff !important; color:var(--rt-text-2) !important; border-color:var(--rt-line) !important; }
 :root[data-theme="light"] .sidebar-runtime { border-top-color:var(--rt-line) !important; color:var(--rt-text-2); }
 :root[data-theme="light"] .sidebar-runtime button { color:var(--rt-text-3); }
 :root[data-theme="light"] .sidebar-runtime button:hover { background:#edf3fa; color:var(--rt-text); }
