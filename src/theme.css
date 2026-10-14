@@ -374,9 +374,8 @@
 }
 
 /* Local Gateway: final light-theme action buttons, overriding legacy dark !important rules. */
+:root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button,
 :root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button {
-  background:#e7f0fd !important; color:#174f9a !important;
-  border:1px solid #bed5f5 !important; box-shadow:none !important;
   min-height:40px; border-radius:9px;
 }
 :root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button:hover:not(:disabled) { background:#d5e6fc !important; }
