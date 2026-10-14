@@ -11,7 +11,49 @@
  * the appearance of the existing application.
  */
 
-/* 01. Design tokens and themes (pending migration) */
+/* 01. Design tokens and themes — currently supplied by theme.css.
+ * Preserve these tokens until all mounted pages have migrated.
+ */
+
+/* Application grid — two mounted children: sidebar and main.
+ * Older three-column declarations assumed a project rail that is no longer
+ * mounted in App.tsx. The new classes override those obsolete layouts.
+ */
+.r-desktop-app {
+  display: grid;
+  grid-template-rows: 38px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #070b10;
+}
+.r-desktop-shell {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #080d12;
+}
+.r-main-view {
+  display: grid;
+  grid-template-rows: 55px minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 78% -15%, rgba(54,105,153,.08), transparent 34%), #090f15;
+}
+:root[data-theme="light"] .r-desktop-app,
+:root[data-theme="light"] .r-desktop-shell,
+:root[data-theme="light"] .r-main-view { background: var(--rt-bg); }
+@media (max-width: 900px) {
+  .r-desktop-shell { grid-template-columns: 168px minmax(0, 1fr); }
+}
+
 
 /* 02. Application shell — WindowChrome migrated.
  * Uses isolated r- classes; no legacy window selectors are required here.
