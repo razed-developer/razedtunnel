@@ -282,7 +282,7 @@ function PublicTunnelPanel({
           ) : null}
 
           {status.provider === "direct" ? (
-            <details className="public-overview-details">
+            <details className="r-public-details">
               <summary>Direct HTTPS setup and certificate</summary>
               <div className="r-public-callout">
               <strong>Direct network path</strong>
@@ -299,7 +299,7 @@ function PublicTunnelPanel({
               </small>
               {!status.tlsTrusted && status.certbotAvailable ? (
                 <div className="r-public-provider-links">
-                  <button className="secondary-button" type="button" onClick={() => void onProvisionCertificate()} disabled={busy || !status.localReady}>
+                  <button className="r-public-cert-button" type="button" onClick={() => void onProvisionCertificate()} disabled={busy || !status.localReady}>
                     {busy ? "Working…" : "Get trusted IP certificate"}
                   </button>
                 </div>
@@ -308,7 +308,7 @@ function PublicTunnelPanel({
             </details>
           ) : null}
 
-          <div className="public-usage-strip">
+          <div className="r-public-usage">
             <div>
               <span>{status.provider === "direct" ? "Direct usage" : "Usage status"}</span>
               <strong>{status.usageLabel}</strong>
@@ -318,9 +318,9 @@ function PublicTunnelPanel({
             </a>
           </div>
 
-          <details className="public-overview-details">
+          <details className="r-public-details">
             <summary>Connection details <abbr title="Ready does not prove an external client connected. Request counts do not confirm tool execution.">ⓘ</abbr></summary>
-            <div className="connection-next-step">
+            <div className="r-public-next-step">
             <strong>
               {status.provider === "direct"
                 ? status.ready ? "Direct HTTPS is confirmed" : "Direct HTTPS is prepared locally"
@@ -334,14 +334,14 @@ function PublicTunnelPanel({
           </div>
           </details>
 
-          <div className="public-connection-actions public-dashboard-actions">
-            <button className="public-action-button public-action-restart" type="button" onClick={() => void onRestart()} disabled={busy}>
+          <div className="r-public-actions">
+            <button className="r-public-action r-public-action-restart" type="button" onClick={() => void onRestart()} disabled={busy}>
               {busy ? "Working…" : "Restart connection"}
             </button>
-            <button className="public-action-button public-action-danger" type="button" onClick={() => void onRevoke()} disabled={busy}>
+            <button className="r-public-action r-public-action-danger" type="button" onClick={() => void onRevoke()} disabled={busy}>
               Revoke MCP access
             </button>
-            <button className="public-action-button public-action-danger" type="button" onClick={() => void onForget()} disabled={busy}>
+            <button className="r-public-action r-public-action-danger" type="button" onClick={() => void onForget()} disabled={busy}>
               Forget public setup
             </button>
           </div>
