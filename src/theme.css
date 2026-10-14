@@ -372,33 +372,3 @@
 @media(max-width:700px) {
   :root[data-theme="light"] .workspace-section .workspace-card { grid-template-columns:44px minmax(0,1fr) !important; padding:18px !important; }
 }
-
-/* Local Gateway: final light-theme action buttons, overriding legacy dark !important rules. */
-:root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button {
-  background:#e7f0fd !important; color:#174f9a !important;
-  border:1px solid #bed5f5 !important; box-shadow:none !important;
-}
-:root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button,
-:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.danger-button {
-  min-height:40px; border-radius:9px;
-}
-:root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button:hover:not(:disabled) { background:#d5e6fc !important; }
-:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.danger-button {
-  background:#fff1f2 !important; color:#a12c3b !important;
-  border:1px solid #edc1c7 !important; box-shadow:none !important;
-}
-:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.danger-button:hover:not(:disabled) { background:#fbdfe3 !important; }
-:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.primary-button:not(.danger-button) {
-  background:#e7f0fd !important; color:#174f9a !important;
-  border:1px solid #bed5f5 !important; box-shadow:none !important;
-}
-
-/* Public MCP status: light badge instead of legacy dark pill. */
-:root[data-theme="light"] .public-overview .connection-heading .connection-state.ready {
-  background:#e8f7f0 !important; background-image:none !important;
-  border:1px solid #b9e2ce !important; color:#16704f !important;
-  box-shadow:none !important;
-}
-:root[data-theme="light"] .public-overview .connection-heading .connection-state.ready .status-dot {
-  background:#168666 !important; box-shadow:none !important;
-}
