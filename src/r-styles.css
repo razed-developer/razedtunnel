@@ -757,4 +757,21 @@
 :root[data-theme="light"] .r-public-provider-warning { color:#8e611e; }
 @media(max-width:760px) { .r-public-provider-form { grid-template-columns:minmax(0,1fr); } .r-public-callout,.r-public-form-footer { grid-column:1; } }
 
+/* Public MCP connected-state health and endpoint (actions/details migrate next). */
+.r-public-connected { display:flex; min-width:0; flex-direction:column; gap:16px; }
+.r-public-health-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.r-public-health-grid > div { display:flex; min-width:0; flex-direction:column; gap:7px; padding:14px 16px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
+.r-public-health-grid span { color:var(--rt-text-3); font-size:11px; line-height:1.45; }
+.r-public-health-grid strong { color:var(--rt-text); font-size:13px; font-weight:650; overflow-wrap:anywhere; }
+.r-public-mcp-endpoint { box-sizing:border-box; display:flex; width:100%; max-width:100%; align-items:center; justify-content:space-between; gap:14px; padding:14px 16px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
+.r-public-mcp-endpoint > div { display:flex; min-width:0; flex-direction:column; gap:5px; }
+.r-public-mcp-endpoint span,.r-public-mcp-endpoint small { color:var(--rt-text-3); font-size:11px; }
+.r-public-mcp-endpoint code { color:var(--rt-text); font-size:12px; white-space:normal; overflow-wrap:anywhere; word-break:break-word; }
+.r-public-copy { min-height:36px; flex-shrink:0; padding:0 12px; border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel); color:var(--rt-blue); font-size:12px; font-weight:600; cursor:pointer; }
+.r-public-copy:hover:not(:disabled) { border-color:var(--rt-blue); background:var(--rt-hover); }
+.r-public-copy:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+:root[data-theme="light"] .r-public-copy { background:#eef4fd; border-color:#c5d8ef; color:#185bb4; }
+:root[data-theme="light"] .r-public-copy:hover:not(:disabled) { background:#dfebfa; }
+@media(max-width:760px) { .r-public-health-grid { grid-template-columns:1fr; } .r-public-mcp-endpoint { flex-wrap:wrap; } }
+
 /* 06. Settings (pending) */
