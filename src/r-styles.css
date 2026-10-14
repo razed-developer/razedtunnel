@@ -884,4 +884,29 @@
 .r-public-heading abbr[title],.r-gateway-heading abbr[title],.r-visual-panel abbr[title] { color:var(--rt-text-3); text-decoration:none; cursor:help; }
 @media(max-width:650px) { .r-gateway-overview,.r-public-overview,.r-visual-panel { padding:18px; } .r-visual-panel > .r-home-section-title { align-items:flex-start; } }
 
-/* 06. Settings (pending) */
+/* 06. Settings — startup and ignored application preferences. */
+.r-settings-card { min-width:0; padding:22px 24px; border:1px solid var(--rt-line); border-radius:12px; background:var(--rt-panel); color:var(--rt-text); }
+.r-settings-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+.r-settings-heading h3 { margin:0; color:var(--rt-text); font-size:16px; line-height:1.35; font-weight:650; }
+.r-settings-heading abbr[title] { margin-left:5px; color:var(--rt-text-3); font-size:.85em; text-decoration:none; cursor:help; }
+.r-settings-card button { min-height:36px; padding:8px 12px; border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel-2); color:var(--rt-blue); font:inherit; font-size:12px; cursor:pointer; }
+.r-settings-card button:hover:not(:disabled) { border-color:var(--rt-blue); background:var(--rt-hover); }
+.r-settings-card button:disabled { opacity:.55; cursor:not-allowed; }
+.r-settings-card button:focus-visible,.r-settings-toggle input:focus-visible { outline:2px solid var(--rt-blue); outline-offset:3px; }
+.r-settings-toggle { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--rt-line); border-radius:9px; background:var(--rt-panel-2); color:var(--rt-text); font-size:12px; line-height:1.5; cursor:pointer; }
+.r-settings-toggle input { width:17px; height:17px; flex:0 0 17px; margin:0; accent-color:var(--rt-blue); cursor:pointer; }
+.r-settings-toggle:has(input:disabled) { opacity:.6; cursor:default; }
+.r-settings-toggle:has(input:disabled) input { cursor:default; }
+.r-settings-empty { margin:0; padding:14px; border:1px dashed var(--rt-line); border-radius:9px; color:var(--rt-text-3); font-size:12px; }
+.r-settings-apps { display:grid; gap:0; }
+.r-settings-app-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; min-width:0; padding:13px 12px; border-bottom:1px solid var(--rt-line); border-radius:8px; }
+.r-settings-app-row:last-child { border-bottom:0; }
+.r-settings-app-row:nth-child(even) { background:color-mix(in srgb,var(--rt-text) 5%,transparent); }
+.r-settings-app-row > span { display:grid; min-width:0; flex:1 1 190px; gap:5px; }
+.r-settings-app-row strong { color:var(--rt-text); font-size:12px; }
+.r-settings-app-path { color:var(--rt-text-3); font-size:11px; overflow-wrap:anywhere; }
+.r-settings-error { padding:10px 12px; border:1px solid #a64a51; border-radius:8px; background:#381f25; color:#ffd0d2; font-size:12px; overflow-wrap:anywhere; }
+:root[data-theme="light"] .r-settings-error { background:#fff1f2; border-color:#edc1c7; color:#a12c3b; }
+@media(max-width:650px) { .r-settings-card { padding:18px; } }
+
+/* 06. Settings migrated */
