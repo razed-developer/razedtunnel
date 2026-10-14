@@ -34,19 +34,19 @@ export default function VisualAccessSettings() {
   }
 
   return (
-    <section className="home-card">
-      <div className="home-section-title">
+    <section className="r-settings-card">
+      <div className="r-settings-heading">
         <div>
           <h3>Ignored applications <abbr title="Applications ignored here are hidden from discovery after restarts. This does not revoke Desktop Access or block MCP control.">ⓘ</abbr></h3>
         </div>
         <button type="button" disabled={busy} onClick={() => void refresh()}>Refresh</button>
       </div>
-      {error ? <p role="alert">{error}</p> : null}
-      {ignored.length === 0 ? <p>No ignored applications.</p> : (
-        <div className="visual-access-apps">
+      {error ? <p className="r-settings-error" role="alert">{error}</p> : null}
+      {ignored.length === 0 ? <p className="r-settings-empty">No ignored applications.</p> : (
+        <div className="r-settings-apps">
           {ignored.map((entry) => (
-            <div className="home-detail-row" key={entry.executablePath}>
-              <span><strong>{entry.name}</strong><span className="home-muted" style={{ display: "block", overflowWrap: "anywhere" }}>{entry.executablePath}</span></span>
+            <div className="r-settings-app-row" key={entry.executablePath}>
+              <span><strong>{entry.name}</strong><span className="r-settings-app-path">{entry.executablePath}</span></span>
               <button type="button" disabled={busy} onClick={() => void restore(entry.executablePath)}>Restore</button>
             </div>
           ))}
