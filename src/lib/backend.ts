@@ -197,3 +197,14 @@ export const setVisualApplicationIgnored = (args: {
 export type VisualAccessWindow = { applicationId: string; title: string };
 export const listVisualAccessWindows = () =>
   invoke<VisualAccessWindow[]>("list_visual_access_windows");
+
+export type PendingApprovalRequest = {
+  id: string;
+  workspaceId: string;
+  path: string;
+  operation: string;
+};
+export const listPendingApprovalRequests = () =>
+  invoke<PendingApprovalRequest[]>("list_pending_approval_requests");
+export const denyPendingApprovalRequest = (requestId: string) =>
+  invoke<boolean>("deny_pending_approval_request", { requestId });
