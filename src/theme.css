@@ -333,6 +333,11 @@
   border:1px solid var(--rt-line) !important; border-radius:14px !important;
   box-shadow:0 4px 14px rgba(33,56,89,.06) !important;
   gap:16px !important;
+  grid-template-columns:48px minmax(220px,1fr) !important;
+  align-items:start !important;
+  column-gap:18px !important;
+  row-gap:16px !important;
+  padding:22px 24px !important;
 }
 :root[data-theme="light"] .workspace-section .workspace-card:hover { background:#f8fbff !important; }
 :root[data-theme="light"] .workspace-section .workspace-title-row h3 { color:var(--rt-text) !important; font-size:14px !important; }
@@ -345,13 +350,6 @@
 :root[data-theme="light"] .workspace-section .workspace-list { gap:14px !important; }
 
 /* Projects: give identity and folder action breathing room. */
-:root[data-theme="light"] .workspace-section .workspace-card {
-  grid-template-columns:48px minmax(220px,1fr) !important;
-  align-items:start !important;
-  column-gap:18px !important;
-  row-gap:16px !important;
-  padding:22px 24px !important;
-}
 .workspace-section .workspace-card .workspace-folder-button {
   width:44px !important; height:44px !important; min-height:44px !important;
   display:grid; place-items:center; cursor:pointer; border-radius:11px !important;
