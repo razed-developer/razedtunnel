@@ -161,7 +161,357 @@
   .r-page-statuses .r-toolbar-status span:not(.r-toolbar-dot) { display:none; }
 }
 
-/* 03. Home Dashboard (pending) */
+/* 03. Home Dashboard — migrated dashboard cards and status colors. */
+.r-home-dashboard { display:grid; gap:20px; padding: 2px 0 26px; }
+.r-home-intro { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.r-home-eyebrow { font-size:10px; font-weight:750; letter-spacing:.13em; color:var(--rt-blue); }
+.r-home-intro h2 { font-size:25px; letter-spacing:-.04em; margin:7px 0; color:var(--rt-text); }
+.r-home-intro p,.r-home-section-title p { margin:0; color:var(--rt-text-3); font-size:12px; line-height:1.6; }
+.r-home-runtime { display:inline-flex; align-items:center; gap:8px; padding:9px 13px; border:1px solid var(--rt-line); border-radius:30px; color:var(--rt-text-3); white-space:nowrap; font-size:11px; }
+.r-home-runtime.is-running { color:var(--rt-green); }
+.r-home-status-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+.r-home-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px; }
+.r-home-card { min-width:0; background:var(--rt-panel); border:1px solid var(--rt-line); border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,.08); }
+.r-home-metric { min-height:144px; padding:20px; }
+.r-home-card-label { display:flex; align-items:center; gap:9px; color:var(--rt-text-2); font-size:12px; }
+.r-home-card-label svg { color:var(--rt-blue); }
+.r-home-metric strong { display:block; margin:19px 0 7px; font-size:26px; font-weight:720; letter-spacing:-.04em; color:var(--rt-text); }
+.r-home-metric p { margin:0; color:var(--rt-text-3); font-size:11px; line-height:1.5; }
+.r-home-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.r-home-detail { padding:21px; min-height:280px; }
+.r-home-section-title { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:17px; }
+.r-home-section-title h3 { font-size:15px; margin:0 0 5px; color:var(--rt-text); }
+.r-home-section-title button,.r-home-empty button { border:1px solid var(--rt-line); background:var(--rt-panel-2); color:var(--rt-blue); border-radius:8px; padding:8px 10px; font-size:11px; cursor:pointer; white-space:nowrap; }
+.r-home-detail-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:47px; border-top:1px solid var(--rt-line-soft); font-size:12px; color:var(--rt-text-2); }
+.r-home-detail-row > span:first-child { display:flex; align-items:center; gap:9px; min-width:0; overflow-wrap:anywhere; }
+.r-home-detail-row svg { flex-shrink:0; color:var(--rt-text-3); }
+.r-home-detail-row > span:last-child { white-space:nowrap; font-size:11px; }
+.r-home-good { color:var(--rt-green); }.r-home-attention { color:var(--rt-yellow); }.r-home-muted { color:var(--rt-text-3); }
+.r-home-empty { display:grid; justify-items:start; gap:10px; color:var(--rt-text-3); padding:20px 0; font-size:12px; }
+.r-home-empty strong { color:var(--rt-text); }.r-home-empty p { margin:0; line-height:1.5; }
+.r-home-footnote { font-size:11px; color:var(--rt-text-4); padding:0 3px; }
+@media (max-width: 1250px) { .r-home-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width: 1100px) { .r-home-detail-grid { grid-template-columns:1fr; } }
+.r-home-metric { position:relative; overflow:hidden; border-top:3px solid var(--metric-accent,var(--rt-line)); background:linear-gradient(165deg,var(--metric-wash,transparent),transparent 65%),var(--rt-panel); }
+.r-home-metric .r-home-card-label svg { color:var(--metric-accent,var(--rt-blue)); }
+.r-home-metric .r-home-card-label { color:var(--rt-text-2); }
+.r-home-metric strong { color:var(--rt-text); }
+.r-home-metric::after { content:""; position:absolute; top:18px; right:19px; width:8px; height:8px; border-radius:50%; background:var(--metric-accent,var(--rt-line)); opacity:.8; }
+.r-metric-healthy { --metric-accent:var(--home-green); --metric-wash:var(--home-green-wash); }
+.r-metric-connected { --metric-accent:var(--home-teal); --metric-wash:var(--home-teal-wash); }
+.r-metric-projects { --metric-accent:var(--home-violet); --metric-wash:var(--home-violet-wash); }
+.r-metric-tools { --metric-accent:var(--home-blue); --metric-wash:var(--home-blue-wash); }
+.r-metric-warning { --metric-accent:var(--home-amber); --metric-wash:var(--home-amber-wash); }
+.r-metric-neutral { --metric-accent:var(--rt-text-4); --metric-wash:transparent; }
+.r-home-detail-health { border-top:2px solid var(--home-teal); }
+.r-home-detail-projects { border-top:2px solid var(--home-violet); }
+.r-home-detail-health .r-home-section-title h3 { color:var(--rt-text); }
+.r-home-detail-projects .r-home-section-title h3 { color:var(--rt-text); }
+.r-home-detail-projects .r-home-detail-row svg { color:var(--home-violet); }
+.r-home-detail-health .r-home-detail-row svg { color:var(--home-teal); }
+.r-home-runtime.is-running { background:var(--home-green-wash); border-color:var(--home-green); color:var(--home-green); }
+.activity-feed { border-top:2px solid var(--home-blue); }
+.activity-entry > .activity-status { border-color:transparent; font-weight:600; }
+.activity-status-succeeded,.activity-status-completed,.activity-status-applied { color:var(--home-green); background:var(--home-green-wash); }
+.activity-status-running,.activity-status-observed { color:var(--home-blue); background:var(--home-blue-wash); }
+.activity-status-pending { color:var(--home-amber); background:var(--home-amber-wash); }
+.activity-status-failed,.activity-status-rejected,.activity-status-stopped { color:var(--home-red); background:var(--home-red-wash); }
+
+
+/* Solid, vivid status cards. No gradient washes or translucent fills. */
+:root {
+  --metric-blue:#94b2ec;
+  --metric-purple:#bfa8e4;
+  --metric-orange:#eac594;
+  --metric-green:#8cc4aa;
+  --metric-yellow:#f1d28d;
+  --metric-red:#c83d45;
+  --metric-neutral:#b8c2d0;
+}
+.r-home-metric {
+  background:var(--metric-solid,var(--metric-blue)) !important;
+  border:1px solid var(--metric-solid,var(--metric-blue)) !important;
+  border-top:3px solid var(--metric-solid,var(--metric-blue)) !important;
+  box-shadow:none;
+  color:#fff;
+}
+.r-home-metric::after { background:currentColor; opacity:.75; }
+.r-home-metric .r-home-card-label,
+.r-home-metric .r-home-card-label svg,
+.r-home-metric strong,
+.r-home-metric p { color:inherit !important; }
+.r-metric-healthy { --metric-solid:var(--metric-green); color:#172436; }
+.r-metric-connected { --metric-solid:var(--metric-blue); color:#172436; }
+.r-metric-projects { --metric-solid:var(--metric-purple); color:#172436; }
+.r-metric-tools { --metric-solid:var(--metric-orange); color:#172436; }
+.r-metric-warning { --metric-solid:var(--metric-yellow); color:#252018; }
+.r-metric-neutral { --metric-solid:var(--metric-neutral); color:#172436; }
+:root[data-theme="light"] .r-home-metric,
+:root[data-theme="dark"] .r-home-metric { background:var(--metric-solid) !important; }
+@media (prefers-reduced-motion:no-preference) {
+  .r-home-metric { transition:filter 150ms ease; }
+}
+
+/* Public MCP dashboard: final appearance layer, after legacy workspace.css. */
+:root[data-theme="light"] .public-overview .connection-heading h2 {
+  color: var(--rt-text) !important;
+  opacity: 1;
+}
+:root[data-theme="light"] .public-overview .public-health-grid {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  gap: 12px;
+}
+:root[data-theme="light"] .public-overview .public-health-grid > div {
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+  box-shadow: none !important;
+}
+:root[data-theme="light"] .public-overview .public-health-grid span,
+:root[data-theme="light"] .public-overview .public-usage-strip span {
+  color: var(--rt-text-3) !important;
+}
+:root[data-theme="light"] .public-overview .public-health-grid strong,
+:root[data-theme="light"] .public-overview .public-usage-strip strong {
+  color: var(--rt-text) !important;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+  box-shadow: none !important;
+  padding: 14px 16px;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 5px;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint span,
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint small {
+  color: var(--rt-text-3) !important;
+}
+:root[data-theme="light"] .public-overview .runtime-endpoint.public-mcp-endpoint code {
+  color: var(--rt-text) !important;
+  font-size: 12px !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.secondary-button,
+:root[data-theme="light"] .public-overview .public-mcp-endpoint button.secondary-button {
+  background: #eef4fd !important;
+  color: #185bb4 !important;
+  border: 1px solid #c5d8ef !important;
+  box-shadow: none !important;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.danger-outline {
+  background: #fff2f3 !important;
+  color: #a72e3d !important;
+  border-color: #e9b9c0 !important;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.secondary-button:hover:not(:disabled),
+:root[data-theme="light"] .public-overview .public-mcp-endpoint button.secondary-button:hover:not(:disabled) {
+  background: #dfebfa !important;
+}
+:root[data-theme="light"] .public-overview .public-connection-actions button.danger-outline:hover:not(:disabled) {
+  background: #fbe3e6 !important;
+}
+:root[data-theme="light"] .public-overview .public-usage-strip {
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+}
+:root[data-theme="light"] .public-overview .public-usage-strip a {
+  color: #185bb4 !important;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch {
+  background: var(--rt-panel-2) !important;
+  border: 1px solid var(--rt-line) !important;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch button {
+  color: var(--rt-text-2) !important;
+}
+:root[data-theme="light"] .public-overview .public-provider-switch button.active {
+  background: #e5effe !important;
+  color: #185bb4 !important;
+  border-color: #b8d2f7 !important;
+}
+
+/* Dedicated Public MCP action buttons, avoiding inherited legacy dark button styles. */
+.public-overview .public-dashboard-actions .public-action-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 15px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.public-overview .public-dashboard-actions .public-action-button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-restart {
+  background: #e7f0fd !important;
+  border-color: #bed5f5 !important;
+  color: #174f9a !important;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-danger {
+  background: #fff1f2 !important;
+  border-color: #edc1c7 !important;
+  color: #a12c3b !important;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-restart:hover:not(:disabled) {
+  background: #d5e6fc !important;
+}
+:root[data-theme="light"] .public-overview .public-dashboard-actions .public-action-danger:hover:not(:disabled) {
+  background: #fbdfe3 !important;
+}
+
+/* Projects: visible permission selectors and dashboard cards. */
+.workspace-section .workspace-list { display:grid; gap:14px; }
+.workspace-section .workspace-details { min-width:0; }
+.workspace-section .workspace-details > p { overflow-wrap:anywhere; line-height:1.5; }
+.workspace-section .workspace-security { display:flex; flex-wrap:wrap; gap:7px 10px; line-height:1.6; }
+.workspace-section .workspace-card-actions { display:flex; flex-wrap:wrap; align-items:center; gap:9px; }
+.workspace-section .workspace-policy-controls { display:grid; width:100%; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; padding:12px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
+:root[data-theme="light"] .workspace-section .workspace-policy-controls { background:#f4f7fb; }
+@media(max-width:760px) { .workspace-section .workspace-card-actions { width:100%; } }
+
+.workspace-section .workspace-permission-field { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.workspace-section .workspace-permission-field > span { font-size:12px; font-weight:650; color:var(--rt-text-2); }
+.workspace-section .workspace-segmented { display:flex; flex-wrap:wrap; gap:4px; padding:4px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel); }
+.workspace-section .workspace-segmented button { flex:1 1 auto; min-height:34px; padding:7px 10px; border:1px solid transparent; border-radius:7px; background:transparent; color:var(--rt-text-2); font:inherit; font-size:12px; cursor:pointer; }
+.workspace-section .workspace-segmented button.selected { background:#dfeeff; border-color:#b8d2f7; color:#174f9a; font-weight:700; }
+.workspace-section .workspace-segmented button:hover:not(:disabled):not(.selected) { background:var(--rt-hover); }
+.workspace-section .workspace-segmented button:disabled { opacity:.6; cursor:not-allowed; }
+@media(max-width:1050px) { .workspace-section .workspace-policy-controls { grid-template-columns:1fr; } }
+
+/* Projects light theme: explicitly supersede legacy !important dark surfaces.
+   Keep scoped until the old project rules are extracted from workspace.css. */
+:root[data-theme="light"] .workspace-section .workspace-card {
+  background:#fff !important; background-image:none !important;
+  border:1px solid var(--rt-line) !important; border-radius:14px !important;
+  box-shadow:0 4px 14px rgba(33,56,89,.06) !important;
+  gap:16px !important;
+  grid-template-columns:48px minmax(220px,1fr) !important;
+  align-items:start !important;
+  column-gap:18px !important;
+  row-gap:16px !important;
+  padding:22px 24px !important;
+}
+:root[data-theme="light"] .workspace-section .workspace-card:hover { background:#f8fbff !important; }
+:root[data-theme="light"] .workspace-section .workspace-title-row h3 { color:var(--rt-text) !important; font-size:14px !important; }
+
+:root[data-theme="light"] .workspace-section .workspace-security { color:var(--rt-text-2) !important; font-size:11px !important; margin-top:10px !important; }
+:root[data-theme="light"] .workspace-section .workspace-icon { background:#edf4ff !important; border-color:#c5d8ef !important; color:#356fb8 !important; }
+:root[data-theme="light"] .workspace-section .workspace-actions > .secondary-button,
+:root[data-theme="light"] .workspace-section .section-heading .secondary-button { background:#e7f0fd !important; border:1px solid #bed5f5 !important; color:#174f9a !important; }
+:root[data-theme="light"] .workspace-section .workspace-card-actions .icon-button { background:#fff1f2 !important; color:#a12c3b !important; border-color:#edc1c7 !important; }
+:root[data-theme="light"] .workspace-section .workspace-list { gap:14px !important; }
+
+/* Projects: give identity and folder action breathing room. */
+.workspace-section .workspace-card .workspace-folder-button {
+  width:44px !important; height:44px !important; min-height:44px !important;
+  display:grid; place-items:center; cursor:pointer; border-radius:11px !important;
+}
+.workspace-section .workspace-card .workspace-folder-button:focus-visible { outline:2px solid var(--rt-blue); outline-offset:3px; }
+.workspace-section .workspace-card .workspace-folder-button:disabled { cursor:not-allowed; opacity:.5; }
+:root[data-theme="light"] .workspace-section .workspace-folder-button:hover:not(:disabled) { background:#dcecff !important; }
+:root[data-theme="light"] .workspace-section .workspace-details { padding-top:3px; }
+:root[data-theme="light"] .workspace-section .workspace-details > p {
+  color:var(--rt-text-3) !important; font-size:11px !important;
+  white-space:normal !important; overflow-wrap:anywhere !important;
+  overflow:visible !important; text-overflow:clip !important;
+  margin-top:8px !important; line-height:1.6 !important;
+}
+:root[data-theme="light"] .workspace-section .workspace-card-actions {
+  grid-column:1 / -1; width:100%; justify-content:space-between;
+  padding-top:12px; border-top:1px solid var(--rt-line-soft);
+}
+:root[data-theme="light"] .workspace-section .workspace-policy-controls { flex:1 1 650px; }
+@media(max-width:700px) {
+  :root[data-theme="light"] .workspace-section .workspace-card { grid-template-columns:44px minmax(0,1fr) !important; padding:18px !important; }
+}
+
+/* Local Gateway: final light-theme action buttons, overriding legacy dark !important rules. */
+:root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button {
+  background:#e7f0fd !important; color:#174f9a !important;
+  border:1px solid #bed5f5 !important; box-shadow:none !important;
+}
+:root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button,
+:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.danger-button {
+  min-height:40px; border-radius:9px;
+}
+:root[data-theme="light"] .gateway-overview .gateway-overview-endpoint button.secondary-button:hover:not(:disabled) { background:#d5e6fc !important; }
+:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.danger-button {
+  background:#fff1f2 !important; color:#a12c3b !important;
+  border:1px solid #edc1c7 !important; box-shadow:none !important;
+}
+:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.danger-button:hover:not(:disabled) { background:#fbdfe3 !important; }
+:root[data-theme="light"] .gateway-overview .gateway-overview-footer button.primary-button:not(.danger-button) {
+  background:#e7f0fd !important; color:#174f9a !important;
+  border:1px solid #bed5f5 !important; box-shadow:none !important;
+}
+
+/* Public MCP status: light badge instead of legacy dark pill. */
+:root[data-theme="light"] .public-overview .connection-heading .connection-state.ready {
+  background:#e8f7f0 !important; background-image:none !important;
+  border:1px solid #b9e2ce !important; color:#16704f !important;
+  box-shadow:none !important;
+}
+:root[data-theme="light"] .public-overview .connection-heading .connection-state.ready .status-dot {
+  background:#168666 !important; box-shadow:none !important;
+}
+/* Solid, vivid status cards. No gradient washes or translucent fills. */
+:root {
+  --metric-blue:#94b2ec;
+  --metric-purple:#bfa8e4;
+  --metric-orange:#eac594;
+  --metric-green:#8cc4aa;
+  --metric-yellow:#f1d28d;
+  --metric-red:#c83d45;
+  --metric-neutral:#b8c2d0;
+}
+.r-home-metric {
+  background:var(--metric-solid,var(--metric-blue)) !important;
+  border:1px solid var(--metric-solid,var(--metric-blue)) !important;
+  border-top:3px solid var(--metric-solid,var(--metric-blue)) !important;
+  box-shadow:none;
+  color:#fff;
+}
+.r-home-metric::after { background:currentColor; opacity:.75; }
+.r-home-metric .r-home-card-label,
+.r-home-metric .r-home-card-label svg,
+.r-home-metric strong,
+.r-home-metric p { color:inherit !important; }
+.r-metric-healthy { --metric-solid:var(--metric-green); color:#172436; }
+.r-metric-connected { --metric-solid:var(--metric-blue); color:#172436; }
+.r-metric-projects { --metric-solid:var(--metric-purple); color:#172436; }
+.r-metric-tools { --metric-solid:var(--metric-orange); color:#172436; }
+.r-metric-warning { --metric-solid:var(--metric-yellow); color:#252018; }
+.r-metric-neutral { --metric-solid:var(--metric-neutral); color:#172436; }
+:root[data-theme="light"] .r-home-metric,
+:root[data-theme="dark"] .r-home-metric { background:var(--metric-solid) !important; }
+@media (prefers-reduced-motion:no-preference) {
+  .r-home-metric { transition:filter 150ms ease; }
+}
+
+
+:root[data-theme="light"] .r-home-card { box-shadow:0 5px 20px rgba(33,56,89,.045); }
+:root[data-theme="light"] .r-home-section-title button,:root[data-theme="light"] .r-home-empty button { background:#f6f9fe; }
+
 
 /* 04. Projects (pending) */
 
