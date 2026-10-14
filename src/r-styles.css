@@ -615,6 +615,54 @@
 :root[data-theme="light"] .r-project-details > p { color:var(--rt-text-3); }
 :root[data-theme="light"] .r-project-security { color:var(--rt-text-2); }
 
+/* Projects cards and permission groups — one cohesive layout. */
+.r-project-list { display:grid; gap:14px; margin-top:20px; }
+.r-project-card {
+  display:grid; grid-template-columns:44px minmax(0,1fr); align-items:start;
+  min-width:0; min-height:84px; column-gap:18px; row-gap:16px;
+  padding:18px 20px; border:1px solid #22313c; border-radius:12px;
+  background:linear-gradient(180deg,rgba(16,25,34,.98),rgba(12,19,26,.98));
+  box-shadow:0 10px 28px rgba(0,0,0,.10),inset 0 1px rgba(255,255,255,.015);
+}
+.r-project-card:hover { border-color:#34506a; }
+.r-project-card.r-project-card-missing { border-color:#55432f; background:linear-gradient(180deg,rgba(39,31,22,.9),rgba(20,20,19,.96)); }
+.r-project-card-actions {
+  display:flex; grid-column:1/-1; width:100%; flex-wrap:wrap;
+  align-items:center; justify-content:space-between; gap:9px;
+  padding-top:12px; border-top:1px solid var(--rt-line-soft);
+}
+.r-project-policy-controls {
+  display:grid; flex:1 1 650px; width:100%;
+  grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px;
+  padding:12px; border:1px solid var(--rt-line); border-radius:10px;
+  background:var(--rt-panel-2);
+}
+.r-project-permission-field { display:flex; min-width:0; flex-direction:column; gap:7px; }
+.r-project-permission-field > span { font-size:12px; font-weight:650; color:var(--rt-text-2); }
+.r-project-segmented { display:flex; flex-wrap:wrap; gap:4px; padding:4px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel); }
+.r-project-segmented button {
+  flex:1 1 auto; min-height:34px; padding:7px 10px;
+  border:1px solid transparent; border-radius:7px; background:transparent;
+  color:var(--rt-text-2); font:inherit; font-size:12px; cursor:pointer;
+}
+.r-project-segmented button.selected { background:#dfeeff; border-color:#b8d2f7; color:#174f9a; font-weight:700; }
+.r-project-segmented button:hover:not(:disabled):not(.selected) { background:var(--rt-hover); }
+.r-project-segmented button:disabled { opacity:.6; cursor:not-allowed; }
+.r-project-remove { display:grid; flex:0 0 auto; width:34px; height:34px; place-items:center; border:1px solid #48303a; border-radius:8px; background:#24191f; color:#e7a5ad; cursor:pointer; }
+.r-project-remove:hover:not(:disabled) { background:#392128; color:#fff; }
+.r-project-remove:disabled { opacity:.5; cursor:not-allowed; }
+.r-project-recovery { min-height:35px; padding:0 11px; border:1px solid #5e4930; border-radius:8px; background:#211a13; color:#e2bc87; font-size:11px; cursor:pointer; }
+.r-project-recheck { min-height:35px; padding:0 11px; border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel-2); color:var(--rt-text-2); font-size:11px; cursor:pointer; }
+.r-project-remove:focus-visible,.r-project-recovery:focus-visible,.r-project-recheck:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+:root[data-theme="light"] .r-project-card { background:#fff; border-color:var(--rt-line); border-radius:14px; box-shadow:0 4px 14px rgba(33,56,89,.06); }
+:root[data-theme="light"] .r-project-card:hover { background:#f8fbff; }
+:root[data-theme="light"] .r-project-card.r-project-card-missing { background:#fff8ee; border-color:#d7b78a; }
+:root[data-theme="light"] .r-project-policy-controls { background:#f4f7fb; }
+:root[data-theme="light"] .r-project-remove { background:#fff1f2; color:#a12c3b; border-color:#edc1c7; }
+:root[data-theme="light"] .r-project-remove:hover:not(:disabled) { background:#ffe1e5; }
+@media(max-width:1050px) { .r-project-policy-controls { grid-template-columns:1fr; } }
+@media(max-width:700px) { .r-project-card { padding:18px; grid-template-columns:44px minmax(0,1fr); } }
+
 /* 05. Connections (pending) */
 
 /* 06. Settings (pending) */
