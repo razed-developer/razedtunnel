@@ -513,6 +513,20 @@
 :root[data-theme="light"] .r-home-section-title button,:root[data-theme="light"] .r-home-empty button { background:#f6f9fe; }
 
 
+/* ActivityFeed — isolated from retired activity-card and approval UI. */
+.r-activity-feed { padding:21px; border-top:2px solid var(--home-blue); }
+.r-activity-entry { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:13px 0; border-top:1px solid var(--rt-line-soft); font-size:11px; color:var(--rt-text-3); }
+.r-activity-entry > div { min-width:0; }
+.r-activity-entry strong { display:block; color:var(--rt-text); font-size:12px; font-weight:600; overflow-wrap:anywhere; }
+.r-activity-entry p { margin:5px 0 0; color:var(--rt-text-3); }
+.r-activity-entry > .r-activity-status { border:1px solid transparent; border-radius:20px; padding:4px 8px; white-space:nowrap; font-size:11px; font-weight:600; text-transform:capitalize; }
+.r-activity-empty { padding:24px 0; color:var(--rt-text-3); font-size:12px; }
+.r-activity-disclaimer { border-top:1px solid var(--rt-line-soft); margin:0; padding-top:13px; font-size:11px; color:var(--rt-text-4); }
+.r-activity-status-succeeded,.r-activity-status-completed,.r-activity-status-applied { color:var(--home-green); background:var(--home-green-wash); }
+.r-activity-status-running,.r-activity-status-observed { color:var(--home-blue); background:var(--home-blue-wash); }
+.r-activity-status-pending { color:var(--home-amber); background:var(--home-amber-wash); }
+.r-activity-status-failed,.r-activity-status-rejected,.r-activity-status-stopped { color:var(--home-red); background:var(--home-red-wash); }
+
 /* 04. Projects (pending) */
 
 /* 05. Connections (pending) */
