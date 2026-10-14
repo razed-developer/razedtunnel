@@ -5,7 +5,6 @@ import HomeDashboard from "./components/HomeDashboard";
 import ThemePicker, { type ThemePreference } from "./components/ThemePicker";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AppSidebar, { type AppView } from "./components/AppSidebar";
-import ChatConnectionPanel from "./components/ChatConnectionPanel";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 import GatewayPanel from "./components/GatewayPanel";
 import StartupPanel from "./components/StartupPanel";
@@ -34,9 +33,7 @@ import {
   revokeMcpAccess,
   configurePublicTunnel,
   selectWorkspace,
-  startChatConnection,
   startGateway,
-  stopChatConnection,
   stopGateway,
   setAiAccessPaused,
   updateWorkspaceAccess,
@@ -166,7 +163,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [gatewayBusy, setGatewayBusy] = useState(false);
-  const [connectionBusy, setConnectionBusy] = useState(false);
   const [workspaceToRemove, setWorkspaceToRemove] = useState<Workspace | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -497,32 +493,6 @@ function App() {
     } finally {
       setPublicTunnelBusy(false);
       setConfirmForgetPublicTunnel(false);
-    }
-  }
-
-  async function handleChatConnect(tunnelId: string, apiKey: string) {
-    setNotice(null);
-    setConnectionBusy(true);
-    try {
-      const status = await startChatConnection(tunnelId, apiKey);
-      setConnectionStatus(status);
-      setGatewayStatus(await getGatewayStatus());
-    } catch (error) {
-      setNotice(`ChatGPT connection failed: ${errorMessage(error)}`);
-    } finally {
-      setConnectionBusy(false);
-    }
-  }
-
-  async function handleChatDisconnect() {
-    setNotice(null);
-    setConnectionBusy(true);
-    try {
-      setConnectionStatus(await stopChatConnection());
-    } catch (error) {
-      setNotice(`Could not stop the ChatGPT connection: ${errorMessage(error)}`);
-    } finally {
-      setConnectionBusy(false);
     }
   }
 
