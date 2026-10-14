@@ -12,6 +12,19 @@ pub(crate) struct Approval {
     pub(crate) operation: FileOperation,
 }
 
+// Only existing regular files have fully specified approval semantics.
+// Creation needs a nonexistent-target policy; moves need destination binding.
+// Directories require separate recursive-impact review.
+fn validate_supported_target(operation: FileOperation, target: &Path) -> Result<(), String> {
+    if !matches!(operation, FileOperation::Write | FileOperation::Delete) {
+        return Err("This operation is not supported by the approval protocol.".into());
+    }
+    if !target.is_file() {
+        return Err("Approval target must be an existing regular file.".into());
+    }
+    Ok(())
+}
+
 const REQUEST_TTL: Duration = Duration::from_secs(120);
 const MAX_PENDING_REQUESTS: usize = 32;
 
@@ -40,6 +53,7 @@ impl ApprovalRequests {
         }
         let root = canonical_existing(workspace_root)?;
         let target = canonical_existing(&approval.path)?;
+        validate_supported_target(approval.operation, &target)?;
         if target == root || !target.starts_with(&root) {
             return Err("Request target must be an existing path below the workspace root.".into());
         }
@@ -119,6 +133,7 @@ impl ApprovalRegistry {
         }
         let root = canonical_existing(workspace_root)?;
         let target = canonical_existing(&approval.path)?;
+        validate_supported_target(approval.operation, &target)?;
         if !target.starts_with(&root) || target == root {
             return Err("Approval target must be an existing path below the workspace root.".into());
         }
@@ -141,6 +156,7 @@ impl ApprovalRegistry {
         let stored = stored.approval;
         let root = canonical_existing(workspace_root)?;
         let target = canonical_existing(&expected.path)?;
+        validate_supported_target(expected.operation, &target)?;
         if target == root || !target.starts_with(&root) ||
             stored.workspace_id != expected.workspace_id ||
             stored.operation != expected.operation || stored.path != target {
@@ -250,4 +266,33 @@ mod tests {
         }
         std::fs::remove_dir(root).unwrap();
     }
+    #[test]
+    fn unsupported_create_and_move_requests_are_rejected() {
+        let temp = tempfile::tempdir().unwrap();
+        let file = temp.path().join("existing.txt");
+        std::fs::write(&file, b"safe").unwrap();
+        let requests = ApprovalRequests::default();
+        let registry = ApprovalRegistry::default();
+        for operation in [FileOperation::Create, FileOperation::Move] {
+            let approval = Approval { workspace_id: "w".into(), path: file.clone(), operation };
+            assert!(requests.propose(approval.clone(), temp.path()).is_err());
+            assert!(registry.register("d".repeat(40), approval, temp.path()).is_err());
+        }
+        assert!(requests.pending().unwrap().is_empty());
+    }
+
+    #[test]
+    fn directory_targets_are_rejected() {
+        let temp = tempfile::tempdir().unwrap();
+        let directory = temp.path().join("nested");
+        std::fs::create_dir(&directory).unwrap();
+        let requests = ApprovalRequests::default();
+        let registry = ApprovalRegistry::default();
+        for operation in [FileOperation::Write, FileOperation::Delete] {
+            let approval = Approval { workspace_id: "w".into(), path: directory.clone(), operation };
+            assert!(requests.propose(approval.clone(), temp.path()).is_err());
+            assert!(registry.register("e".repeat(40), approval, temp.path()).is_err());
+        }
+    }
+
 }
