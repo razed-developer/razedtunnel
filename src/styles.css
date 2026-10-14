@@ -338,11 +338,6 @@ button:focus-visible {
   background: #0b1016;
 }
 
-.workspace-card:hover {
-  border-color: #2a3541;
-  background: #0c1219;
-}
-
 .workspace-icon,
 .empty-icon {
   display: grid;
@@ -3224,16 +3219,6 @@ body {
 .secondary-button:hover:not(:disabled) {
   border-color: #3a3f48;
   background: #1c1f25;
-}
-
-.workspace-card {
-  border-color: #20232a;
-  border-radius: 11px;
-  background: #14161b;
-}
-
-.workspace-card:hover {
-  border-color: #2c3038;
 }
 
 .workspace-actions {
