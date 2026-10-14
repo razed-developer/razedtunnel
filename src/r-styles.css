@@ -728,4 +728,33 @@
 .r-public-provider-switch button:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
 :root[data-theme="light"] .r-public-provider-switch button.active { background:#e5effe; color:#185bb4; border-color:#b8d2f7; }
 
+/* Public MCP provider setup forms — independent of legacy connection selectors. */
+.r-public-provider-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; margin-top:4px; }
+.r-public-callout { grid-column:1/-1; min-width:0; padding:14px 16px; border:1px solid var(--rt-line-soft); border-radius:9px; background:var(--rt-panel-2); }
+.r-public-callout strong { display:block; color:var(--rt-text); font-size:12px; line-height:1.5; }
+.r-public-callout p { margin:7px 0 0; color:var(--rt-text-3); font-size:11px; line-height:1.6; overflow-wrap:anywhere; }
+.r-public-callout code { font-size:10.5px; overflow-wrap:anywhere; }
+.r-public-callout > a,.r-public-provider-links a { color:var(--rt-blue); font-size:11px; text-decoration:none; }
+.r-public-callout > a { display:inline-block; margin-top:10px; }
+.r-public-callout a:hover { text-decoration:underline; }
+.r-public-provider-links { display:flex; flex-wrap:wrap; gap:12px; margin-top:10px; }
+.r-public-provider-ready,.r-public-provider-warning { display:block; margin-top:10px; font-size:10.5px; line-height:1.5; }
+.r-public-provider-ready { color:#7fc294; }
+.r-public-provider-warning { color:#d1a55e; }
+.r-public-field { display:grid; align-content:start; gap:7px; min-width:0; color:var(--rt-text-2); font-size:12px; font-weight:650; }
+.r-public-field input { box-sizing:border-box; width:100%; min-width:0; min-height:38px; padding:8px 11px; border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel); color:var(--rt-text); font:inherit; font-size:12px; font-weight:500; }
+.r-public-field input:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+.r-public-field input:disabled { opacity:.6; cursor:not-allowed; }
+.r-public-field small { color:var(--rt-text-3); font-size:10.5px; font-weight:400; line-height:1.5; }
+.r-public-form-footer { display:flex; grid-column:1/-1; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; padding-top:8px; }
+.r-public-form-footer > span { flex:1 1 250px; color:var(--rt-text-3); font-size:11px; line-height:1.5; }
+.r-public-submit { min-height:38px; padding:0 14px; border:1px solid #2870af; border-radius:8px; background:#277bc3; color:#fff; font-weight:650; font-size:12px; cursor:pointer; }
+.r-public-submit:hover:not(:disabled) { background:#358dd2; }
+.r-public-submit:disabled { opacity:.5; cursor:not-allowed; }
+.r-public-submit:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+:root[data-theme="light"] .r-public-callout { background:#f4f7fb; }
+:root[data-theme="light"] .r-public-provider-ready { color:#267446; }
+:root[data-theme="light"] .r-public-provider-warning { color:#8e611e; }
+@media(max-width:760px) { .r-public-provider-form { grid-template-columns:minmax(0,1fr); } .r-public-callout,.r-public-form-footer { grid-column:1; } }
+
 /* 06. Settings (pending) */
