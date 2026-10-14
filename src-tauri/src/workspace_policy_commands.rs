@@ -32,9 +32,7 @@ pub fn update_workspace_change_policy(
             .ok_or_else(|| "That project is no longer registered with RepoTunnel.".to_string())?;
 
         validate_workspace_root(workspace)?;
-        workspace.change_policy = change_policy;
-        // File-change approval must not silently elevate command execution privileges.
-        // Command policy is managed independently by update_workspace_command_policy.
+        set_change_policy(workspace, change_policy);
         Ok(workspace.clone())
     })
 }
@@ -52,7 +50,7 @@ pub fn update_workspace_command_policy(
             .ok_or_else(|| "That project is no longer registered with RepoTunnel.".to_string())?;
 
         validate_workspace_root(workspace)?;
-        workspace.command_policy = command_policy;
+        set_command_policy(workspace, command_policy);
         Ok(workspace.clone())
     })
 }
@@ -86,5 +84,52 @@ pub fn check_workspace_access(
             allowed: false,
             reason: Some(reason),
         }),
+    }
+}
+
+ 
+// Separate file-change approval from command-execution approval.
+fn set_change_policy(workspace: &mut Workspace, policy: WorkspaceChangePolicy) {
+    workspace.change_policy = policy;
+}
+
+fn set_command_policy(workspace: &mut Workspace, policy: CommandPolicy) {
+    workspace.command_policy = policy;
+}
+
+#[cfg(test)]
+mod policy_tests {
+    use super::*;
+
+    fn workspace() -> Workspace {
+        Workspace {
+            id: "test".into(),
+            name: "Test".into(),
+            path: ".".into(),
+            added_at: 0,
+            access_mode: WorkspaceAccessMode::ReadWrite,
+            change_policy: WorkspaceChangePolicy::Review,
+            command_policy: CommandPolicy::Review,
+        }
+    }
+
+    #[test]
+    fn automatic_file_changes_do_not_enable_automatic_commands() {
+        let mut workspace = workspace();
+        set_change_policy(&mut workspace, WorkspaceChangePolicy::Automatic);
+        assert_eq!(workspace.change_policy, WorkspaceChangePolicy::Automatic);
+        assert_eq!(workspace.command_policy, CommandPolicy::Review);
+        set_change_policy(&mut workspace, WorkspaceChangePolicy::Review);
+        assert_eq!(workspace.command_policy, CommandPolicy::Review);
+    }
+
+    #[test]
+    fn command_policy_changes_do_not_change_file_review() {
+        let mut workspace = workspace();
+        set_command_policy(&mut workspace, CommandPolicy::Automatic);
+        assert_eq!(workspace.command_policy, CommandPolicy::Automatic);
+        assert_eq!(workspace.change_policy, WorkspaceChangePolicy::Review);
+        set_command_policy(&mut workspace, CommandPolicy::Disabled);
+        assert_eq!(workspace.change_policy, WorkspaceChangePolicy::Review);
     }
 }
