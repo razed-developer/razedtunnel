@@ -6583,8 +6583,6 @@ body {
 html,
 body,
 #root { min-width: 900px !important; min-height: 600px !important; }
-.desktop-shell { grid-template-columns: clamp(176px, 14vw, 220px) clamp(210px, 18vw, 270px) minmax(0, 1fr) !important; }
-.desktop-shell > *,
 .workspace-main,
 .workspace-content,
 .panel,
@@ -6619,7 +6617,6 @@ body,
 .developer-process-row pre { max-width: 100%; overflow: auto; }
 
 @media (max-width: 1180px) {
-  .desktop-shell { grid-template-columns: 176px 212px minmax(0, 1fr) !important; }
   .editor-file-meta { display: none; }
   .editor-view-controls button { padding: 0 6px; }
   .terminal-shell-actions { max-width: 58%; }
@@ -6629,7 +6626,6 @@ body,
   html,
   body,
   #root { min-width: 760px !important; }
-  .desktop-shell { grid-template-columns: 164px 198px minmax(0, 1fr) !important; }
   .editor-pane-toolbar { align-items: flex-start; }
   .editor-toolbar-actions { width: 100%; justify-content: flex-start; }
   .editor-view-controls { margin-right: auto; }
@@ -6902,23 +6898,6 @@ body,
   font-size: 11.5px;
   font-weight: 650;
   letter-spacing: .01em;
-}
-
-.desktop-shell {
-  grid-template-columns: 196px 244px minmax(0, 1fr);
-  background: #080d12;
-}
-
-.desktop-shell.video-view,
-.desktop-shell.phone-view,
-.desktop-shell.https-setup-view {
-  grid-template-columns: 196px minmax(0, 1fr) !important;
-}
-
-.desktop-shell.video-view > .main-view,
-.desktop-shell.phone-view > .main-view,
-.desktop-shell.https-setup-view > .main-view {
-  grid-column: 2;
 }
 
 .video-main-view .page-scroll {
@@ -7723,9 +7702,6 @@ body,
 ::-webkit-scrollbar-thumb:hover { background: #415563; background-clip: padding-box; }
 
 @media (max-width: 980px) {
-  .desktop-shell { grid-template-columns: 168px 206px minmax(0, 1fr) !important; }
-  .app-sidebar { padding-inline: 8px; }
-  .sidebar-nav-item { padding-inline: 8px; }
 }
 
 
