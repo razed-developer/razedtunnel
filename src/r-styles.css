@@ -868,4 +868,20 @@
 :root[data-theme="light"] .r-visual-error { background:#fff1f2; border-color:#edc1c7; color:#a12c3b; }
 @media(max-width:650px) { .r-visual-ignored-content,.r-visual-preview { padding:12px; } }
 
+/* Connections page — shared visual rhythm across the three migrated panels. */
+.r-gateway-overview,.r-public-overview,.r-visual-panel { box-sizing:border-box; min-width:0; border:1px solid var(--rt-line); border-radius:12px; background:var(--rt-panel); color:var(--rt-text); }
+.r-gateway-overview { box-shadow:none; }
+.r-gateway-heading,.r-public-heading,.r-visual-panel > .r-home-section-title { min-height:34px; margin-bottom:18px; }
+.r-gateway-heading h3,.r-public-heading h2,.r-visual-panel > .r-home-section-title h3 { margin:0; color:var(--rt-text); font-size:16px; line-height:1.35; font-weight:650; }
+.r-visual-panel > .r-home-section-title { align-items:center; }
+.r-visual-panel > .r-home-section-title button { min-height:36px; padding:8px 12px; }
+.r-visual-panel > .r-home-detail-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:10px 0; }
+.r-visual-panel > .r-home-detail-row > span { min-width:0; }
+.r-visual-panel > .r-home-detail-row > button[aria-pressed="true"] { border-color:#377a58; background:#1d3528; color:#a6dfbb; }
+:root[data-theme="light"] .r-visual-panel > .r-home-detail-row > button[aria-pressed="true"] { border-color:#b9e2ce; background:#e8f7f0; color:#16704f; }
+.r-visual-panel .r-visual-app-row button { min-height:34px; }
+.r-visual-panel .r-visual-ignored-row button { min-height:34px; }
+.r-public-heading abbr[title],.r-gateway-heading abbr[title],.r-visual-panel abbr[title] { color:var(--rt-text-3); text-decoration:none; cursor:help; }
+@media(max-width:650px) { .r-gateway-overview,.r-public-overview,.r-visual-panel { padding:18px; } .r-visual-panel > .r-home-section-title { align-items:flex-start; } }
+
 /* 06. Settings (pending) */
