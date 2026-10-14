@@ -6663,27 +6663,6 @@ body,
 
 /* Final release hardening: readability, recovery surfaces, UI scale and Focus Mode. */
 
-.focus-mode-toggle {
-  display: inline-flex;
-  min-height: 28px;
-  align-items: center;
-  gap: 6px;
-  padding: 0 9px;
-  border: 1px solid #293743;
-  border-radius: 7px;
-  background: #0f171f;
-  color: #90a0ad;
-  cursor: pointer;
-  font-size: 10.5px;
-  font-weight: 700;
-}
-.focus-mode-toggle:hover,
-.focus-mode-toggle.active { border-color: #466078; background: #16232e; color: #dbe8f2; }
-.desktop-shell.focus-mode { grid-template-columns: minmax(0, 1fr) !important; }
-.desktop-shell.focus-mode > .app-sidebar,
-.desktop-shell.focus-mode > .project-rail { display: none !important; }
-.desktop-shell.focus-mode > .main-view { grid-column: 1 !important; width: 100% !important; }
-
 .interface-settings {
   display: grid;
   gap: 12px;
@@ -6858,7 +6837,6 @@ body,
 
 @media (max-width: 880px) {
   .page-statuses .toolbar-status span:not(.toolbar-dot) { display: none; }
-  .focus-mode-toggle span:last-child { display: none; }
   .workspace-card { grid-template-columns: 42px minmax(0, 1fr) !important; }
   .workspace-actions { grid-column: 2; justify-content: flex-start !important; }
 }
@@ -7590,8 +7568,7 @@ body,
 .page-tab.active::after { right: 15px; left: 15px; height: 2px; background: #5ca8f7; }
 .page-statuses { gap: 8px; }
 .toolbar-status,
-.toolbar-paused,
-.focus-mode-toggle {
+.toolbar-paused {
   min-height: 29px;
   border: 1px solid #22323e;
   border-radius: 8px;
@@ -7599,7 +7576,6 @@ body,
   background: #0d151c;
 }
 .toolbar-status { color: #9eacb8; }
-.focus-mode-toggle { margin: 0; }
 
 .main-view button:focus-visible,
 .app-sidebar button:focus-visible,
