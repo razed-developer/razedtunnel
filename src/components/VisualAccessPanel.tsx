@@ -128,7 +128,7 @@ export default function VisualAccessPanel() {
         <button type="button" disabled={busy} onClick={() => void toggle()}
           aria-pressed={enabled}>{busy ? "Working…" : enabled ? "Enabled — turn off" : "Disabled — enable"}</button>
       </div>
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <p className="r-visual-error" role="alert">{error}</p> : null}
       <h4>Detected applications ({apps.length})</h4>
       {apps.length === 0 ? <p>No applications detected. Open Notepad and select Refresh apps.</p> : (
         <div className="r-visual-apps">
@@ -147,12 +147,12 @@ export default function VisualAccessPanel() {
           ))}
         </div>
       )}
-      <div className="visual-access-ignored-settings">
+      <div className="r-visual-ignored">
         <button type="button" aria-expanded={showIgnored} onClick={() => setShowIgnored(!showIgnored)}>{showIgnored ? "Hide" : "Manage"} ignored apps ({ignoredApps.length})</button>
-        {showIgnored ? <div><h4>Ignored applications <abbr title="Ignored applications stay hidden after restarts; this does not revoke Desktop Access.">ⓘ</abbr></h4>{ignoredApps.length === 0 ? <p>No ignored applications.</p> : ignoredApps.map((entry) => <div className="r-home-detail-row" key={entry.executablePath}><span>{entry.name} <small style={{ overflowWrap: "anywhere" }}>{entry.executablePath}</small></span><button type="button" disabled={busy} onClick={() => void changeIgnored({ executablePath: entry.executablePath, ignored: false })}>Restore</button></div>)}</div> : null}
+        {showIgnored ? <div className="r-visual-ignored-content"><h4>Ignored applications <abbr title="Ignored applications stay hidden after restarts; this does not revoke Desktop Access.">ⓘ</abbr></h4>{ignoredApps.length === 0 ? <p>No ignored applications.</p> : ignoredApps.map((entry) => <div className="r-visual-ignored-row" key={entry.executablePath}><span>{entry.name} <small>{entry.executablePath}</small></span><button type="button" disabled={busy} onClick={() => void changeIgnored({ executablePath: entry.executablePath, ignored: false })}>Restore</button></div>)}</div> : null}
       </div>
-      {identity ? <p><strong>Executable identity for {identity.name}:</strong> <code style={{ overflowWrap: "anywhere" }}>{identity.path}</code></p> : null}
-      {preview ? <div className="visual-access-preview"><h4>Preview: {previewName}</h4><p>{preview.width} × {preview.height} · {(preview.sizeBytes / 1024).toFixed(0)} KB · Local window capture</p><img src={`data:image/png;base64,${preview.dataBase64}`} alt={`Captured window: ${previewName}`} style={{ display: "block", width: "100%", maxWidth: 900, height: "auto", borderRadius: 8, border: "1px solid var(--border, #d1d5db)" }} /><button type="button" onClick={() => setPreview(null)}>Clear preview</button></div> : null}
+      {identity ? <p className="r-visual-identity"><strong>Executable identity for {identity.name}:</strong> <code>{identity.path}</code></p> : null}
+      {preview ? <div className="r-visual-preview"><h4>Preview: {previewName}</h4><p>{preview.width} × {preview.height} · {(preview.sizeBytes / 1024).toFixed(0)} KB · Local window capture</p><img src={`data:image/png;base64,${preview.dataBase64}`} alt={`Captured window: ${previewName}`} /><button type="button" onClick={() => setPreview(null)}>Clear preview</button></div> : null}
     </section>
   );
 }
