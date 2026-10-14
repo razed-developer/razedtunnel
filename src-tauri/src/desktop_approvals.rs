@@ -12,6 +12,70 @@ pub(crate) struct Approval {
     pub(crate) operation: FileOperation,
 }
 
+const REQUEST_TTL: Duration = Duration::from_secs(120);
+const MAX_PENDING_REQUESTS: usize = 32;
+
+/// AI may propose a request, but this type never grants permission.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ApprovalRequest {
+    pub(crate) id: String,
+    pub(crate) approval: Approval,
+    pub(crate) workspace_root: PathBuf,
+}
+
+struct PendingRequest {
+    request: ApprovalRequest,
+    expires_at: Instant,
+}
+
+#[derive(Default)]
+pub(crate) struct ApprovalRequests {
+    pending: Mutex<HashMap<String, PendingRequest>>,
+}
+
+impl ApprovalRequests {
+    pub(crate) fn propose(&self, approval: Approval, workspace_root: &Path) -> Result<String, String> {
+        if approval.workspace_id.trim().is_empty() {
+            return Err("Request requires a workspace identity.".into());
+        }
+        let root = canonical_existing(workspace_root)?;
+        let target = canonical_existing(&approval.path)?;
+        if target == root || !target.starts_with(&root) {
+            return Err("Request target must be an existing path below the workspace root.".into());
+        }
+        let mut bytes = [0u8; 16];
+        getrandom::fill(&mut bytes).map_err(|_| "Secure request identifier generation failed.")?;
+        let id: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+        let mut pending = self.pending.lock().map_err(|_| "Approval requests unavailable.")?;
+        pending.retain(|_, item| Instant::now() < item.expires_at);
+        if pending.len() >= MAX_PENDING_REQUESTS {
+            return Err("Too many pending approval requests.".into());
+        }
+        pending.insert(id.clone(), PendingRequest {
+            request: ApprovalRequest {
+                id: id.clone(),
+                approval: Approval { path: target, ..approval },
+                workspace_root: root,
+            },
+            expires_at: Instant::now() + REQUEST_TTL,
+        });
+        Ok(id)
+    }
+
+    pub(crate) fn pending(&self) -> Result<Vec<ApprovalRequest>, String> {
+        let mut pending = self.pending.lock().map_err(|_| "Approval requests unavailable.")?;
+        pending.retain(|_, item| Instant::now() < item.expires_at);
+        Ok(pending.values().map(|item| item.request.clone()).collect())
+    }
+
+    pub(crate) fn deny(&self, id: &str) -> Result<bool, String> {
+        Ok(self.pending.lock().map_err(|_| "Approval requests unavailable.")?.remove(id).is_some())
+    }
+
+    // No public approval method. A future trusted local confirmation handler
+    // must take ownership of a request and revalidate before issuing a token.
+}
+
 const APPROVAL_TTL: Duration = Duration::from_secs(120);
 
 struct PendingApproval { approval: Approval, expires_at: Instant }
@@ -109,6 +173,29 @@ mod tests {
         assert_eq!(std::fs::read(&target).unwrap(), b"untouched");
         std::fs::remove_file(target).unwrap();
         std::fs::remove_dir(root).unwrap();
+    }
+
+    #[test]
+    fn proposal_never_issues_approval() {
+        let temp = tempfile::tempdir().unwrap();
+        let target = temp.path().join("file.txt");
+        std::fs::write(&target, b"unchanged").unwrap();
+        let requests = ApprovalRequests::default();
+        let approval = Approval { workspace_id: "w".into(), path: target.clone(), operation: FileOperation::Delete };
+        let id = requests.propose(approval, temp.path()).unwrap();
+        assert_eq!(requests.pending().unwrap().len(), 1);
+        assert!(requests.deny(&id).unwrap());
+        assert!(requests.pending().unwrap().is_empty());
+        assert_eq!(std::fs::read(target).unwrap(), b"unchanged");
+    }
+
+    #[test]
+    fn proposal_rejects_outside_paths() {
+        let temp = tempfile::tempdir().unwrap();
+        let requests = ApprovalRequests::default();
+        let approval = Approval { workspace_id: "w".into(), path: std::env::temp_dir(), operation: FileOperation::Delete };
+        assert!(requests.propose(approval, temp.path()).is_err());
+        assert!(requests.pending().unwrap().is_empty());
     }
 
     #[test]
