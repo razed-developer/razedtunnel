@@ -4,16 +4,16 @@ const appWindow = getCurrentWindow();
 
 function WindowChrome() {
   return (
-    <header className="window-chrome" data-tauri-drag-region>
-      <div className="window-title" data-tauri-drag-region>RazedTunnel</div>
-      <div className="window-controls">
+    <header className="r-window-chrome" data-tauri-drag-region>
+      <div className="r-window-title" data-tauri-drag-region>RazedTunnel</div>
+      <div className="r-window-controls">
         <button type="button" aria-label="Minimize" title="Minimize" onClick={() => appWindow.minimize()}>
-          <span className="window-minimize" />
+          <span className="r-window-minimize" />
         </button>
         <button type="button" aria-label="Maximize" title="Maximize" onClick={() => appWindow.toggleMaximize()}>
-          <span className="window-maximize" />
+          <span className="r-window-maximize" />
         </button>
-        <button className="window-close" type="button" aria-label="Close" title="Close" onClick={() => appWindow.close()}>
+        <button className="r-window-close" type="button" aria-label="Close" title="Close" onClick={() => appWindow.close()}>
           <span>×</span>
         </button>
       </div>
