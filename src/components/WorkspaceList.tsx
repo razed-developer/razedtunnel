@@ -62,18 +62,18 @@ function WorkspaceList({
   }
   return (
     <section className="workspace-section" aria-labelledby="workspace-title">
-      <div className="section-heading">
+      <div className="r-project-heading">
         <div>
-          <span className="section-kicker">Projects</span>
+          <span className="r-project-kicker">Projects</span>
           <h2 id="workspace-title">Approved workspaces</h2>
           <p>Manage approved folders and their access permissions.</p>
         </div>
-        <div className="workspace-actions">
-          <button className="secondary-button" type="button" onClick={onAdd} disabled={adding}>
+        <div className="r-project-heading-actions">
+          <button className="r-project-heading-button" type="button" onClick={onAdd} disabled={adding}>
             <span aria-hidden="true">+</span>
             {adding ? "Adding…" : "Add local folder"}
           </button>
-          <button className="secondary-button" type="button" aria-expanded={showGitInstructions} onClick={() => setShowGitInstructions((value) => !value)}>
+          <button className="r-project-heading-button" type="button" aria-expanded={showGitInstructions} onClick={() => setShowGitInstructions((value) => !value)}>
             Git repository
           </button>
         </div>
