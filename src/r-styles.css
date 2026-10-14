@@ -1,0 +1,24 @@
+/* RazedTunnel UI migration stylesheet.
+ *
+ * Migration order: window chrome -> sidebar -> page header -> Home -> Projects
+ * -> Connections -> Settings.
+ *
+ * During migration, legacy styles.css, workspace.css, and theme.css remain
+ * loaded. Move only verified effective rules here, scoped to r-* classes.
+ * Do not remove a legacy import until every mounted component is migrated.
+ *
+ * This file is intentionally empty at bootstrap: adding it must not change
+ * the appearance of the existing application.
+ */
+
+/* 01. Design tokens and themes (pending migration) */
+
+/* 02. Application shell: WindowChrome, AppSidebar, AppHeader (pending) */
+
+/* 03. Home Dashboard (pending) */
+
+/* 04. Projects (pending) */
+
+/* 05. Connections (pending) */
+
+/* 06. Settings (pending) */
