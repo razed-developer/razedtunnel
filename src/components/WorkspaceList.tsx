@@ -113,17 +113,17 @@ function WorkspaceList({
 
             return (
               <article className={`workspace-card ${unavailable ? "workspace-card-missing" : ""}`} key={workspace.id}>
-                <button className="workspace-icon workspace-folder-button" type="button" onClick={() => onOpenFolder(workspace)} disabled={unavailable} aria-label={`Open ${workspace.name} folder`} title={unavailable ? "Folder unavailable" : "Open folder in file manager"}>
+                <button className="r-project-folder-button" type="button" onClick={() => onOpenFolder(workspace)} disabled={unavailable} aria-label={`Open ${workspace.name} folder`} title={unavailable ? "Folder unavailable" : "Open folder in file manager"}>
                   <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                 </button>
-                <div className="workspace-details">
-                  <div className="workspace-title-row">
+                <div className="r-project-details">
+                  <div className="r-project-title-row">
                     <h3>{workspace.name}</h3>
-                    <span className={`access-badge ${unavailable ? "missing" : ""}`}>{unavailable ? "Path missing" : "Approved"}</span>
+                    <span className={`r-project-access-badge ${unavailable ? "missing" : ""}`}>{unavailable ? "Path missing" : "Approved"}</span>
                   </div>
                   <p title={workspace.path}>{workspace.path}</p>
-                  {unavailable ? <div className="workspace-path-warning">{health?.message ?? "This project folder cannot be reached."}</div> : null}
-                  <div className="workspace-security" aria-label="Project security status">
+                  {unavailable ? <div className="r-project-path-warning">{health?.message ?? "This project folder cannot be reached."}</div> : null}
+                  <div className="r-project-security" aria-label="Project security status">
                     <span>Secrets blocked</span>
                   </div>
                 </div>
