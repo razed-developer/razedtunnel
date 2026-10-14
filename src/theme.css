@@ -342,7 +342,7 @@
 :root[data-theme="light"] .workspace-section .workspace-card:hover { background:#f8fbff !important; }
 :root[data-theme="light"] .workspace-section .workspace-title-row h3 { color:var(--rt-text) !important; font-size:14px !important; }
 
-:root[data-theme="light"] .workspace-section .workspace-security { color:var(--rt-text-2) !important; font-size:11px !important; }
+:root[data-theme="light"] .workspace-section .workspace-security { color:var(--rt-text-2) !important; font-size:11px !important; margin-top:10px !important; }
 :root[data-theme="light"] .workspace-section .workspace-icon { background:#edf4ff !important; border-color:#c5d8ef !important; color:#356fb8 !important; }
 :root[data-theme="light"] .workspace-section .workspace-actions > .secondary-button,
 :root[data-theme="light"] .workspace-section .section-heading .secondary-button { background:#e7f0fd !important; border:1px solid #bed5f5 !important; color:#174f9a !important; }
@@ -364,7 +364,6 @@
   overflow:visible !important; text-overflow:clip !important;
   margin-top:8px !important; line-height:1.6 !important;
 }
-:root[data-theme="light"] .workspace-section .workspace-security { margin-top:10px !important; }
 :root[data-theme="light"] .workspace-section .workspace-card-actions {
   grid-column:1 / -1; width:100%; justify-content:space-between;
   padding-top:12px; border-top:1px solid var(--rt-line-soft);
