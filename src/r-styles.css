@@ -527,7 +527,43 @@
 .r-activity-status-pending { color:var(--home-amber); background:var(--home-amber-wash); }
 .r-activity-status-failed,.r-activity-status-rejected,.r-activity-status-stopped { color:var(--home-red); background:var(--home-red-wash); }
 
-/* 04. Projects (pending) */
+/* 04. Projects — migrate in self-contained pieces.
+ * Empty state is the first isolated WorkspaceList subview.
+ */
+.r-project-empty {
+  display:flex;
+  min-height:255px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  margin-top:18px;
+  padding:38px 20px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:#777a82;
+  text-align:center;
+}
+.r-project-empty-icon {
+  display:grid;
+  width:34px;
+  height:34px;
+  margin:0 auto 10px;
+  place-items:center;
+  border:1px solid #2c2e33;
+  border-radius:8px;
+  background:#17181b;
+  color:#8796a8;
+  font-size:8px;
+  font-weight:700;
+}
+.r-project-empty h3 { margin:15px 0 0; color:#dde4eb; font-size:14px; }
+.r-project-empty p { max-width:420px; margin:7px 0 17px; color:#718094; font-size:12px; line-height:1.5; }
+:root[data-theme="light"] .r-project-empty-icon { background:#f2f6fc; border-color:var(--rt-line); color:var(--rt-text-2); }
+:root[data-theme="light"] .r-project-empty h3 { color:var(--rt-text); }
+:root[data-theme="light"] .r-project-empty p { color:var(--rt-text-3); }
+
+
 
 /* 05. Connections (pending) */
 
