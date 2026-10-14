@@ -109,7 +109,7 @@ function PublicTunnelPanel({
         </span>
       </div>
 
-      <div className="public-provider-switch" role="group" aria-label="Public connection provider">
+      <div className="r-public-provider-switch" role="group" aria-label="Public connection provider">
         {(["direct", "ngrok", "cloudflare"] as const).map((option) => (
           <button
             key={option}
