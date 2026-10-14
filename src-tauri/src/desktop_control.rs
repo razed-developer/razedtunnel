@@ -117,11 +117,35 @@ fn protected_file_manager(name: &str) -> bool {
         .any(|item| name == *item || name.starts_with(&format!("{item} ")))
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DesktopCapability {
+    Observe,
+    Interact,
+    Modify,
+}
+
+// Conservative classification: an accessibility click can trigger an arbitrary
+// file operation, so file-manager interaction is treated as modification.
+fn desktop_capability(file_manager: bool, action: &str) -> DesktopCapability {
+    if matches!(action, "inspect" | "screenshot" | "snapshot") {
+        DesktopCapability::Observe
+    } else if file_manager && action != "activate" {
+        DesktopCapability::Modify
+    } else {
+        DesktopCapability::Interact
+    }
+}
+
+fn desktop_capability_allowed(capability: DesktopCapability) -> bool {
+    // Modify is intentionally not available: there is no path-bound approval token yet.
+    capability != DesktopCapability::Modify
+}
+
 fn require_safe_desktop_mutation(app: &AppHandle, application_id: &str) -> Result<(), String> {
     let applications = discovered(app)?;
     let target = applications.iter().find(|item| item.id == application_id)
         .ok_or_else(|| "Desktop application is no longer available; refresh the application list.".to_string())?;
-    if protected_file_manager(&target.name) {
+    if !desktop_capability_allowed(desktop_capability(protected_file_manager(&target.name), "click")) {
         return Err("AI file-manager desktop actions are blocked until path-scoped approvals exist. Use workspace-scoped file tools instead.".to_string());
     }
     Ok(())
@@ -1030,11 +1054,24 @@ mod tests {
     use serde_json::json;
 
     use super::{
-        protected_file_manager, desktop_document_identity, prepare_semantic_sequence, protected_application,
+        protected_file_manager, desktop_capability, desktop_capability_allowed, DesktopCapability, desktop_document_identity, prepare_semantic_sequence, protected_application,
         semantic_backend_id, semantic_drafts_from_inspection, DesktopSemanticSequenceStep,
         PermissionStore, GLOBAL_PERMISSION,
     };
     use crate::semantic::{self, SemanticNodeDraft, SemanticSnapshotInput};
+
+    #[test]
+    fn desktop_capability_model_fails_closed_on_unscoped_modification() {
+        assert_eq!(desktop_capability(true, "inspect"), DesktopCapability::Observe);
+        assert_eq!(desktop_capability(true, "screenshot"), DesktopCapability::Observe);
+        assert_eq!(desktop_capability(true, "activate"), DesktopCapability::Interact);
+        assert_eq!(desktop_capability(true, "click"), DesktopCapability::Modify);
+        assert_eq!(desktop_capability(true, "type"), DesktopCapability::Modify);
+        assert_eq!(desktop_capability(false, "click"), DesktopCapability::Interact);
+        assert!(desktop_capability_allowed(DesktopCapability::Observe));
+        assert!(desktop_capability_allowed(DesktopCapability::Interact));
+        assert!(!desktop_capability_allowed(DesktopCapability::Modify));
+    }
 
     #[test]
     fn file_managers_are_blocked_from_unscoped_desktop_mutations() {
