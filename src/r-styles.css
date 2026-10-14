@@ -97,6 +97,32 @@
 :root[data-theme="light"] .r-sidebar-nav-item.active svg { color:#2169e8; }
 @media(max-width:900px) { .r-app-sidebar { padding-inline:8px; } .r-sidebar-nav-item { padding-inline:8px; } }
 
+/* AppHeader — scoped layout, status indicators and focus control. */
+.r-page-header { display:flex; min-width:0; min-height:55px; align-items:stretch; justify-content:space-between; gap:18px; padding:0 14px 0 6px; border-bottom:1px solid #1e2b35; background:rgba(10,16,22,.94); box-shadow:0 1px rgba(255,255,255,.012) inset; }
+.r-page-tab { position:relative; display:flex; min-width:112px; align-items:center; gap:9px; padding:0 15px; color:#dce2e9; }
+.r-page-tab h1 { margin:0; color:#eef3f7; font-size:15px; font-weight:720; letter-spacing:-.015em; }
+.r-page-tab.active::after { position:absolute; right:15px; bottom:0; left:15px; height:2px; border-radius:2px 2px 0 0; background:#5ca8f7; content:""; }
+.r-page-tab.active svg { color:#aeb6bd; }
+.r-page-statuses { display:flex; align-items:center; gap:8px; }
+.r-toolbar-status,.r-toolbar-paused,.r-focus-mode-toggle { display:inline-flex; min-height:29px; align-items:center; gap:6px; border:1px solid #22323e; border-radius:8px; padding:0 8px; background:#0d151c; color:#9eacb8; font-size:10.5px; }
+.r-toolbar-status { font-weight:560; }
+.r-toolbar-status svg { color:#aab4bf; }
+.r-toolbar-dot { width:7px; height:7px; border-radius:50%; background:#4d5864; }
+.r-toolbar-dot.online { background:var(--rt-green); }
+.r-toolbar-dot.offline { background:var(--rt-red); }
+.r-focus-mode-toggle { margin:0; cursor:pointer; font-weight:700; }
+.r-focus-mode-toggle:hover,.r-focus-mode-toggle.active { border-color:#466078; background:#16232e; color:#dbe8f2; }
+.r-focus-mode-toggle:focus-visible { outline:2px solid rgba(94,171,246,.8); outline-offset:2px; }
+:root[data-theme="light"] .r-page-header { background:#fff; border-bottom-color:var(--rt-line); box-shadow:none; }
+:root[data-theme="light"] .r-page-tab,:root[data-theme="light"] .r-page-tab svg { color:var(--rt-text-2); }
+:root[data-theme="light"] .r-page-tab h1 { color:var(--rt-text); }
+:root[data-theme="light"] .r-page-tab.active svg { color:#2169e8; }
+:root[data-theme="light"] .r-toolbar-status,:root[data-theme="light"] .r-focus-mode-toggle { background:#f7faff; color:var(--rt-text-2); border-color:var(--rt-line); }
+@media(max-width:880px) {
+  .r-page-statuses .r-toolbar-status span:not(.r-toolbar-dot) { display:none; }
+  .r-focus-mode-toggle span:last-child { display:none; }
+}
+
 /* 03. Home Dashboard (pending) */
 
 /* 04. Projects (pending) */
