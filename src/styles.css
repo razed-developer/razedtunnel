@@ -326,18 +326,6 @@ button:focus-visible {
   margin-top: 22px;
 }
 
-.workspace-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 14px;
-  min-height: 72px;
-  padding: 12px 13px;
-  border: 1px solid #202a35;
-  border-radius: 13px;
-  background: #0b1016;
-}
-
 .workspace-icon,
 .empty-icon {
   display: grid;
