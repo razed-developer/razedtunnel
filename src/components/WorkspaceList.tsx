@@ -96,8 +96,8 @@ function WorkspaceList({
       ) : null}
 
       {workspaces.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon" aria-hidden="true">&lt;/&gt;</div>
+        <div className="r-project-empty">
+          <div className="r-project-empty-icon" aria-hidden="true">&lt;/&gt;</div>
           <h3>No projects added yet</h3>
           <p>Choose an existing local folder or a checked-out Git repository to make it available through MCP.</p>
           <button className="primary-button" type="button" onClick={onAdd} disabled={adding}>
