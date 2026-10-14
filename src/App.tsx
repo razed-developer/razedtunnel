@@ -548,9 +548,9 @@ function App() {
 
     if (activeView === "settings") {
       return (
-        <div className="home-dashboard">
-          <div className="home-intro"><div><span className="home-eyebrow">PREFERENCES</span><h2>Settings</h2></div></div>
-          <div className="home-detail-grid">
+        <div className="r-settings-page">
+          <div className="r-settings-intro"><div><span className="r-settings-eyebrow">PREFERENCES</span><h2>Settings</h2></div></div>
+          <div className="r-settings-grid">
             <StartupPanel />
             <VisualAccessSettings />
           </div>
