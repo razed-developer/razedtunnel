@@ -774,4 +774,35 @@
 :root[data-theme="light"] .r-public-copy:hover:not(:disabled) { background:#dfebfa; }
 @media(max-width:760px) { .r-public-health-grid { grid-template-columns:1fr; } .r-public-mcp-endpoint { flex-wrap:wrap; } }
 
+/* Public MCP details, usage, certificate and management actions. */
+.r-public-details { min-width:0; border-top:1px solid var(--rt-line); }
+.r-public-details summary { padding:12px 0; color:var(--rt-blue); cursor:pointer; font-size:12px; font-weight:600; }
+.r-public-details summary:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+.r-public-details > .r-public-callout,.r-public-details > .r-public-next-step { margin-top:8px; }
+.r-public-details .r-public-provider-links button { min-height:36px; padding:0 12px; border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel); color:var(--rt-blue); font-size:12px; cursor:pointer; }
+.r-public-details .r-public-provider-links button:hover:not(:disabled) { background:var(--rt-hover); border-color:var(--rt-blue); }
+.r-public-details .r-public-provider-links button:disabled { opacity:.5; cursor:not-allowed; }
+.r-public-next-step { padding:14px 16px; border:1px solid var(--rt-line-soft); border-radius:9px; background:var(--rt-panel-2); }
+.r-public-next-step strong { color:var(--rt-text); font-size:12px; line-height:1.5; }
+.r-public-next-step p { margin:8px 0 0; color:var(--rt-text-3); font-size:11px; line-height:1.6; overflow-wrap:anywhere; }
+.r-public-usage { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 14px; border:1px solid var(--rt-line); border-radius:9px; background:var(--rt-panel-2); }
+.r-public-usage > div { display:grid; min-width:0; gap:5px; }
+.r-public-usage span { color:var(--rt-text-3); font-size:11px; }
+.r-public-usage strong { color:var(--rt-text); font-size:11px; font-weight:600; line-height:1.5; overflow-wrap:anywhere; }
+.r-public-usage a { color:var(--rt-blue); font-size:11px; text-decoration:none; white-space:nowrap; }
+.r-public-usage a:hover { text-decoration:underline; }
+.r-public-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.r-public-action { display:inline-flex; min-height:40px; align-items:center; justify-content:center; padding:0 15px; border:1px solid var(--rt-line); border-radius:9px; background:var(--rt-panel-2); color:var(--rt-blue); font:inherit; font-size:12px; font-weight:650; cursor:pointer; }
+.r-public-action:hover:not(:disabled) { border-color:var(--rt-blue); background:var(--rt-hover); }
+.r-public-action.r-public-action-danger { border-color:#6c3841; background:#281c22; color:#e9a3ac; }
+.r-public-action.r-public-action-danger:hover:not(:disabled) { background:#3b222b; }
+.r-public-action:disabled { opacity:.55; cursor:not-allowed; }
+.r-public-action:focus-visible,.r-public-details button:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+:root[data-theme="light"] .r-public-next-step,:root[data-theme="light"] .r-public-usage { background:#f4f7fb; }
+:root[data-theme="light"] .r-public-action.r-public-action-restart { background:#e7f0fd; border-color:#bed5f5; color:#174f9a; }
+:root[data-theme="light"] .r-public-action.r-public-action-restart:hover:not(:disabled) { background:#d5e6fc; }
+:root[data-theme="light"] .r-public-action.r-public-action-danger { background:#fff1f2; border-color:#edc1c7; color:#a12c3b; }
+:root[data-theme="light"] .r-public-action.r-public-action-danger:hover:not(:disabled) { background:#fbdfe3; }
+@media(max-width:650px) { .r-public-usage { align-items:flex-start; flex-direction:column; } }
+
 /* 06. Settings (pending) */
