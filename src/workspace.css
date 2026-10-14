@@ -2953,56 +2953,6 @@ body {
   }
 }
 
-/* Managed public MCP connection */
-.public-tunnel-panel .public-health-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.public-mcp-endpoint {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.public-mcp-endpoint > div {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-}
-
-.public-mcp-endpoint code {
-  overflow-wrap: anywhere;
-}
-
-.public-mcp-endpoint small {
-  color: #758594;
-  font-size: 10px;
-}
-
-.public-connection-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-@media (max-width: 980px) {
-  .public-tunnel-panel .public-health-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .public-tunnel-panel .public-health-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .public-mcp-endpoint {
-    align-items: stretch;
-    flex-direction: column;
-  }
-}
-
 /* Checkpoints: match the contained card layout used by Changes & history */
 .checkpoint-manager {
   padding: 20px 22px 22px !important;
