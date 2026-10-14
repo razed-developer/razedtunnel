@@ -114,8 +114,8 @@ export default function VisualAccessPanel() {
   }
 
   return (
-    <section className="home-card visual-access-panel">
-      <div className="home-section-title">
+    <section className="r-visual-panel">
+      <div className="r-home-section-title">
         <div>
           <h3>Visual Access <abbr title="Desktop Access is global for approved projects and allows interaction as well as screenshots. Captures are on demand, with no background recording or desktop fallback.">ⓘ</abbr></h3>
           
@@ -123,7 +123,7 @@ export default function VisualAccessPanel() {
         <button type="button" disabled={busy} onClick={() => void refresh()}>Refresh apps</button>
       </div>
       
-      <div className="home-detail-row">
+      <div className="r-home-detail-row">
         <span>Desktop Access <abbr title="Enabling Desktop Access permits control as well as screenshots for approved projects.">ⓘ</abbr></span>
         <button type="button" disabled={busy} onClick={() => void toggle()}
           aria-pressed={enabled}>{busy ? "Working…" : enabled ? "Enabled — turn off" : "Disabled — enable"}</button>
@@ -131,25 +131,25 @@ export default function VisualAccessPanel() {
       {error ? <p role="alert">{error}</p> : null}
       <h4>Detected applications ({apps.length})</h4>
       {apps.length === 0 ? <p>No applications detected. Open Notepad and select Refresh apps.</p> : (
-        <div className="visual-access-apps">
+        <div className="r-visual-apps">
           {apps.map((app) => (
-            <div key={app.id}>
-            <div className="home-detail-row">
+            <div className="r-visual-app-row" key={app.id}>
+            <div className="r-home-detail-row">
               <span>{app.name}</span>
-              <span className="home-muted">{app.windowCount} window{app.windowCount === 1 ? "" : "s"} · {app.accessibility ? "Accessible" : "Limited accessibility"}</span>
+              <span className="r-home-muted">{app.windowCount} window{app.windowCount === 1 ? "" : "s"} · {app.accessibility ? "Accessible" : "Limited accessibility"}</span>
               <button type="button" aria-expanded={expandedApp === app.id} onClick={() => setExpandedApp(expandedApp === app.id ? null : app.id)}>Windows ({windows.filter((entry) => entry.applicationId === app.id).length})</button>
               <button type="button" disabled={busy || capturingId !== null} onClick={() => void changeIgnored({ applicationId: app.id, name: app.name, ignored: true })}>Ignore</button>
               <button type="button" disabled={busy || capturingId !== null} onClick={() => void inspectIdentity(app)}>Identify</button>
               <button type="button" disabled={!enabled || busy || capturingId !== null} onClick={() => void capture(app)}>{capturingId === app.id ? "Capturing…" : "Capture Now"}</button>
             </div>
-            {expandedApp === app.id ? <div style={{ paddingLeft: 16 }}>{windows.filter((entry) => entry.applicationId === app.id).map((entry, index) => <p key={`${entry.applicationId}-${index}`}>{entry.title}</p>)}</div> : null}
+            {expandedApp === app.id ? <div className="r-visual-app-windows">{windows.filter((entry) => entry.applicationId === app.id).map((entry, index) => <p key={`${entry.applicationId}-${index}`}>{entry.title}</p>)}</div> : null}
             </div>
           ))}
         </div>
       )}
       <div className="visual-access-ignored-settings">
         <button type="button" aria-expanded={showIgnored} onClick={() => setShowIgnored(!showIgnored)}>{showIgnored ? "Hide" : "Manage"} ignored apps ({ignoredApps.length})</button>
-        {showIgnored ? <div><h4>Ignored applications <abbr title="Ignored applications stay hidden after restarts; this does not revoke Desktop Access.">ⓘ</abbr></h4>{ignoredApps.length === 0 ? <p>No ignored applications.</p> : ignoredApps.map((entry) => <div className="home-detail-row" key={entry.executablePath}><span>{entry.name} <small style={{ overflowWrap: "anywhere" }}>{entry.executablePath}</small></span><button type="button" disabled={busy} onClick={() => void changeIgnored({ executablePath: entry.executablePath, ignored: false })}>Restore</button></div>)}</div> : null}
+        {showIgnored ? <div><h4>Ignored applications <abbr title="Ignored applications stay hidden after restarts; this does not revoke Desktop Access.">ⓘ</abbr></h4>{ignoredApps.length === 0 ? <p>No ignored applications.</p> : ignoredApps.map((entry) => <div className="r-home-detail-row" key={entry.executablePath}><span>{entry.name} <small style={{ overflowWrap: "anywhere" }}>{entry.executablePath}</small></span><button type="button" disabled={busy} onClick={() => void changeIgnored({ executablePath: entry.executablePath, ignored: false })}>Restore</button></div>)}</div> : null}
       </div>
       {identity ? <p><strong>Executable identity for {identity.name}:</strong> <code style={{ overflowWrap: "anywhere" }}>{identity.path}</code></p> : null}
       {preview ? <div className="visual-access-preview"><h4>Preview: {previewName}</h4><p>{preview.width} × {preview.height} · {(preview.sizeBytes / 1024).toFixed(0)} KB · Local window capture</p><img src={`data:image/png;base64,${preview.dataBase64}`} alt={`Captured window: ${previewName}`} style={{ display: "block", width: "100%", maxWidth: 900, height: "auto", borderRadius: 8, border: "1px solid var(--border, #d1d5db)" }} /><button type="button" onClick={() => setPreview(null)}>Clear preview</button></div> : null}
