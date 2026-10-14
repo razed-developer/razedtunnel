@@ -16,6 +16,7 @@ mod connection;
 mod continuity;
 mod desktop_control;
 mod desktop_approvals;
+mod desktop_approval_commands;
 mod visual_access_commands;
 mod direct_https;
 mod environment;
@@ -224,6 +225,8 @@ pub fn run() {
         .manage(AppState::default())
         .invoke_handler({
             let handler: fn(tauri::ipc::Invoke<tauri::Wry>) -> bool = tauri::generate_handler![
+                desktop_approval_commands::list_pending_approval_requests,
+                desktop_approval_commands::deny_pending_approval_request,
                 workspace_management_commands::select_workspace,
                 workspace_management_commands::list_workspaces,
                 workspace_management_commands::open_workspace_folder,
