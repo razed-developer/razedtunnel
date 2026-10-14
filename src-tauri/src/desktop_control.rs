@@ -109,6 +109,24 @@ impl PermissionStore {
     }
 }
 
+// File-manager UI actions cannot prove that the target is inside an approved workspace.
+fn protected_file_manager(name: &str) -> bool {
+    let name = name.trim().to_ascii_lowercase();
+    ["explorer.exe", "file explorer", "onecommander", "total commander", "freecommander", "directory opus", "double commander", "files app", "dolphin", "nautilus", "thunar", "nemo", "finder"]
+        .iter()
+        .any(|item| name == *item || name.starts_with(&format!("{item} ")))
+}
+
+fn require_safe_desktop_mutation(app: &AppHandle, application_id: &str) -> Result<(), String> {
+    let applications = discovered(app)?;
+    let target = applications.iter().find(|item| item.id == application_id)
+        .ok_or_else(|| "Desktop application is no longer available; refresh the application list.".to_string())?;
+    if protected_file_manager(&target.name) {
+        return Err("AI file-manager desktop actions are blocked until path-scoped approvals exist. Use workspace-scoped file tools instead.".to_string());
+    }
+    Ok(())
+}
+
 fn protected_application(id: &str) -> bool {
     id.to_ascii_lowercase().contains("repotunnel")
 }
@@ -840,6 +858,7 @@ pub(crate) fn semantic_sequence(
     steps: &[DesktopSemanticSequenceStep],
 ) -> Result<Value, String> {
     require_enabled(app, workspace_id, application_id)?;
+    require_safe_desktop_mutation(app, application_id)?;
     let plan = prepare_semantic_sequence(workspace_id, application_id, snapshot_id, steps)?;
     let result = {
         #[cfg(windows)]
@@ -888,6 +907,8 @@ pub(crate) fn action(
     if !matches!(action, "activate" | "click" | "type" | "key" | "scroll") {
         return Err("Desktop action must be activate, click, type, key, or scroll.".to_string());
     }
+
+    if action != "activate" { require_safe_desktop_mutation(app, application_id)?; }
 
     #[cfg(windows)]
     {
@@ -1009,11 +1030,21 @@ mod tests {
     use serde_json::json;
 
     use super::{
-        desktop_document_identity, prepare_semantic_sequence, protected_application,
+        protected_file_manager, desktop_document_identity, prepare_semantic_sequence, protected_application,
         semantic_backend_id, semantic_drafts_from_inspection, DesktopSemanticSequenceStep,
         PermissionStore, GLOBAL_PERMISSION,
     };
     use crate::semantic::{self, SemanticNodeDraft, SemanticSnapshotInput};
+
+    #[test]
+    fn file_managers_are_blocked_from_unscoped_desktop_mutations() {
+        for name in ["File Explorer", "OneCommander", "Total Commander", "Directory Opus", "explorer.exe"] {
+            assert!(protected_file_manager(name), "{name}");
+        }
+        for name in ["Visual Studio Code", "Notepad", "Calculator"] {
+            assert!(!protected_file_manager(name), "{name}");
+        }
+    }
 
     #[test]
     fn normalizes_at_spi_elements_into_shared_semantic_drafts() {
