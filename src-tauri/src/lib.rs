@@ -15,6 +15,7 @@ mod chatgpt_bridge;
 mod connection;
 mod continuity;
 mod desktop_control;
+mod desktop_approvals;
 mod visual_access_commands;
 mod direct_https;
 mod environment;
