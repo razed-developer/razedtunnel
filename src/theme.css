@@ -76,18 +76,6 @@
 @media(max-width:1300px) { .page-content.home-page-content { width:calc(100% - 40px) !important; } }
 @media(max-width:1100px) { .page-content.home-page-content { width:calc(100% - 24px) !important; } }
 
-
-/* Live activity feed */
-.activity-feed { padding:21px; }
-.activity-entry { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:13px 0; border-top:1px solid var(--rt-line-soft); font-size:11px; color:var(--rt-text-3); }
-.activity-entry > div { min-width:0; }
-.activity-entry strong { display:block; color:var(--rt-text); font-size:12px; font-weight:600; overflow-wrap:anywhere; }
-.activity-entry p { margin:5px 0 0; color:var(--rt-text-3); }
-.activity-entry > span { text-transform:capitalize; border:1px solid var(--rt-line); border-radius:20px; padding:4px 8px; white-space:nowrap; }
-.activity-empty { padding:24px 0; color:var(--rt-text-3); font-size:12px; }
-.activity-disclaimer { border-top:1px solid var(--rt-line-soft); margin:0; padding-top:13px; font-size:11px; color:var(--rt-text-4); }
-
-
 /* Muted semantic accents for the monitoring dashboard.
    Values use theme-local tokens so colour communicates actual state. */
 :root {
