@@ -252,8 +252,8 @@ function PublicTunnelPanel({
           </div>
         </form>
       ) : (
-        <div className="connected-card public-connected-card">
-          <div className="managed-client-summary public-health-grid">
+        <div className="r-public-connected">
+          <div className="r-public-health-grid">
             <div><span>Provider</span><strong>{providerLabel(status.provider)}</strong></div>
             <div><span>Local gateway</span><strong>{gatewayRunning ? "Online" : "Offline"}</strong></div>
             {status.provider === "direct" ? (
@@ -269,13 +269,13 @@ function PublicTunnelPanel({
           </div>
 
           {status.mcpUrl ? (
-            <div className="runtime-endpoint public-mcp-endpoint">
+            <div className="r-public-mcp-endpoint">
               <div>
                 <span>{status.provider === "direct" ? "Direct MCP URL" : "Stable MCP URL"}</span>
                 <code>{status.mcpUrl}</code>
                 <small>{activity}</small>
               </div>
-              <button type="button" className="secondary-button" onClick={() => void copyMcpUrl()}>
+              <button type="button" className="r-public-copy" onClick={() => void copyMcpUrl()}>
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
