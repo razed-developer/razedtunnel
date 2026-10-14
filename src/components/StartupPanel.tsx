@@ -28,9 +28,9 @@ export default function StartupPanel() {
   }
 
   return (
-    <section className="home-card">
-      <div className="home-section-title"><div><h3>Startup <abbr title="Launch at sign-in starts quietly in the tray and requires an installed release build.">ⓘ</abbr></h3></div></div>
-      <label>
+    <section className="r-settings-card">
+      <div className="r-settings-heading"><div><h3>Startup <abbr title="Launch at sign-in starts quietly in the tray and requires an installed release build.">ⓘ</abbr></h3></div></div>
+      <label className="r-settings-toggle">
         <input
           type="checkbox"
           checked={enabled ?? false}
@@ -39,7 +39,7 @@ export default function StartupPanel() {
         />
         {" "}Launch RazedTunnel when I sign in
       </label>
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <p className="r-settings-error" role="alert">{error}</p> : null}
     </section>
   );
 }
