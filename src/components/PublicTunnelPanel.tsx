@@ -125,10 +125,10 @@ function PublicTunnelPanel({
       </div>
 
       {!showingConfiguredProvider ? (
-        <form className="connection-form public-provider-form" onSubmit={handleSubmit}>
+        <form className="r-public-provider-form" onSubmit={handleSubmit}>
           {provider === "direct" ? (
             <>
-              <div className="connection-callout">
+              <div className="r-public-callout">
                 <strong>Direct HTTPS · no relay provider</strong>
                 <p>
                   RepoTunnel terminates HTTPS on this computer and proxies only to its loopback MCP gateway.
@@ -140,7 +140,7 @@ function PublicTunnelPanel({
                   your ISP supplies a routable IPv4/IPv6 and the router/firewall path is open.
                 </p>
               </div>
-              <label className="field-label" htmlFor="direct-public-url">
+              <label className="r-public-field" htmlFor="direct-public-url">
                 Public HTTPS address
                 <input
                   id="direct-public-url"
@@ -158,7 +158,7 @@ function PublicTunnelPanel({
             </>
           ) : provider === "ngrok" ? (
             <>
-              <div className="connection-callout">
+              <div className="r-public-callout">
                 <strong>ngrok · fastest hosted fallback</strong>
                 <p>
                   Paste your own ngrok authtoken once. RepoTunnel embeds the connection and reuses the assigned
@@ -168,7 +168,7 @@ function PublicTunnelPanel({
                   Open ngrok authtoken page
                 </a>
               </div>
-              <label className="field-label" htmlFor="public-provider-credential">
+              <label className="r-public-field" htmlFor="public-provider-credential">
                 ngrok authtoken
                 <input
                   id="public-provider-credential"
@@ -185,25 +185,25 @@ function PublicTunnelPanel({
             </>
           ) : (
             <>
-              <div className="connection-callout">
+              <div className="r-public-callout">
                 <strong>Cloudflare Tunnel · stable named fallback</strong>
                 <p>
                   Create a named Cloudflare Tunnel and published hostname, then point its Service URL to
                   <code> http://localhost:{status.cloudflareOriginPort}</code>. RepoTunnel runs <code>cloudflared</code>
                   with the token in its environment, never on the command line.
                 </p>
-                <div className="provider-link-row">
+                <div className="r-public-provider-links">
                   <a href="https://developers.cloudflare.com/tunnel/downloads/" target="_blank" rel="noreferrer">Install cloudflared</a>
                   <a href="https://developers.cloudflare.com/tunnel/setup/" target="_blank" rel="noreferrer">Cloudflare setup guide</a>
                   <a href="https://dash.cloudflare.com/" target="_blank" rel="noreferrer">Cloudflare dashboard</a>
                 </div>
-                <small className={status.cloudflaredAvailable ? "provider-ready" : "provider-warning"}>
+                <small className={status.cloudflaredAvailable ? "r-public-provider-ready" : "r-public-provider-warning"}>
                   {status.cloudflaredAvailable
                     ? "cloudflared detected on this computer."
                     : "cloudflared is not detected yet. Install it before connecting."}
                 </small>
               </div>
-              <label className="field-label" htmlFor="public-provider-credential">
+              <label className="r-public-field" htmlFor="public-provider-credential">
                 Cloudflare Tunnel token
                 <input
                   id="public-provider-credential"
@@ -217,7 +217,7 @@ function PublicTunnelPanel({
                   required
                 />
               </label>
-              <label className="field-label" htmlFor="cloudflare-public-url">
+              <label className="r-public-field" htmlFor="cloudflare-public-url">
                 Public hostname
                 <input
                   id="cloudflare-public-url"
@@ -234,7 +234,7 @@ function PublicTunnelPanel({
             </>
           )}
 
-          <div className="connection-form-footer">
+          <div className="r-public-form-footer">
             <span>
               {status.configured
                 ? `Switch from ${providerLabel(status.provider)} only after the new local connection starts.`
@@ -243,7 +243,7 @@ function PublicTunnelPanel({
                   : "No RepoTunnel developer credential is bundled."}
             </span>
             <button
-              className="primary-button"
+              className="r-public-submit"
               type="submit"
               disabled={busy || !canSubmit || (provider === "cloudflare" && !status.cloudflaredAvailable)}
             >
@@ -284,13 +284,13 @@ function PublicTunnelPanel({
           {status.provider === "direct" ? (
             <details className="public-overview-details">
               <summary>Direct HTTPS setup and certificate</summary>
-              <div className="connection-callout">
+              <div className="r-public-callout">
               <strong>Direct network path</strong>
               <p>
                 Router mappings: public <code>443 → {status.directHttpsPort}</code> and public <code>80 → {status.directHttpChallengePort}</code>
                 on this computer. RepoTunnel&apos;s actual MCP gateway remains localhost-only on <code>{status.originPort ?? status.cloudflareOriginPort}</code>.
               </p>
-              <small className={status.tlsTrusted ? "provider-ready" : "provider-warning"}>
+              <small className={status.tlsTrusted ? "r-public-provider-ready" : "r-public-provider-warning"}>
                 {status.tlsTrusted
                   ? "A trusted certificate is loaded."
                   : status.certbotAvailable
@@ -298,7 +298,7 @@ function PublicTunnelPanel({
                     : `Local TLS is working with a self-signed test certificate. Certbot 5.4+ is not detected${status.certbotVersion ? ` (${status.certbotVersion})` : ""}; install it before requesting a Let's Encrypt IP certificate.`}
               </small>
               {!status.tlsTrusted && status.certbotAvailable ? (
-                <div className="provider-link-row">
+                <div className="r-public-provider-links">
                   <button className="secondary-button" type="button" onClick={() => void onProvisionCertificate()} disabled={busy || !status.localReady}>
                     {busy ? "Working…" : "Get trusted IP certificate"}
                   </button>
