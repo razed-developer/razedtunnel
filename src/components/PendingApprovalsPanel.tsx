@@ -1,3 +1,4 @@
+import "./PendingApprovalsPanel.css";
 import { useCallback, useEffect, useState } from "react";
 import { denyPendingApprovalRequest, listPendingApprovalRequests, type PendingApprovalRequest } from "../lib/backend";
 import { NavIcon } from "./AppSidebar";
