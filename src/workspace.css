@@ -6815,7 +6815,6 @@ body,
 .terminal-shell-actions button,
 .process-actions button { min-height: 28px !important; font-size: 10px !important; }
 .developer-dock-tabs button { min-height: 29px !important; font-size: 10.5px !important; }
-.page-header h1 { font-size: 15px !important; }
 .toolbar-status,
 .toolbar-paused { font-size: 10.5px !important; }
 .workspace-card,
@@ -7436,14 +7435,6 @@ body,
   }
 }
 
-.app-sidebar {
-  padding: 12px 10px 9px;
-  border-right-color: #1d2a35;
-  background:
-    linear-gradient(180deg, rgba(16,25,34,.98), rgba(10,16,23,.99)),
-    #0b1118;
-}
-
 .sidebar-brand {
   grid-template-columns: 36px minmax(0, 1fr);
   min-height: 58px;
@@ -7531,13 +7522,6 @@ body,
     radial-gradient(circle at 78% -15%, rgba(54,105,153,.08), transparent 34%),
     #090f15;
 }
-.page-header {
-  min-height: 52px;
-  padding: 0 14px 0 6px;
-  border-bottom-color: #1e2b35;
-  background: rgba(10,16,22,.94);
-  box-shadow: 0 1px rgba(255,255,255,.012) inset;
-}
 .page-tab {
   min-width: 112px;
   gap: 9px;
@@ -7557,7 +7541,6 @@ body,
 .toolbar-status { color: #9eacb8; }
 
 .main-view button:focus-visible,
-.app-sidebar button:focus-visible,
 .project-rail button:focus-visible,
 .main-view input:focus-visible,
 .main-view textarea:focus-visible,
@@ -9031,7 +9014,6 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 .main-view button:focus-visible,
-.app-sidebar button:focus-visible,
 .project-rail button:focus-visible,
 .main-view input:focus-visible,
 .main-view textarea:focus-visible,
