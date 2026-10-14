@@ -8,11 +8,9 @@ type AppHeaderProps = {
   gatewayRunning: boolean;
   connectionReady: boolean;
   aiAccessPaused: boolean;
-  focusMode: boolean;
-  onToggleFocusMode: () => void;
 };
 
-function AppHeader({ view, themeControl, gatewayRunning, connectionReady, aiAccessPaused, focusMode, onToggleFocusMode }: AppHeaderProps) {
+function AppHeader({ view, themeControl, gatewayRunning, connectionReady, aiAccessPaused }: AppHeaderProps) {
   return (
     <header className="r-page-header">
       <div className="r-page-tab active">
@@ -21,15 +19,6 @@ function AppHeader({ view, themeControl, gatewayRunning, connectionReady, aiAcce
       </div>
       <div className="r-page-statuses" aria-label="Connection status">
         {themeControl}
-        <button
-          type="button"
-          className={`r-focus-mode-toggle ${focusMode ? "active" : ""}`}
-          onClick={onToggleFocusMode}
-          title="Toggle Focus Mode (Ctrl+Shift+Enter)"
-        >
-          <span aria-hidden="true">{focusMode ? "↙" : "↗"}</span>
-          <span>{focusMode ? "Exit focus" : "Focus"}</span>
-        </button>
         {aiAccessPaused ? (
           <span className="r-toolbar-paused" title="MCP project access is blocked until you resume AI access">
             <NavIcon name="pause" size={14} />
