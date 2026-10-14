@@ -25,9 +25,18 @@ fn canonical_existing(path: &Path) -> Result<PathBuf, String> {
     path.canonicalize().map_err(|_| "Approval path must exist and be verifiable.".to_string())
 }
 
+// This capability cannot be constructed by MCP/HTTP request parsing.
+// A future local UI confirmation handler must be the only production caller
+// of the private constructor in this module.
+struct LocalConfirmation { _private: () }
+
+impl LocalConfirmation {
+    fn from_trusted_local_ui() -> Self { Self { _private: () } }
+}
+
 impl ApprovalRegistry {
     /// Only call from a trusted local confirmation handler, never an AI-facing endpoint.
-    pub(crate) fn issue_local(&self, approval: Approval, workspace_root: &Path) -> Result<String, String> {
+    fn issue_local(&self, _confirmation: LocalConfirmation, approval: Approval, workspace_root: &Path) -> Result<String, String> {
         let mut bytes = [0u8; 32];
         getrandom::fill(&mut bytes).map_err(|_| "Secure approval token generation failed.")?;
         let token: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
@@ -37,7 +46,7 @@ impl ApprovalRegistry {
 
     /// Caller must use an unpredictable, collision-resistant token; this registry
     /// intentionally does not generate credentials.
-    pub(crate) fn register(&self, token: String, approval: Approval, workspace_root: &Path) -> Result<(), String> {
+    fn register(&self, token: String, approval: Approval, workspace_root: &Path) -> Result<(), String> {
         if token.len() < 32 || !token.bytes().all(|b| b.is_ascii_alphanumeric()) {
             return Err("Approval token must be an opaque 32+ character alphanumeric value.".into());
         }
@@ -103,13 +112,24 @@ mod tests {
     }
 
     #[test]
+    fn approval_requires_explicit_local_capability() {
+        let temp = tempfile::tempdir().unwrap();
+        let target = temp.path().join("target.txt");
+        std::fs::write(&target, b"safe").unwrap();
+        let approval = Approval { workspace_id: "w".into(), path: target, operation: FileOperation::Write };
+        let registry = ApprovalRegistry::default();
+        let token = registry.issue_local(LocalConfirmation::from_trusted_local_ui(), approval.clone(), temp.path()).unwrap();
+        assert!(registry.consume(&token, &approval, temp.path()).is_ok());
+    }
+
+    #[test]
     fn local_tokens_are_random_and_single_use() {
         let temp = tempfile::tempdir().unwrap();
         let target = temp.path().join("file.txt");
         std::fs::write(&target, b"safe").unwrap();
         let approval = Approval { workspace_id: "w".into(), path: target, operation: FileOperation::Write };
         let registry = ApprovalRegistry::default();
-        let first = registry.issue_local(approval.clone(), temp.path()).unwrap();
+        let first = registry.issue_local(LocalConfirmation::from_trusted_local_ui(), approval.clone(), temp.path()).unwrap();
         let second = registry.issue_local(approval.clone(), temp.path()).unwrap();
         assert_eq!(first.len(), 64);
         assert_ne!(first, second);
