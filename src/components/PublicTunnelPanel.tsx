@@ -96,15 +96,15 @@ function PublicTunnelPanel({
     : credentialValid && (provider === "ngrok" || publicUrlValid);
 
   return (
-    <section className="connection-panel public-tunnel-panel home-card public-overview" aria-labelledby="public-tunnel-title">
-      <div className="connection-heading">
+    <section className="r-public-overview" aria-labelledby="public-tunnel-title">
+      <div className="r-public-heading">
         <div>
           
           <h2 id="public-tunnel-title">Public MCP Endpoint <abbr title="Secure remote access to the localhost MCP gateway. Direct HTTPS avoids a relay; ngrok and Cloudflare are alternatives.">ⓘ</abbr></h2>
 
         </div>
-        <span className={`connection-state ${status.ready ? "ready" : status.running ? "starting" : ""}`}>
-          <span className="status-dot" aria-hidden="true" />
+        <span className={`r-public-state ${status.ready ? "ready" : status.running ? "starting" : ""}`}>
+          <span className="r-public-state-dot" aria-hidden="true" />
           {showingConfiguredProvider ? publicStateLabel : "Switch provider"}
         </span>
       </div>
