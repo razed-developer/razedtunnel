@@ -12,7 +12,7 @@ use tauri::AppHandle;
 use tokio::sync::watch;
 
 use crate::{
-    ai_workspace, connection, direct_https, gateway,
+    ai_workspace, connection, desktop_approvals, direct_https, gateway,
     models::{ChatConnectionStatus, PublicTunnelStatus},
     public_tunnel::{self, PublicTunnelProvider},
 };
@@ -38,6 +38,7 @@ struct PublicTunnelState {
 #[derive(Default)]
 pub(crate) struct AppState {
     pub(crate) ai_workspace: ai_workspace::AiWorkspaceState,
+    pub(crate) approval_requests: desktop_approvals::ApprovalRequests,
     gateway: Mutex<Option<GatewayRuntime>>,
     tunnel: Mutex<TunnelState>,
     public_tunnel: Mutex<PublicTunnelState>,
