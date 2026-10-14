@@ -805,4 +805,23 @@
 :root[data-theme="light"] .r-public-action.r-public-action-danger:hover:not(:disabled) { background:#fbdfe3; }
 @media(max-width:650px) { .r-public-usage { align-items:flex-start; flex-direction:column; } }
 
+/* Public MCP panel shell and status badge — final isolated panel selectors. */
+.r-public-overview { box-sizing:border-box; min-width:0; padding:24px; border:1px solid var(--rt-line); border-radius:12px; background:var(--rt-panel); color:var(--rt-text); }
+.r-public-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:18px; }
+.r-public-heading > div:first-child { min-width:0; flex:1 1 260px; }
+.r-public-heading h2 { margin:0; color:var(--rt-text); font-size:17px; line-height:1.35; font-weight:650; }
+.r-public-heading abbr[title] { margin-left:5px; color:var(--rt-text-3); text-decoration:none; cursor:help; font-size:13px; }
+.r-public-state { display:inline-flex; align-items:center; gap:7px; min-height:28px; padding:4px 10px; border:1px solid var(--rt-line); border-radius:7px; background:var(--rt-panel-2); color:var(--rt-text-2); font-size:11px; font-weight:600; white-space:nowrap; }
+.r-public-state-dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; background:#838a95; }
+.r-public-state.ready { border-color:#315c45; background:#1b2b23; color:#91d5a8; }
+.r-public-state.ready .r-public-state-dot { background:#70d79a; }
+.r-public-state.starting { border-color:#695333; background:#302719; color:#edc580; }
+.r-public-state.starting .r-public-state-dot { background:#e7b75e; }
+:root[data-theme="light"] .r-public-overview { background:#fff; border-color:var(--rt-line); }
+:root[data-theme="light"] .r-public-state.ready { background:#e8f7f0; border-color:#b9e2ce; color:#16704f; }
+:root[data-theme="light"] .r-public-state.ready .r-public-state-dot { background:#168666; }
+:root[data-theme="light"] .r-public-state.starting { background:#fff4df; border-color:#e7cf9d; color:#815b20; }
+:root[data-theme="light"] .r-public-state.starting .r-public-state-dot { background:#b98532; }
+@media(max-width:650px) { .r-public-overview { padding:18px; } .r-public-heading { align-items:flex-start; } }
+
 /* 06. Settings (pending) */
