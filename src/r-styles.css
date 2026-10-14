@@ -718,4 +718,14 @@
 
 
 
+/* Public MCP Endpoint — provider selector, first isolated subcomponent. */
+.r-public-provider-switch { display:inline-flex; max-width:100%; flex-wrap:wrap; gap:3px; margin:14px 0 18px; padding:3px; border:1px solid var(--rt-line); border-radius:9px; background:var(--rt-panel-2); }
+.r-public-provider-switch button { min-height:32px; padding:0 12px; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--rt-text-2); font:inherit; font-size:11px; cursor:pointer; }
+.r-public-provider-switch button:hover:not(:disabled):not(.active) { background:var(--rt-hover); }
+.r-public-provider-switch button.active { background:rgba(75,151,255,.12); color:var(--rt-blue); border-color:rgba(75,151,255,.3); font-weight:650; }
+.r-public-provider-switch button span { margin-left:7px; color:#72bc91; font-size:9px; text-transform:uppercase; }
+.r-public-provider-switch button:disabled { opacity:.6; cursor:default; }
+.r-public-provider-switch button:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+:root[data-theme="light"] .r-public-provider-switch button.active { background:#e5effe; color:#185bb4; border-color:#b8d2f7; }
+
 /* 06. Settings (pending) */
