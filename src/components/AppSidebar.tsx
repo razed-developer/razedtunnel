@@ -96,24 +96,24 @@ function AppSidebar({
   onNavigate,
 }: AppSidebarProps) {
   return (
-    <aside className="app-sidebar">
-      <div className="sidebar-brand">
-        <RepoTunnelLogo size={39} className="sidebar-product-logo" />
-        <div className="sidebar-brand-copy">
+    <aside className="r-app-sidebar">
+      <div className="r-sidebar-brand">
+        <RepoTunnelLogo size={39} className="r-sidebar-product-logo" />
+        <div className="r-r-sidebar-brand-copy">
           <strong>RazedTunnel</strong>
           <span>Project access gateway</span>
         </div>
       </div>
 
-      <nav className="sidebar-nav" aria-label="RazedTunnel navigation">
+      <nav className="r-sidebar-nav" aria-label="RazedTunnel navigation">
         {navGroups.map((group) => (
-          <div className="sidebar-nav-group" key={group.label}>
-            <div className="sidebar-nav-group-label">{group.label}</div>
+          <div className="r-r-sidebar-nav-group" key={group.label}>
+            <div className="r-r-r-sidebar-nav-group-label">{group.label}</div>
             {group.items.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                className={`sidebar-nav-item ${activeView === item.id ? "active" : ""}`}
+                className={`r-r-sidebar-nav-item ${activeView === item.id ? "active" : ""}`}
                 onClick={() => onNavigate(item.id)}
               >
                 <NavIcon name={item.icon} />
