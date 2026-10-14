@@ -824,4 +824,26 @@
 :root[data-theme="light"] .r-public-state.starting .r-public-state-dot { background:#b98532; }
 @media(max-width:650px) { .r-public-overview { padding:18px; } .r-public-heading { align-items:flex-start; } }
 
+/* Connections — Visual Access card and detected application list. */
+.r-visual-panel { min-width:0; padding:22px 24px; border:1px solid var(--rt-line); border-radius:12px; background:var(--rt-panel); color:var(--rt-text); }
+.r-visual-panel .r-home-section-title { margin-bottom:18px; }
+.r-visual-panel abbr[title] { margin-left:5px; color:var(--rt-text-3); font-size:.85em; text-decoration:none; cursor:help; }
+.r-visual-panel > h4 { margin:24px 0 10px; color:var(--rt-text); font-size:13px; }
+.r-visual-panel button { padding:8px 12px; border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel-2); color:var(--rt-text); font:inherit; font-size:12px; cursor:pointer; white-space:nowrap; }
+.r-visual-panel button:hover:not(:disabled) { border-color:var(--rt-blue); background:var(--rt-hover); }
+.r-visual-panel button:disabled { cursor:not-allowed; opacity:.55; }
+.r-visual-panel button:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+.r-visual-apps { margin:12px 0 18px; }
+.r-visual-app-row { padding-inline:12px; border-bottom:1px solid var(--rt-line); border-radius:8px; transition:background-color 140ms ease; }
+.r-visual-app-row:last-child { border-bottom:0; }
+.r-visual-app-row:nth-child(even) { background:color-mix(in srgb,var(--rt-text) 5%,transparent); }
+.r-visual-app-row:hover { background:color-mix(in srgb,var(--rt-blue) 9%,transparent); }
+.r-visual-app-row > .r-home-detail-row { display:flex; align-items:center; flex-wrap:wrap; gap:10px 12px; padding:13px 0; }
+.r-visual-app-row > .r-home-detail-row > span:first-child { flex:1 1 190px; min-width:0; overflow-wrap:anywhere; font-weight:600; }
+.r-visual-app-row > .r-home-detail-row > span.r-home-muted { flex:1 1 155px; min-width:0; font-weight:400; }
+.r-visual-app-windows { padding:0 0 12px 16px; color:var(--rt-text-2); font-size:11px; overflow-wrap:anywhere; }
+.r-visual-app-windows p { margin:6px 0; }
+@media(max-width:650px) { .r-visual-panel { padding:18px; } }
+@media(prefers-reduced-motion:reduce) { .r-visual-app-row { transition:none; } }
+
 /* 06. Settings (pending) */
