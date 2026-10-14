@@ -614,17 +614,8 @@ function App() {
             onForget={handlePublicTunnelForget}
           />
           <VisualAccessPanel />
-          <details className="connection-advanced-details">
-            <summary>Advanced: OpenAI Secure Tunnel</summary>
-          <ChatConnectionPanel
-            status={connectionStatus}
-            gatewayRunning={gatewayStatus.running}
-            busy={connectionBusy}
-            aiAccessPaused={aiAccessPaused}
-            onConnect={handleChatConnect}
-            onDisconnect={handleChatDisconnect}
-          />
-          </details>
+          {/* Legacy OpenAI Secure Tunnel UI intentionally hidden.
+              The existing backend integration remains available for future review. */}
         </div>
       );
     }
