@@ -663,6 +663,29 @@
 @media(max-width:1050px) { .r-project-policy-controls { grid-template-columns:1fr; } }
 @media(max-width:700px) { .r-project-card { padding:18px; grid-template-columns:44px minmax(0,1fr); } }
 
+/* Projects Git clone panel and boundary notice. */
+.r-project-section { min-width:0; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+.r-project-git-panel { display:flex; align-items:flex-start; gap:12px; margin-top:16px; padding:16px 18px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
+.r-project-git-panel > div { min-width:0; width:100%; }
+.r-project-git-panel strong { display:block; color:var(--rt-text); font-size:13px; }
+.r-project-git-panel p { margin:8px 0; color:var(--rt-text-3); font-size:12px; line-height:1.55; }
+.r-project-git-panel form { display:grid; gap:8px; margin-top:12px; }
+.r-project-git-panel label { color:var(--rt-text-2); font-size:12px; font-weight:600; }
+.r-project-git-panel input { box-sizing:border-box; width:100%; min-height:38px; padding:8px 11px; border:1px solid var(--rt-line); border-radius:8px; background:var(--rt-panel); color:var(--rt-text); font:inherit; font-size:12px; }
+.r-project-git-panel input:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+.r-project-git-panel button { min-height:36px; width:fit-content; padding:0 12px; border:1px solid #293a47; border-radius:8px; background:#111a22; color:var(--rt-text-2); font-size:12px; cursor:pointer; }
+.r-project-git-panel button:hover:not(:disabled) { border-color:#3b5264; background:#17232d; color:#edf3f7; }
+.r-project-git-panel button:disabled { opacity:.55; cursor:not-allowed; }
+.r-project-git-panel [role="alert"] { color:var(--home-red); overflow-wrap:anywhere; }
+.r-project-security-note { display:flex; align-items:center; gap:9px; margin-top:16px; padding:8px 2px; background:transparent; }
+.r-project-security-note-icon { display:grid; flex:0 0 17px; width:17px; height:17px; place-items:center; border:1px solid rgba(101,185,138,.25); border-radius:50%; color:#77af8c; font-size:9px; }
+.r-project-security-note strong { color:var(--rt-text-2); font-size:11px; font-weight:600; line-height:1.4; }
+.r-project-security-note p { margin:3px 0 0; color:var(--rt-text-3); font-size:10.5px; line-height:1.5; }
+:root[data-theme="light"] .r-project-git-panel { background:#f4f7fb; }
+:root[data-theme="light"] .r-project-git-panel button { background:#e7f0fd; border-color:#bed5f5; color:#174f9a; }
+:root[data-theme="light"] .r-project-git-panel button:hover:not(:disabled) { background:#d9e8fc; }
+@media(max-width:700px) { .r-project-git-panel { padding:14px; } .r-project-security-note { align-items:flex-start; } }
+
 /* 05. Connections (pending) */
 
 /* 06. Settings (pending) */
