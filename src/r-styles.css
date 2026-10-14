@@ -686,6 +686,36 @@
 :root[data-theme="light"] .r-project-git-panel button:hover:not(:disabled) { background:#d9e8fc; }
 @media(max-width:700px) { .r-project-git-panel { padding:14px; } .r-project-security-note { align-items:flex-start; } }
 
-/* 05. Connections (pending) */
+/* 05. Connections — Local Gateway card */
+.r-gateway-overview { min-width:0; padding:24px; }
+.r-gateway-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+.r-gateway-heading h3 { margin:0; font-size:15px; color:var(--rt-text); }
+.r-gateway-overview abbr[title] { color:var(--rt-text-3); text-decoration:none; cursor:help; margin-left:4px; }
+.r-gateway-endpoint { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 16px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
+.r-gateway-endpoint > div { display:flex; min-width:0; flex-direction:column; gap:5px; }
+.r-gateway-endpoint code { color:var(--rt-text); overflow-wrap:anywhere; font-size:12px; }
+.r-gateway-copy { min-height:36px; flex-shrink:0; padding:0 12px; border:1px solid #293a47; border-radius:8px; background:#111a22; color:var(--rt-text-2); cursor:pointer; }
+.r-gateway-copy:hover:not(:disabled) { border-color:#3b5264; background:#17232d; color:#edf3f7; }
+.r-gateway-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:16px 0; }
+.r-gateway-metrics > div { display:flex; flex-direction:column; gap:7px; min-width:0; padding:16px; border:1px solid var(--rt-line); border-radius:10px; background:var(--rt-panel-2); }
+.r-gateway-metrics strong { color:var(--rt-text); font-size:1.12rem; overflow-wrap:anywhere; }
+.r-gateway-footer { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding-top:14px; border-top:1px solid var(--rt-line); }
+.r-gateway-diagnostics { flex:1; min-width:0; }
+.r-gateway-diagnostics summary { cursor:pointer; color:var(--rt-blue); padding:10px 0; }
+.r-gateway-diagnostics[open] .r-home-detail-row { padding:12px 0; }
+.r-gateway-diagnostics p { margin:8px 0 14px; }
+.r-gateway-toggle { min-height:40px; flex-shrink:0; padding:0 15px; border:1px solid #2870af; border-radius:8px; background:#277bc3; color:#fff; font-weight:650; cursor:pointer; }
+.r-gateway-toggle:hover:not(:disabled) { background:#358dd2; }
+.r-gateway-toggle.r-gateway-stop { border-color:#8c4048; background:#8d3843; }
+.r-gateway-toggle.r-gateway-stop:hover:not(:disabled) { background:#a44752; }
+.r-gateway-toggle:disabled { opacity:.55; cursor:not-allowed; }
+.r-gateway-copy:focus-visible,.r-gateway-toggle:focus-visible { outline:2px solid var(--rt-blue); outline-offset:2px; }
+:root[data-theme="light"] .r-gateway-copy { background:#e7f0fd; border-color:#bed5f5; color:#174f9a; }
+:root[data-theme="light"] .r-gateway-copy:hover:not(:disabled) { background:#d5e6fc; }
+:root[data-theme="light"] .r-gateway-toggle.r-gateway-stop { background:#fff1f2; border-color:#edc1c7; color:#a12c3b; }
+:root[data-theme="light"] .r-gateway-toggle.r-gateway-stop:hover:not(:disabled) { background:#fbdfe3; }
+@media(max-width:650px) { .r-gateway-overview { padding:18px; } .r-gateway-metrics { grid-template-columns:1fr; } .r-gateway-footer { flex-wrap:wrap; } .r-gateway-endpoint { flex-wrap:wrap; } }
+
+
 
 /* 06. Settings (pending) */
