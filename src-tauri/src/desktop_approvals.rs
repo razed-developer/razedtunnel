@@ -130,7 +130,7 @@ mod tests {
         let approval = Approval { workspace_id: "w".into(), path: target, operation: FileOperation::Write };
         let registry = ApprovalRegistry::default();
         let first = registry.issue_local(LocalConfirmation::from_trusted_local_ui(), approval.clone(), temp.path()).unwrap();
-        let second = registry.issue_local(approval.clone(), temp.path()).unwrap();
+        let second = registry.issue_local(LocalConfirmation::from_trusted_local_ui(), approval.clone(), temp.path()).unwrap();
         assert_eq!(first.len(), 64);
         assert_ne!(first, second);
         registry.consume(&first, &approval, temp.path()).unwrap();
@@ -145,7 +145,7 @@ mod tests {
         std::fs::write(&target, b"safe").unwrap();
         let approval = Approval { workspace_id: "w".into(), path: target, operation: FileOperation::Delete };
         let registry = ApprovalRegistry::default();
-        let token = registry.issue_local(approval.clone(), temp.path()).unwrap();
+        let token = registry.issue_local(LocalConfirmation::from_trusted_local_ui(), approval.clone(), temp.path()).unwrap();
         registry.pending.lock().unwrap().get_mut(&token).unwrap().expires_at = Instant::now() - Duration::from_secs(1);
         assert!(registry.consume(&token, &approval, temp.path()).unwrap_err().contains("expired"));
         assert!(registry.consume(&token, &approval, temp.path()).is_err());
