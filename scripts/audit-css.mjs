@@ -21,3 +21,24 @@ for (const file of files) {
 }
 console.log(`\nTotal: ${totals.lines} lines, ${(totals.bytes / 1024).toFixed(1)} KiB, ${totals.important} !important declarations`);
 console.log("Counts are diagnostic, not a claim that every reference is a duplicate.");
+
+
+// Identify large legacy feature blocks for follow-up review. This does not delete CSS.
+const workspaceLines = readFileSync("src/workspace.css", "utf8").split(/\r?\n/);
+const sections = [
+  ["Model Hub", "/* Stage 2 Model Hub"],
+  ["Home Chat", "/* Stage 3 · Local Home Chat"],
+  ["Video Intelligence", "/* Video Intelligence is intentionally isolated"],
+  ["Video Projects", "/* Video Projects file workspace"],
+  ["HTTPS Setup", "/* HTTPS Setup: one guided"],
+  ["Operational Home", "/* Operational home dashboard"],
+];
+console.log("\nLegacy section boundaries (review before removal):");
+for (let i = 0; i < sections.length; i++) {
+  const [name, marker] = sections[i];
+  const start = workspaceLines.findIndex((line) => line.includes(marker));
+  if (start < 0) { console.log(`  ${name}: marker missing`); continue; }
+  const next = sections.slice(i + 1).map(([, m]) => workspaceLines.findIndex((line) => line.includes(m))).find((line) => line > start);
+  console.log(`  ${name}: starts at line ${start + 1}${next == null ? " (no following boundary)" : `, next marker at ${next + 1}`}`);
+}
+console.log("Boundaries are landmarks, not proof that the intervening rules are unused.");
