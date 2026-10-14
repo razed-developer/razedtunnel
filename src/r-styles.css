@@ -582,6 +582,39 @@
 :root[data-theme="light"] .r-project-heading-button:hover:not(:disabled) { background:#d9e8fc; }
 @media(max-width:900px) { .r-project-heading { gap:12px; } .r-project-heading-actions { justify-content:flex-start; } }
 
+/* Project card identity — keep the outer card and permissions legacy-scoped
+ * until their dependent layout rules are migrated together.
+ */
+.r-project-folder-button {
+  display:grid;
+  width:44px;
+  height:44px;
+  min-height:44px;
+  place-items:center;
+  border:1px solid #303238;
+  border-radius:11px;
+  background:#191a1e;
+  color:#8796a8;
+  cursor:pointer;
+}
+.r-project-folder-button:hover:not(:disabled) { border-color:var(--rt-blue); background:#202b37; }
+.r-project-folder-button:focus-visible { outline:2px solid var(--rt-blue); outline-offset:3px; }
+.r-project-folder-button:disabled { cursor:not-allowed; opacity:.5; }
+.r-project-details { min-width:0; }
+.r-project-title-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.r-project-title-row h3 { margin:0; color:#dadbe0; font-size:14px; font-weight:600; line-height:1.3; }
+.r-project-details > p { max-width:700px; margin:8px 0 0; color:var(--rt-text-3); font-size:11px; line-height:1.6; overflow-wrap:anywhere; word-break:break-word; }
+.r-project-access-badge { display:none; }
+.r-project-access-badge.missing { display:inline-flex; padding:3px 7px; border:1px solid #6d5030; border-radius:6px; background:#291e12; color:#e4b678; font-size:10px; }
+.r-project-path-warning { margin-top:5px; color:#d2a66f; font-size:10.5px; line-height:1.45; }
+.r-project-security { margin-top:10px; color:var(--rt-text-2); font-size:11px; line-height:1.4; }
+:root[data-theme="light"] .r-project-folder-button { background:#edf4ff; border-color:#c5d8ef; color:#356fb8; }
+:root[data-theme="light"] .r-project-folder-button:hover:not(:disabled) { background:#dcecff; }
+:root[data-theme="light"] .r-project-title-row h3 { color:var(--rt-text); }
+:root[data-theme="light"] .r-project-details { padding-top:3px; }
+:root[data-theme="light"] .r-project-details > p { color:var(--rt-text-3); }
+:root[data-theme="light"] .r-project-security { color:var(--rt-text-2); }
+
 /* 05. Connections (pending) */
 
 /* 06. Settings (pending) */
