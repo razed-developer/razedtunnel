@@ -167,7 +167,6 @@ function App() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [focusMode, setFocusMode] = useState(false);
   const [workspaceHealth, setWorkspaceHealth] = useState<Record<string, WorkspaceHealth>>({});
   const [relocatingWorkspaceId, setRelocatingWorkspaceId] = useState<string | null>(null);
   const [confirmStopGateway, setConfirmStopGateway] = useState(false);
@@ -226,10 +225,7 @@ function App() {
         event.preventDefault();
         return;
       }
-      if (event.shiftKey && event.key === "Enter") {
-        event.preventDefault();
-        setFocusMode((current) => !current);
-      }
+
     }
     function blockDesktopZoomWheel(event: WheelEvent) {
       if (event.ctrlKey || event.metaKey) event.preventDefault();
@@ -596,7 +592,7 @@ function App() {
   return (
     <div className="desktop-app">
       <WindowChrome />
-      <div className={`desktop-shell ${focusMode ? "focus-mode" : ""}`}>
+      <div className="desktop-shell">
         <AppSidebar
           activeView={activeView}
           onNavigate={setActiveView}
@@ -610,8 +606,6 @@ function App() {
             gatewayRunning={gatewayStatus.running}
             connectionReady={publicTunnelStatus.ready || connectionStatus.ready}
             aiAccessPaused={aiAccessPaused}
-            focusMode={focusMode}
-            onToggleFocusMode={() => setFocusMode((current) => !current)}
           />
 
           {notice ? (
