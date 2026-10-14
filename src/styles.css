@@ -6268,13 +6268,6 @@ textarea:focus-visible {
 :root[data-theme="light"] .public-overview .public-usage-strip strong {
   color: #253247;
 }
-:root[data-theme="light"] .public-overview .public-connection-actions button.secondary-button,
-:root[data-theme="light"] .public-overview .public-mcp-endpoint button.secondary-button {
-  background: #f3f6fa;
-  color: #245f9c;
-  border: 1px solid #cddbeb;
-  box-shadow: none;
-}
 :root[data-theme="light"] .public-overview .public-connection-actions button.danger-outline {
   background: #fff7f7;
   color: #a52b3c;
