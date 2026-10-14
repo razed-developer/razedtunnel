@@ -61,7 +61,7 @@ function WorkspaceList({
     }
   }
   return (
-    <section className="workspace-section" aria-labelledby="workspace-title">
+    <section className="r-project-section" aria-labelledby="workspace-title">
       <div className="r-project-heading">
         <div>
           <span className="r-project-kicker">Projects</span>
@@ -80,17 +80,17 @@ function WorkspaceList({
       </div>
 
       {showGitInstructions ? (
-        <div className="security-note" role="region" aria-label="Connect a Git repository">
+        <div className="r-project-git-panel" role="region" aria-label="Connect a Git repository">
           <div>
             <strong>Clone and connect a Git repository</strong>
             <p>Enter an HTTPS clone URL, then select a parent folder on this computer. RazedTunnel will clone into a new subfolder and register it with read-only access, edit review, and commands disabled by default. You can change permissions afterward. Git must be installed; private repositories need non-interactive credentials already configured.</p>
             <form onSubmit={(event) => void submitClone(event)}>
               <label htmlFor="git-clone-url">Repository URL</label>
               <input id="git-clone-url" type="url" required placeholder="https://github.com/owner/repository.git" value={gitUrl} onChange={(event) => setGitUrl(event.target.value)} disabled={cloning} style={{ width: "100%", margin: "8px 0" }} />
-              <button className="secondary-button" type="submit" disabled={cloning || !gitUrl.trim()}>{cloning ? "Cloning…" : "Choose destination and clone"}</button>
+              <button className="r-project-git-button" type="submit" disabled={cloning || !gitUrl.trim()}>{cloning ? "Cloning…" : "Choose destination and clone"}</button>
             </form>
             {cloneError ? <p role="alert">{cloneError}</p> : null}
-            <p>Already cloned? <button className="secondary-button" type="button" onClick={onAdd} disabled={adding || cloning}>Select existing checkout</button></p>
+            <p>Already cloned? <button className="r-project-git-button" type="button" onClick={onAdd} disabled={adding || cloning}>Select existing checkout</button></p>
           </div>
         </div>
       ) : null}
@@ -176,8 +176,8 @@ function WorkspaceList({
         </div>
       )}
 
-      <div className="security-note">
-        <span className="security-note-icon" aria-hidden="true">✓</span>
+      <div className="r-project-security-note">
+        <span className="r-project-security-note-icon" aria-hidden="true">✓</span>
         <div>
           <strong>Workspace boundary enforced locally</strong>
           <p>
