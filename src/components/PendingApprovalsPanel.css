@@ -1,0 +1,11 @@
+.r-approval-panel { padding: 22px 24px; }
+.r-approval-panel .r-home-section-title h3 { display: flex; align-items: center; gap: 9px; }
+.r-approval-panel .r-home-section-title { margin-bottom: 16px; }
+.r-approval-request { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 16px 12px; border-top: 1px solid var(--border-color, rgba(110,130,160,.2)); }
+.r-approval-request:nth-of-type(even) { background: rgba(115,150,190,.055); border-radius: 8px; }
+.r-approval-request-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.r-approval-request-info strong { font-size: .95rem; }
+.r-approval-request-info span { overflow-wrap: anywhere; opacity: .8; font-size: .88rem; }
+.r-approval-request button { flex-shrink: 0; padding: 9px 16px; border-radius: 9px; cursor: pointer; }
+.r-approval-request button:disabled { cursor: wait; opacity: .6; }
+@media (max-width: 620px) { .r-approval-request { align-items: flex-start; flex-direction: column; } }
