@@ -305,6 +305,23 @@ pub(crate) fn timeline(
         let processes =
             terminal::list_processes(app, Some(&group.workspace_id), 100).unwrap_or_default();
         for event in &mut group.events {
+            if event.kind == ActivityKind::Browser && event.status == ActivityStatus::Pending {
+                if let Some(source_id) = event.source_id.as_deref() {
+                    if let Ok(action) = crate::browser::get_action(app, source_id) {
+                        let status = match action.status {
+                            BrowserActionStatus::Pending => ActivityStatus::Pending,
+                            BrowserActionStatus::Applied => ActivityStatus::Succeeded,
+                            BrowserActionStatus::Rejected => ActivityStatus::Rejected,
+                            BrowserActionStatus::Ambiguous | BrowserActionStatus::Failed => ActivityStatus::Failed,
+                        };
+                        if status != event.status {
+                            event.status = status;
+                            event.updated_at = action.updated_at;
+                            changed = true;
+                        }
+                    }
+                }
+            }
             if event.kind != ActivityKind::Process {
                 continue;
             }
