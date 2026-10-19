@@ -40,7 +40,7 @@ export default function HomeDashboard({ gateway, tunnel, chat, workspaces, aiAcc
           {workspaces.length ? workspaces.slice(0, 5).map((workspace) => <div className="r-home-detail-row" key={workspace.id}><span><NavIcon name="folder" />{workspace.name}</span><span className="r-home-muted">{workspace.accessMode === "readWrite" ? "Read & write" : "Read only"}</span></div>) : <div className="r-home-empty"><NavIcon name="folder" size={24} /><strong>No projects yet</strong><p>Add a project to make it available to connected AI clients.</p><button type="button" onClick={() => onNavigate("projects")}>Set up projects →</button></div>}
         </section>
       </div>
-      <PendingApprovalsPanel />
+      <PendingApprovalsPanel activity={activity} />
       <ActivityFeed timeline={activity} loading={activityLoading} error={activityError} onRefresh={onRefreshActivity} />
     </div>
   );
