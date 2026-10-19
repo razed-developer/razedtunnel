@@ -211,3 +211,6 @@ export const denyPendingApprovalRequest = (requestId: string) =>
 
 export const rejectPendingBrowserAction = (actionId: string) =>
   invoke<void>("reject_pending_browser_action", { actionId });
+
+export const rejectPendingFileChange = (changeId: string) =>
+  invoke<void>("reject_pending_file_change", { changeId });
