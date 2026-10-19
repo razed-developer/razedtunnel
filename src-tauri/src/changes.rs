@@ -741,8 +741,10 @@ fn apply_payload(
             relative_path,
             expected,
             replacement,
-            ..
-        } => filesystem::patch_file(workspace, relative_path, expected, replacement).map(Some),
+            expected_fingerprint,
+        } => filesystem::patch_file_with_fingerprint(
+            workspace, relative_path, expected, replacement, Some(expected_fingerprint)
+        ).map(Some),
         ChangePayload::CreateDirectory {
             relative_path,
             recursive,
