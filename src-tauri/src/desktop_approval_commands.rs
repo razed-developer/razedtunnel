@@ -1,6 +1,6 @@
 //! Read-only and deny-only local UI surface. No grant/issue endpoint.
 use tauri::State;
-use crate::{app_state::AppState, desktop_approvals::ApprovalRequest};
+use crate::{app_state::AppState, desktop_approvals::ApprovalRequest, models::{ActivityKind, ActivityStatus, BrowserActionStatus}};
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -37,12 +37,14 @@ pub(crate) fn deny_pending_approval_request(state: State<'_, AppState>, request_
 #[tauri::command]
 pub(crate) fn reject_pending_browser_action(app: tauri::AppHandle, action_id: String) -> Result<(), String> {
     crate::browser::reject_action(&app, &action_id)?;
+    crate::activity::update_operation_status(&app, ActivityKind::Browser, &action_id, ActivityStatus::Rejected)?;
     Ok(())
 }
 
 #[tauri::command]
 pub(crate) fn reject_pending_file_change(app: tauri::AppHandle, change_id: String) -> Result<(), String> {
     crate::changes::reject_change(&app, &change_id)?;
+    crate::activity::update_operation_status(&app, ActivityKind::Files, &change_id, ActivityStatus::Rejected)?;
     Ok(())
 }
 
@@ -78,6 +80,13 @@ pub(crate) fn approve_pending_browser_action(
         return Err("Approval cancelled; the request remains pending.".to_string());
     }
     // approve_action revalidates pending status and project identity under its execution lock.
-    crate::browser::approve_action(&app, &workspace, &action_id)?;
+    let result = crate::browser::approve_action(&app, &workspace, &action_id)?;
+    let status = match result.status {
+        BrowserActionStatus::Applied => ActivityStatus::Succeeded,
+        BrowserActionStatus::Rejected => ActivityStatus::Rejected,
+        BrowserActionStatus::Pending => ActivityStatus::Pending,
+        BrowserActionStatus::Ambiguous | BrowserActionStatus::Failed => ActivityStatus::Failed,
+    };
+    crate::activity::update_operation_status(&app, ActivityKind::Browser, &action_id, status)?;
     Ok(())
 }
