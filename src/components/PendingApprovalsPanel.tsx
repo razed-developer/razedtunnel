@@ -1,6 +1,6 @@
 import "./PendingApprovalsPanel.css";
 import { useCallback, useEffect, useState } from "react";
-import { denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingBrowserAction, rejectPendingFileChange, type PendingApprovalRequest } from "../lib/backend";
+import { approvePendingBrowserAction, denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingBrowserAction, rejectPendingFileChange, type PendingApprovalRequest } from "../lib/backend";
 import type { ActivityTimeline } from "../types";
 import { NavIcon } from "./AppSidebar";
 
@@ -26,6 +26,12 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
     catch (cause) { setError(String(cause)); }
     finally { setBusyId(null); }
   }
+  async function approveBrowser(id: string) {
+    setBusyId(id);
+    try { await approvePendingBrowserAction(id); await refresh(); onRefreshActivity(); }
+    catch (cause) { setError(String(cause)); }
+    finally { setBusyId(null); }
+  }
   async function rejectBrowser(id: string) {
     setBusyId(id);
     try { await rejectPendingBrowserAction(id); await refresh(); onRefreshActivity(); }
@@ -46,7 +52,7 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
   return (
     <section className="r-home-card r-approval-panel" aria-label="Pending operation requests">
       <div className="r-home-section-title">
-        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Local approval is not yet available. Browser and file-change requests can be rejected here.</p></div>
+        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Local approval is not yet available. Browser requests require native confirmation before approval. File changes remain reject-only.</p></div>
         <button type="button" onClick={() => void refresh()}>Refresh filesystem proposals</button>
       </div>
       {error && <p role="alert" className="r-home-attention">Unable to load filesystem proposals: {error}</p>}
@@ -60,6 +66,7 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
           </div>
           <div>
             <span className="r-activity-status r-activity-status-pending">Pending</span>
+            {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveBrowser(event.sourceId!)}>Accept…</button>}
             {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectBrowser(event.sourceId!)}>Reject</button>}
             {event.kind === "files" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectFileChange(event.sourceId!)}>Reject</button>}
           </div>
