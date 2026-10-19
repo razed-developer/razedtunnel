@@ -372,10 +372,41 @@ fn new_id(prefix: &str) -> String {
 }
 
 fn find_executable(name: &str) -> Option<PathBuf> {
-    let path_value = env::var_os("PATH")?;
-    env::split_paths(&path_value)
-        .map(|directory| directory.join(name))
-        .find(|candidate| candidate.is_file())
+    let from_path = env::var_os("PATH").and_then(|value| {
+        env::split_paths(&value)
+            .flat_map(|directory| {
+                #[cfg(windows)]
+                {
+                    vec![directory.join(name), directory.join(format!("{name}.exe"))]
+                }
+                #[cfg(not(windows))]
+                {
+                    vec![directory.join(name)]
+                }
+            })
+            .find(|candidate| candidate.is_file())
+    });
+    if from_path.is_some() {
+        return from_path;
+    }
+    #[cfg(windows)]
+    {
+        let relative = match name {
+            "microsoft-edge" | "microsoft-edge-stable" => "Microsoft/Edge/Application/msedge.exe",
+            "google-chrome" | "google-chrome-stable" => "Google/Chrome/Application/chrome.exe",
+            "brave" | "brave-browser" => "BraveSoftware/Brave-Browser/Application/brave.exe",
+            _ => return None,
+        };
+        for root in ["ProgramFiles", "ProgramFiles(x86)", "LocalAppData"] {
+            if let Some(base) = env::var_os(root) {
+                let candidate = PathBuf::from(base).join(relative);
+                if candidate.is_file() {
+                    return Some(candidate);
+                }
+            }
+        }
+    }
+    None
 }
 
 fn automation_node() -> Result<PathBuf, String> {
