@@ -112,8 +112,18 @@ pub(crate) fn approve_pending_file_change(
         .find(|workspace| workspace.id == record.workspace_id)
         .ok_or_else(|| "The project is no longer approved.".to_string())?;
     let preview = record.diff.as_deref().unwrap_or("(No text diff available)");
-    if record.diff.is_none() {
-        return Err("This change has no reviewable diff. Approval is disabled; reject it or review it through another trusted workflow.".to_string());
+    // The stored diff is a bounded summary, not a complete patch. Never authorize
+    // a change if the preview is truncated or too large for a readable native dialog.
+    if record.diff.is_none()
+        || preview.contains("… diff preview truncated …")
+        || preview.len() > 12_000
+    {
+        return Err("A complete, readable change preview is unavailable. Approval is blocked; do not apply this change from the dashboard.".to_string());
+    }
+    // Non-patch operations can have additional filesystem effects not represented
+    // by a text diff. Keep them outside this first approval surface.
+    if !matches!(record.operation, crate::models::ChangeOperation::PatchFile) {
+        return Err("Only file patches with a readable diff can be approved here.".to_string());
     }
     let message = format!(
         "Apply this queued file change?\n\nProject: {}\nOperation: {:?}\nFile: {}\nSummary: {}\n\nProposed diff:\n{}\n\nYes applies the change; No leaves it pending.",
