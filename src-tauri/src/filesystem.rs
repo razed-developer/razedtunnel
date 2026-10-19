@@ -719,7 +719,7 @@ mod tests {
 
         assert_eq!(
             fs::read_to_string(root.join("src/app.ts")).unwrap(),
-            "const greeting = 'approved';\\n"
+            "const greeting = 'approved';\n"
         );
         let _ = fs::remove_dir_all(root);
     }
