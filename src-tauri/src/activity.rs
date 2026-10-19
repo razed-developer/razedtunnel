@@ -822,14 +822,16 @@ pub(crate) fn update_operation_status(
     let mut groups = load(app)?;
     let mut changed = false;
     for group in &mut groups {
+        let mut group_changed = false;
         for event in &mut group.events {
             if event.kind == kind && event.source_id.as_deref() == Some(source_id) {
                 event.status = status;
                 event.updated_at = now_millis();
                 changed = true;
+                group_changed = true;
             }
         }
-        if changed {
+        if group_changed {
             group.updated_at = group.events.iter().map(|event| event.updated_at).max().unwrap_or(group.created_at);
         }
     }
