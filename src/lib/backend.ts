@@ -208,3 +208,6 @@ export const listPendingApprovalRequests = () =>
   invoke<PendingApprovalRequest[]>("list_pending_approval_requests");
 export const denyPendingApprovalRequest = (requestId: string) =>
   invoke<boolean>("deny_pending_approval_request", { requestId });
+
+export const rejectPendingBrowserAction = (actionId: string) =>
+  invoke<void>("reject_pending_browser_action", { actionId });
