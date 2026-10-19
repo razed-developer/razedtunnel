@@ -26,7 +26,7 @@ export default function PendingApprovalsPanel() {
   return (
     <section className="r-home-card r-approval-panel" aria-label="Pending operation requests">
       <div className="r-home-section-title">
-        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Review proposed file changes. Approval is disabled until secure local confirmation is available.</p></div>
+        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Filesystem approval proposals only. Browser launches, Git operations, and queued file changes appear in Recent activity, not this list. Local approval controls are not yet implemented.</p></div>
         <button type="button" onClick={() => void refresh()}>Refresh</button>
       </div>
       {error && <p role="alert" className="r-home-attention">Unable to load requests: {error}</p>}
