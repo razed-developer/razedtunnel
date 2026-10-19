@@ -1272,6 +1272,21 @@ pub(crate) fn approve_change(app: &AppHandle, change_id: &str) -> Result<ChangeO
         .ok_or_else(|| "The project for this change is no longer approved.".to_string())?;
     let request = request_path(app, change_id)?;
     let pending_request = read_pending_change_request(&request)?;
+    if let ChangePayload::PatchFile { relative_path, expected, replacement, expected_fingerprint } = &pending_request.payload {
+        if relative_path != &record.primary_path {
+            return Err("Patch path does not match the approved request.".to_string());
+        }
+        let current = filesystem::read_file(&workspace, relative_path)?;
+        if content_fingerprint(&current.content) != *expected_fingerprint {
+            return Err("The file changed after review. Approval cancelled; submit a new patch.".to_string());
+        }
+        let updated = patch_result(&current.content, expected, replacement)?;
+        let diff = diff_preview(&current.content, &updated)
+            .ok_or_else(|| "The patch produces no changes.".to_string())?;
+        if record.diff.as_deref() != Some(diff.as_str()) {
+            return Err("The patch no longer matches the approved preview.".to_string());
+        }
+    }
     let prepared_version = versioning::prepare_change(
         app,
         &workspace,
