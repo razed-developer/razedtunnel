@@ -70,12 +70,12 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
             <span>{event.workspaceName} · {event.kind} · {new Date(event.createdAt).toLocaleString()}</span>
             {event.detail && <span style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{event.detail}</span>}
           </div>
-          <div>
+          <div className="r-approval-request-actions">
             <span className="r-activity-status r-activity-status-pending">Pending</span>
             {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveBrowser(event.sourceId!)}>Accept…</button>}
             {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectBrowser(event.sourceId!)}>Reject</button>}
             {event.kind === "files" && event.action === "PatchFile" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveFileChange(event.sourceId!)}>Review &amp; Accept…</button>}
-            {event.kind === "files" && event.action !== "PatchFile" && <span title="This operation cannot be accepted from this panel.">Approval unavailable · </span>}
+            {event.kind === "files" && event.action !== "PatchFile" && <span className="r-approval-unavailable" title="This operation cannot be accepted from this panel.">Approval unavailable</span>}
             {event.kind === "files" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectFileChange(event.sourceId!)}>Reject</button>}
           </div>
         </div>
