@@ -1,6 +1,6 @@
 import "./PendingApprovalsPanel.css";
 import { useCallback, useEffect, useState } from "react";
-import { denyPendingApprovalRequest, listPendingApprovalRequests, type PendingApprovalRequest } from "../lib/backend";
+import { denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingBrowserAction, type PendingApprovalRequest } from "../lib/backend";
 import type { ActivityTimeline } from "../types";
 import { NavIcon } from "./AppSidebar";
 
@@ -26,6 +26,12 @@ export default function PendingApprovalsPanel({ activity }: Props) {
     catch (cause) { setError(String(cause)); }
     finally { setBusyId(null); }
   }
+  async function rejectBrowser(id: string) {
+    setBusyId(id);
+    try { await rejectPendingBrowserAction(id); await refresh(); }
+    catch (cause) { setError(String(cause)); }
+    finally { setBusyId(null); }
+  }
   const pendingOperations = (activity?.groups ?? [])
     .flatMap(group => group.events
       .filter(event => event.status === "pending")
@@ -34,7 +40,7 @@ export default function PendingApprovalsPanel({ activity }: Props) {
   return (
     <section className="r-home-card r-approval-panel" aria-label="Pending operation requests">
       <div className="r-home-section-title">
-        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Local approval is not yet available; these entries cannot be accepted here.</p></div>
+        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Local approval is not yet available. Browser requests can be rejected here.</p></div>
         <button type="button" onClick={() => void refresh()}>Refresh filesystem proposals</button>
       </div>
       {error && <p role="alert" className="r-home-attention">Unable to load filesystem proposals: {error}</p>}
@@ -46,7 +52,10 @@ export default function PendingApprovalsPanel({ activity }: Props) {
             <span>{event.workspaceName} · {event.kind} · {new Date(event.createdAt).toLocaleString()}</span>
             {event.detail && <span style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{event.detail}</span>}
           </div>
-          <span className="r-activity-status r-activity-status-pending">Pending</span>
+          <div>
+            <span className="r-activity-status r-activity-status-pending">Pending</span>
+            {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectBrowser(event.sourceId!)}>Reject</button>}
+          </div>
         </div>
       ))}
       {requests.map(request => (
