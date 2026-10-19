@@ -100,6 +100,12 @@ fn validate_text_content(bytes: &[u8]) -> Result<String, String> {
 }
 
 fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
+    atomic_write_checked(path, content, None)
+}
+
+/// Check the original file again immediately before replacing it.
+/// This is best-effort against external writers, not a cross-process CAS.
+fn atomic_write_checked(path: &Path, content: &[u8], expected_fingerprint: Option<&str>) -> Result<(), String> {
     let parent = path
         .parent()
         .ok_or_else(|| "Could not resolve the file's parent folder.".to_string())?;
@@ -133,6 +139,16 @@ fn atomic_write(path: &Path, content: &[u8]) -> Result<(), String> {
         if let Some(permissions) = existing_permissions.clone() {
             fs::set_permissions(&temporary, permissions)
                 .map_err(|error| format!("Could not preserve file permissions: {error}"))?;
+        }
+
+        if let Some(expected) = expected_fingerprint {
+            let current = fs::read(path)
+                .map_err(|error| format!("Could not recheck the file before replacement: {error}"))?;
+            let current = validate_text_content(&current)?;
+            if crate::changes::content_fingerprint(&current) != expected {
+                return Err("The file changed before replacement; the patch was not applied.".to_string());
+            }
+            ensure_leaf_is_not_symlink(path)?;
         }
 
         fs::rename(&temporary, path)
@@ -492,7 +508,17 @@ pub(crate) fn patch_file_with_fingerprint(
 
     let updated = current.content.replacen(expected, replacement, 1);
     ensure_content_size(&updated)?;
-    write_file(workspace, relative_path, &updated)
+    if let Some(fingerprint) = expected_fingerprint {
+        let path = resolve_workspace_path(workspace, relative_path, AccessOperation::Write, true)?;
+        let metadata = ensure_leaf_is_not_symlink(&path)?;
+        if !metadata.is_file() {
+            return Err("The requested path is not a file.".to_string());
+        }
+        atomic_write_checked(&path, updated.as_bytes(), Some(fingerprint))?;
+        file_info(workspace, relative_path)
+    } else {
+        write_file(workspace, relative_path, &updated)
+    }
 }
 
 pub(crate) fn create_directory(
