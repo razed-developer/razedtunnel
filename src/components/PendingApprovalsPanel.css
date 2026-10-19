@@ -9,3 +9,7 @@
 .r-approval-request button { flex-shrink: 0; padding: 9px 16px; border-radius: 9px; cursor: pointer; }
 .r-approval-request button:disabled { cursor: wait; opacity: .6; }
 @media (max-width: 620px) { .r-approval-request { align-items: flex-start; flex-direction: column; } }
+
+.r-approval-request-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+.r-approval-unavailable { font-size: .85rem; opacity: .75; }
+@media (max-width: 620px) { .r-approval-request-actions { justify-content: flex-start; } }
