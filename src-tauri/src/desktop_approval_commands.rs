@@ -100,10 +100,7 @@ pub(crate) fn approve_pending_file_change(
     if window.label() != "main" {
         return Err("File approval requires the main desktop window.".to_string());
     }
-    let record = crate::changes::list_changes(&app, None, 100)?
-        .into_iter()
-        .find(|change| change.id == change_id)
-        .ok_or_else(|| "The requested file change was not found in recent history.".to_string())?;
+    let record = crate::changes::review_pending_patch(&app, &change_id)?;
     if record.status != crate::models::ChangeStatus::Pending {
         return Err("Only pending file changes can be approved.".to_string());
     }
