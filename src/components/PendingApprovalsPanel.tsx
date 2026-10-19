@@ -1,10 +1,13 @@
 import "./PendingApprovalsPanel.css";
 import { useCallback, useEffect, useState } from "react";
 import { denyPendingApprovalRequest, listPendingApprovalRequests, type PendingApprovalRequest } from "../lib/backend";
+import type { ActivityTimeline } from "../types";
 import { NavIcon } from "./AppSidebar";
 
-/** Review and rejection only. This panel cannot grant filesystem permissions. */
-export default function PendingApprovalsPanel() {
+type Props = { activity?: ActivityTimeline | null };
+
+/** Pending operational records are informational until trusted local confirmation is implemented. */
+export default function PendingApprovalsPanel({ activity }: Props) {
   const [requests, setRequests] = useState<PendingApprovalRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -23,15 +26,30 @@ export default function PendingApprovalsPanel() {
     catch (cause) { setError(String(cause)); }
     finally { setBusyId(null); }
   }
+  const pendingOperations = (activity?.groups ?? [])
+    .flatMap(group => group.events
+      .filter(event => event.status === "pending")
+      .map(event => ({ ...event, workspaceName: group.workspaceName, workspaceId: group.workspaceId })))
+    .sort((a, b) => b.createdAt - a.createdAt);
   return (
     <section className="r-home-card r-approval-panel" aria-label="Pending operation requests">
       <div className="r-home-section-title">
-        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Filesystem approval proposals only. Browser launches, Git operations, and queued file changes appear in Recent activity, not this list. Local approval controls are not yet implemented.</p></div>
-        <button type="button" onClick={() => void refresh()}>Refresh</button>
+        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Local approval is not yet available; these entries cannot be accepted here.</p></div>
+        <button type="button" onClick={() => void refresh()}>Refresh filesystem proposals</button>
       </div>
-      {error && <p role="alert" className="r-home-attention">Unable to load requests: {error}</p>}
-      {!requests.length && !error && <p className="r-home-muted">No pending requests.</p>}
-      {requests.map((request) => (
+      {error && <p role="alert" className="r-home-attention">Unable to load filesystem proposals: {error}</p>}
+      {!requests.length && !pendingOperations.length && !error && <p className="r-home-muted">No pending requests.</p>}
+      {pendingOperations.map(event => (
+        <div className="r-approval-request" key={event.id}>
+          <div className="r-approval-request-info">
+            <strong>{event.summary}</strong>
+            <span>{event.workspaceName} · {event.kind} · {new Date(event.createdAt).toLocaleString()}</span>
+            {event.detail && <span style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{event.detail}</span>}
+          </div>
+          <span className="r-activity-status r-activity-status-pending">Pending</span>
+        </div>
+      ))}
+      {requests.map(request => (
         <div className="r-approval-request" key={request.id}>
           <div className="r-approval-request-info">
             <strong>{request.operation} · {request.workspaceId}</strong>
@@ -42,6 +60,7 @@ export default function PendingApprovalsPanel() {
           </button>
         </div>
       ))}
+      <p className="r-activity-disclaimer">Pending activity is read from retained audit records. This view does not grant permissions or execute queued actions.</p>
     </section>
   );
 }
