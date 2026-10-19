@@ -52,10 +52,10 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
   return (
     <section className="r-home-card r-approval-panel" aria-label="Pending operation requests">
       <div className="r-home-section-title">
-        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Local approval is not yet available. Browser requests require native confirmation before approval. File changes remain reject-only.</p></div>
-        <button type="button" onClick={() => void refresh()}>Refresh filesystem proposals</button>
+        <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Browser requests require native confirmation before approval. File changes remain reject-only.</p></div>
+        <button type="button" onClick={() => void refresh()}>Refresh requests</button>
       </div>
-      {error && <p role="alert" className="r-home-attention">Unable to load filesystem proposals: {error}</p>}
+      {error && <p role="alert" className="r-home-attention">Operation request error: {error}</p>}
       {!requests.length && !pendingOperations.length && !error && <p className="r-home-muted">No pending requests.</p>}
       {pendingOperations.map(event => (
         <div className="r-approval-request" key={event.id}>
@@ -83,7 +83,7 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
           </button>
         </div>
       ))}
-      <p className="r-activity-disclaimer">Pending activity is read from retained audit records. This view does not grant permissions or execute queued actions.</p>
+      <p className="r-activity-disclaimer">Pending activity is read from retained audit records. Browser Accept requires an explicit native confirmation; file changes cannot be approved here.</p>
     </section>
   );
 }
