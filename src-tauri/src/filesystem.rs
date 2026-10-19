@@ -451,11 +451,28 @@ pub(crate) fn patch_file(
     expected: &str,
     replacement: &str,
 ) -> Result<FileInfo, String> {
+    patch_file_with_fingerprint(workspace, relative_path, expected, replacement, None)
+}
+
+/// For approved queued edits, recheck the original file at the actual patch write path.
+/// This narrows the stale-write window but does not lock out external editors.
+pub(crate) fn patch_file_with_fingerprint(
+    workspace: &Workspace,
+    relative_path: &str,
+    expected: &str,
+    replacement: &str,
+    expected_fingerprint: Option<&str>,
+) -> Result<FileInfo, String> {
     if expected.is_empty() {
         return Err("Patch expected text cannot be empty.".to_string());
     }
 
     let current = read_file(workspace, relative_path)?;
+    if let Some(fingerprint) = expected_fingerprint {
+        if crate::changes::content_fingerprint(&current.content) != fingerprint {
+            return Err("The file changed since the patch was reviewed; no edit was applied.".to_string());
+        }
+    }
     let occurrences = current.content.matches(expected).count();
 
     match occurrences {
