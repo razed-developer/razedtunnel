@@ -31,3 +31,11 @@ pub(crate) fn list_pending_approval_requests(state: State<'_, AppState>) -> Resu
 pub(crate) fn deny_pending_approval_request(state: State<'_, AppState>, request_id: String) -> Result<bool, String> {
     state.approval_requests.deny(&request_id)
 }
+
+
+/// Rejection cannot execute an action or grant permissions.
+#[tauri::command]
+pub(crate) fn reject_pending_browser_action(app: tauri::AppHandle, action_id: String) -> Result<(), String> {
+    crate::browser::reject_action(&app, &action_id)?;
+    Ok(())
+}
