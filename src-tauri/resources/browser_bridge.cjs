@@ -1509,7 +1509,7 @@ async function executeOperation(currentOperation, currentArgs, emit = out) {
     }
     case "click": {
       const [tabId, selector] = args;
-      const expression = `(() => { const el = document.querySelector(${JSON.stringify(selector)}); if (!el) return {ok:false,error:'No element matches the selector.'}; el.scrollIntoView({block:'center',inline:'center'}); el.click(); return {ok:true,tag:el.tagName,text:(el.innerText||el.getAttribute('aria-label')||el.getAttribute('title')||'').slice(0,500)}; })()`;
+      const expression = `(() => { const el = document.querySelector(${JSON.stringify(selector)}); if (!el) return {ok:false,error:'No element matches the selector.'}; el.scrollIntoView({block:'center',inline:'center'}); if (typeof el.click === 'function') { el.click(); } else { el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); } return {ok:true,tag:el.tagName,text:(el.innerText||el.getAttribute('aria-label')||el.getAttribute('title')||'').slice(0,500)}; })()`;
       const result = await evaluate(tabId, expression);
       if (!result?.ok) throw new Error(result?.error || "Could not click the selected element.");
       await new Promise((resolve) => setTimeout(resolve, 180));
