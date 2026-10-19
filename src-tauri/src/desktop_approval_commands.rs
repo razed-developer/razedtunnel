@@ -45,3 +45,39 @@ pub(crate) fn reject_pending_file_change(app: tauri::AppHandle, change_id: Strin
     crate::changes::reject_change(&app, &change_id)?;
     Ok(())
 }
+
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
+use tauri::Manager;
+
+/// Only the main desktop window may request a local, explicit native confirmation.
+#[tauri::command]
+pub(crate) fn approve_pending_browser_action(
+    window: tauri::Window,
+    app: tauri::AppHandle,
+    action_id: String,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("Browser approval requires the main desktop window.".to_string());
+    }
+    let record = crate::browser::get_action(&app, &action_id)?;
+    if record.status != crate::models::BrowserActionStatus::Pending {
+        return Err("Only pending browser actions can be approved.".to_string());
+    }
+    let workspace = crate::storage::load_workspaces(&app)?
+        .into_iter()
+        .find(|workspace| workspace.id == record.workspace_id)
+        .ok_or_else(|| "The project is no longer approved.".to_string())?;
+    let summary = format!(
+        "Approve this queued browser operation?\n\nProject: {}\nOperation: {:?}\nTarget: {}\nDetails: {}\n\nThis may change the browser or website. Choose No to leave it pending.",
+        record.workspace_name,
+        record.kind,
+        record.target,
+        record.detail.as_deref().unwrap_or("(none)")
+    );
+    if !app.dialog().message(summary).buttons(MessageDialogButtons::YesNo).blocking_show() {
+        return Err("Approval cancelled; the request remains pending.".to_string());
+    }
+    // approve_action revalidates pending status and project identity under its execution lock.
+    crate::browser::approve_action(&app, &workspace, &action_id)?;
+    Ok(())
+}
