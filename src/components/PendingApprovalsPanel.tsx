@@ -4,10 +4,10 @@ import { denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingB
 import type { ActivityTimeline } from "../types";
 import { NavIcon } from "./AppSidebar";
 
-type Props = { activity?: ActivityTimeline | null };
+type Props = { activity?: ActivityTimeline | null; onRefreshActivity: () => void };
 
 /** Pending operational records are informational until trusted local confirmation is implemented. */
-export default function PendingApprovalsPanel({ activity }: Props) {
+export default function PendingApprovalsPanel({ activity, onRefreshActivity }: Props) {
   const [requests, setRequests] = useState<PendingApprovalRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -28,13 +28,13 @@ export default function PendingApprovalsPanel({ activity }: Props) {
   }
   async function rejectBrowser(id: string) {
     setBusyId(id);
-    try { await rejectPendingBrowserAction(id); await refresh(); }
+    try { await rejectPendingBrowserAction(id); await refresh(); onRefreshActivity(); }
     catch (cause) { setError(String(cause)); }
     finally { setBusyId(null); }
   }
   async function rejectFileChange(id: string) {
     setBusyId(id);
-    try { await rejectPendingFileChange(id); await refresh(); }
+    try { await rejectPendingFileChange(id); await refresh(); onRefreshActivity(); }
     catch (cause) { setError(String(cause)); }
     finally { setBusyId(null); }
   }
