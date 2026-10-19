@@ -1209,6 +1209,9 @@ pub(crate) fn list_changes(
 }
 
 pub(crate) fn approve_change(app: &AppHandle, change_id: &str) -> Result<ChangeOutcome, String> {
+    let _submission_guard = change_submission_lock()
+        .lock()
+        .map_err(|_| "RepoTunnel change coordination is temporarily unavailable.".to_string())?;
     let history = load_history(app)?;
     let record = history
         .into_iter()
@@ -1262,6 +1265,9 @@ pub(crate) fn approve_change(app: &AppHandle, change_id: &str) -> Result<ChangeO
 }
 
 pub(crate) fn reject_change(app: &AppHandle, change_id: &str) -> Result<ChangeRecord, String> {
+    let _submission_guard = change_submission_lock()
+        .lock()
+        .map_err(|_| "RepoTunnel change coordination is temporarily unavailable.".to_string())?;
     let mut history = load_history(app)?;
     let record = history
         .iter_mut()
