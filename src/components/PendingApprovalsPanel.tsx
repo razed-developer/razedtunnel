@@ -6,13 +6,13 @@ import { NavIcon } from "./AppSidebar";
 
 type Props = { activity?: ActivityTimeline | null; onRefreshActivity: () => void };
 
-/** Pending operational records are informational until trusted local confirmation is implemented. */
+/** Pending operations expose only the locally supported approval actions. */
 export default function PendingApprovalsPanel({ activity, onRefreshActivity }: Props) {
   const [requests, setRequests] = useState<PendingApprovalRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const refresh = useCallback(async () => {
-    try { setRequests(await listPendingApprovalRequests()); setError(null); }
+    try { setRequests(await listPendingApprovalRequests()); }
     catch (cause) { setError(String(cause)); }
   }, []);
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
         <div><h3><NavIcon name="shield" /> Operation requests</h3><p>Pending operations across projects. Browser requests require native confirmation before approval. File changes require a reviewable diff and native confirmation.</p></div>
         <button type="button" onClick={() => void refresh()}>Refresh requests</button>
       </div>
-      {error && <p role="alert" className="r-home-attention">Operation request error: {error}</p>}
+      {error && <div role="alert" className="r-home-attention"><span>Operation request error: {error}</span> <button type="button" onClick={() => setError(null)} aria-label="Dismiss operation request error">Dismiss</button></div>}
       {!requests.length && !pendingOperations.length && !error && <p className="r-home-muted">No pending requests.</p>}
       {pendingOperations.map(event => (
         <div className="r-approval-request" key={event.id}>
@@ -74,7 +74,8 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
             <span className="r-activity-status r-activity-status-pending">Pending</span>
             {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveBrowser(event.sourceId!)}>Accept…</button>}
             {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectBrowser(event.sourceId!)}>Reject</button>}
-            {event.kind === "files" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveFileChange(event.sourceId!)}>Review &amp; Accept…</button>}
+            {event.kind === "files" && event.action === "PatchFile" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveFileChange(event.sourceId!)}>Review &amp; Accept…</button>}
+            {event.kind === "files" && event.action !== "PatchFile" && <span title="This operation cannot be accepted from this panel.">Approval unavailable · </span>}
             {event.kind === "files" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectFileChange(event.sourceId!)}>Reject</button>}
           </div>
         </div>
