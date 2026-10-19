@@ -669,8 +669,8 @@ mod tests {
     };
 
     use super::{
-        create_directory, create_file, delete_entry, list_directory, patch_file, read_file,
-        search_files, search_files_detailed, write_file,
+        create_directory, create_file, delete_entry, list_directory, patch_file,
+        patch_file_with_fingerprint, read_file, search_files, search_files_detailed, write_file,
     };
     use crate::models::{CommandPolicy, Workspace, WorkspaceAccessMode, WorkspaceChangePolicy};
 
@@ -704,6 +704,59 @@ mod tests {
         patch_file(&workspace, "src/app.ts", "hello", "world").unwrap();
         let after = read_file(&workspace, "src/app.ts").unwrap();
         assert!(after.content.contains("world"));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn reviewed_patch_applies_when_fingerprint_matches() {
+        let (root, workspace) = temp_workspace();
+        let before = read_file(&workspace, "src/app.ts").unwrap().content;
+        let fingerprint = crate::changes::content_fingerprint(&before);
+
+        patch_file_with_fingerprint(
+            &workspace, "src/app.ts", "hello", "approved", Some(&fingerprint),
+        ).unwrap();
+
+        assert_eq!(
+            fs::read_to_string(root.join("src/app.ts")).unwrap(),
+            "const greeting = 'approved';\\n"
+        );
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn reviewed_patch_rejects_stale_fingerprint_without_overwriting() {
+        let (root, workspace) = temp_workspace();
+        let before = read_file(&workspace, "src/app.ts").unwrap().content;
+        let fingerprint = crate::changes::content_fingerprint(&before);
+        let external_edit = "const greeting = 'changed externally';\n";
+        fs::write(root.join("src/app.ts"), external_edit).unwrap();
+
+        let error = patch_file_with_fingerprint(
+            &workspace, "src/app.ts", "hello", "approved", Some(&fingerprint),
+        ).unwrap_err();
+
+        assert!(error.contains("changed since the patch was reviewed"));
+        assert_eq!(
+            fs::read_to_string(root.join("src/app.ts")).unwrap(),
+            external_edit
+        );
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn reviewed_patch_rejects_ambiguous_matches_without_overwriting() {
+        let (root, workspace) = temp_workspace();
+        let original = "same same";
+        fs::write(root.join("src/app.ts"), original).unwrap();
+        let fingerprint = crate::changes::content_fingerprint(original);
+
+        let error = patch_file_with_fingerprint(
+            &workspace, "src/app.ts", "same", "approved", Some(&fingerprint),
+        ).unwrap_err();
+
+        assert!(error.contains("appears 2 times"));
+        assert_eq!(fs::read_to_string(root.join("src/app.ts")).unwrap(), original);
         let _ = fs::remove_dir_all(root);
     }
 
