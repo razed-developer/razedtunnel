@@ -808,3 +808,31 @@ mod tests {
         assert!(!reconcile_process_event(&mut event, &process));
     }
 }
+
+/// Reconcile a desktop-approved/rejected operation with its existing audit entry.
+pub(crate) fn update_operation_status(
+    app: &AppHandle,
+    kind: ActivityKind,
+    source_id: &str,
+    status: ActivityStatus,
+) -> Result<(), String> {
+    let _guard = activity_lock()
+        .lock()
+        .map_err(|_| "RepoTunnel activity history is temporarily unavailable.".to_string())?;
+    let mut groups = load(app)?;
+    let mut changed = false;
+    for group in &mut groups {
+        for event in &mut group.events {
+            if event.kind == kind && event.source_id.as_deref() == Some(source_id) {
+                event.status = status;
+                event.updated_at = now_millis();
+                changed = true;
+            }
+        }
+        if changed {
+            group.updated_at = group.events.iter().map(|event| event.updated_at).max().unwrap_or(group.created_at);
+        }
+    }
+    if changed { save(app, &groups)?; }
+    Ok(())
+}
