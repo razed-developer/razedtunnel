@@ -230,6 +230,7 @@ pub fn run() {
                 desktop_approval_commands::reject_pending_browser_action,
                 desktop_approval_commands::approve_pending_browser_action,
                 desktop_approval_commands::reject_pending_file_change,
+                desktop_approval_commands::approve_pending_file_change,
                 workspace_management_commands::select_workspace,
                 workspace_management_commands::list_workspaces,
                 workspace_management_commands::open_workspace_folder,
