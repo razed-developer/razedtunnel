@@ -90,3 +90,50 @@ pub(crate) fn approve_pending_browser_action(
     crate::activity::update_operation_status(&app, ActivityKind::Browser, &action_id, status)?;
     Ok(())
 }
+
+#[tauri::command]
+pub(crate) fn approve_pending_file_change(
+    window: tauri::Window,
+    app: tauri::AppHandle,
+    change_id: String,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("File approval requires the main desktop window.".to_string());
+    }
+    let record = crate::changes::list_changes(&app, None, 100)?
+        .into_iter()
+        .find(|change| change.id == change_id)
+        .ok_or_else(|| "The requested file change was not found in recent history.".to_string())?;
+    if record.status != crate::models::ChangeStatus::Pending {
+        return Err("Only pending file changes can be approved.".to_string());
+    }
+    let workspace = crate::storage::load_workspaces(&app)?
+        .into_iter()
+        .find(|workspace| workspace.id == record.workspace_id)
+        .ok_or_else(|| "The project is no longer approved.".to_string())?;
+    let preview = record.diff.as_deref().unwrap_or("(No text diff available)");
+    if record.diff.is_none() {
+        return Err("This change has no reviewable diff. Approval is disabled; reject it or review it through another trusted workflow.".to_string());
+    }
+    let message = format!(
+        "Apply this queued file change?\n\nProject: {}\nOperation: {:?}\nFile: {}\nSummary: {}\n\nProposed diff:\n{}\n\nYes applies the change; No leaves it pending.",
+        workspace.name,
+        record.operation,
+        record.primary_path,
+        record.summary,
+        preview
+    );
+    if !app.dialog().message(message).buttons(MessageDialogButtons::YesNo).blocking_show() {
+        return Err("Approval cancelled; the file change remains pending.".to_string());
+    }
+    let outcome = crate::changes::approve_change(&app, &change_id)?;
+    let status = match outcome.change.status {
+        crate::models::ChangeStatus::Applied => ActivityStatus::Succeeded,
+        crate::models::ChangeStatus::Rejected => ActivityStatus::Rejected,
+        crate::models::ChangeStatus::Pending => ActivityStatus::Pending,
+        crate::models::ChangeStatus::Failed => ActivityStatus::Failed,
+        crate::models::ChangeStatus::Undone => ActivityStatus::Stopped,
+    };
+    crate::activity::update_operation_status(&app, ActivityKind::Files, &change_id, status)?;
+    Ok(())
+}
