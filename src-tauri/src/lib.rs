@@ -227,6 +227,7 @@ pub fn run() {
             let handler: fn(tauri::ipc::Invoke<tauri::Wry>) -> bool = tauri::generate_handler![
                 desktop_approval_commands::list_pending_approval_requests,
                 desktop_approval_commands::deny_pending_approval_request,
+                desktop_approval_commands::reject_pending_browser_action,
                 workspace_management_commands::select_workspace,
                 workspace_management_commands::list_workspaces,
                 workspace_management_commands::open_workspace_folder,
