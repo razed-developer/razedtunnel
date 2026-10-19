@@ -39,3 +39,9 @@ pub(crate) fn reject_pending_browser_action(app: tauri::AppHandle, action_id: St
     crate::browser::reject_action(&app, &action_id)?;
     Ok(())
 }
+
+#[tauri::command]
+pub(crate) fn reject_pending_file_change(app: tauri::AppHandle, change_id: String) -> Result<(), String> {
+    crate::changes::reject_change(&app, &change_id)?;
+    Ok(())
+}
