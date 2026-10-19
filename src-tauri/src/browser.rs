@@ -59,6 +59,8 @@ const BROWSER_HELPER: &str = include_str!("../resources/browser_bridge.cjs");
 
 static BROWSER_SEQUENCE: AtomicU64 = AtomicU64::new(1);
 static HISTORY_LOCK: Mutex<()> = Mutex::new(());
+// Serialize approval/rejection across the full execution window, not only history reads.
+static BROWSER_APPROVAL_LOCK: Mutex<()> = Mutex::new(());
 static BROWSER_HELPER_RESTART_LOCK: Mutex<()> = Mutex::new(());
 static BROWSER_PROFILE_CLONE_LOCK: Mutex<()> = Mutex::new(());
 static BROWSER_RUNTIMES: OnceLock<Mutex<HashMap<String, Arc<Mutex<BrowserRuntime>>>>> =
@@ -4160,6 +4162,9 @@ pub(crate) fn approve_action(
     workspace: &Workspace,
     action_id: &str,
 ) -> Result<BrowserActionRecord, String> {
+    let _approval_guard = BROWSER_APPROVAL_LOCK
+        .lock()
+        .map_err(|_| "Browser approval is unavailable.".to_string())?;
     let (request, owner_id) = {
         let _guard = HISTORY_LOCK
             .lock()
@@ -4213,6 +4218,9 @@ pub(crate) fn reject_action(
     app: &AppHandle,
     action_id: &str,
 ) -> Result<BrowserActionRecord, String> {
+    let _approval_guard = BROWSER_APPROVAL_LOCK
+        .lock()
+        .map_err(|_| "Browser approval is unavailable.".to_string())?;
     with_history(app, |records| {
         let entry = records
             .iter_mut()
