@@ -11,7 +11,7 @@ use windows_sys::Win32::{
         CreateRestrictedToken, GetTokenInformation, IsTokenRestricted, SetTokenInformation,
         LookupPrivilegeValueW,
         GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
-        TokenPrivileges, TokenIntegrityLevel, TokenRestrictedSids, TokenUser, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
+        TokenPrivileges, TokenIntegrityLevel, TokenRestrictedSids, TokenUser, DISABLE_MAX_PRIVILEGE, TOKEN_ADJUST_DEFAULT, TOKEN_DUPLICATE, TOKEN_QUERY,
         TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES, TOKEN_USER,
         LUID_AND_ATTRIBUTES, TOKEN_PRIVILEGES, SE_PRIVILEGE_ENABLED,
     },
@@ -211,7 +211,7 @@ impl RestrictedBrowserToken {
     pub(crate) fn create_candidate() -> Result<Self, String> {
         let mut source: HANDLE = std::ptr::null_mut();
         let opened = unsafe {
-            OpenProcessToken(GetCurrentProcess(), TOKEN_DUPLICATE | TOKEN_QUERY, &mut source)
+            OpenProcessToken(GetCurrentProcess(), TOKEN_DUPLICATE | TOKEN_QUERY | TOKEN_ADJUST_DEFAULT, &mut source)
         };
         if opened == 0 {
             return Err(format!("OpenProcessToken failed: {}", std::io::Error::last_os_error()));
