@@ -3,7 +3,6 @@
 //! This module is intentionally policy-only. URL validation does NOT establish
 //! DNS-rebinding protection, OS process isolation, or network egress control.
 //! Browser launch must remain disabled until those enforcement layers exist.
-use std::net::IpAddr;
 use serde::{Deserialize, Serialize};
 use url::{Host, Url};
 
@@ -35,13 +34,6 @@ pub(crate) enum SessionAction {
     Login,
 }
 
-fn is_public_ip(ip: IpAddr) -> bool {
-    match ip {
-        IpAddr::V4(ip) => ip.is_global(),
-        IpAddr::V6(ip) => ip.is_global(),
-    }
-}
-
 /// Validate a syntactic public HTTPS origin. DNS resolution and every redirect
 /// must also be checked by the future isolated network enforcement layer.
 pub(crate) fn public_https_origin(input: &str) -> Result<String, String> {
@@ -65,15 +57,10 @@ pub(crate) fn public_https_origin(input: &str) -> Result<String, String> {
                 return Err("Local, reserved, or unqualified hosts are blocked.".to_string());
             }
         }
-        Host::Ipv4(ip) => {
-            if !is_public_ip(IpAddr::V4(ip)) {
-                return Err("Non-public IP addresses are blocked.".to_string());
-            }
-        }
-        Host::Ipv6(ip) => {
-            if !is_public_ip(IpAddr::V6(ip)) {
-                return Err("Non-public IP addresses are blocked.".to_string());
-            }
+        Host::Ipv4(_) | Host::Ipv6(_) => {
+            // DNS names only in v1. This avoids treating IP literals as proof
+            // of public reachability and simplifies the network isolation gate.
+            return Err("IP-literal destinations are blocked.".to_string());
         }
     }
     Ok(url.origin().ascii_serialization())
