@@ -101,11 +101,21 @@ mod windows {
             if !executable.is_absolute() || !executable.is_file() {
                 return Err("Executable must be an existing absolute file path.".into());
             }
+            self.launch_with_command_line(executable, None)
+        }
+
+        // Command lines are deliberately unavailable to production callers.
+        // Used only to exercise parent/child containment with Windows utilities.
+        fn launch_with_command_line(self, executable: &Path, command_line: Option<&str>) -> Result<ContainedProcess, String> {
+            if !executable.is_absolute() || !executable.is_file() {
+                return Err("Executable must be an existing absolute file path.".into());
+            }
             let application: Vec<u16> = executable.as_os_str().encode_wide().chain(Some(0)).collect();
+            let mut command: Option<Vec<u16>> = command_line.map(|value| value.encode_utf16().chain(Some(0)).collect());
             let mut startup: STARTUPINFOW = unsafe { std::mem::zeroed() };
             startup.cb = size_of::<STARTUPINFOW>() as u32;
             let mut info: PROCESS_INFORMATION = unsafe { std::mem::zeroed() };
-            let created = unsafe { CreateProcessW(application.as_ptr(), null_mut(), null(), null(), 0, CREATE_SUSPENDED | CREATE_NO_WINDOW, null(), null(), &startup, &mut info) };
+            let created = unsafe { CreateProcessW(application.as_ptr(), command.as_mut().map_or(null_mut(), |v| v.as_mut_ptr()), null(), null(), 0, CREATE_SUSPENDED | CREATE_NO_WINDOW, null(), null(), &startup, &mut info) };
             if created == 0 { return Err(format!("Suspended process creation failed: {}", std::io::Error::last_os_error())); }
             // Every failure before ResumeThread kills the still-suspended child.
             let assigned = unsafe { AssignProcessToJobObject(self.handle, info.hProcess) };
@@ -159,6 +169,38 @@ mod windows {
             assert_ne!(status, 0, "Job membership query failed");
             assert_ne!(member, 0, "Launched process escaped the job");
             process.terminate().unwrap(); // Also verifies zero active processes in the job.
+        }
+
+        #[test]
+        fn child_processes_are_contained_and_terminated() {
+            // cmd launches a long-running ping child. Both must remain in the job.
+            let root = std::path::PathBuf::from(std::env::var_os("SystemRoot").unwrap()).join("System32");
+            let cmd = root.join("cmd.exe");
+            let job = BrowserJob::create().unwrap();
+            let process = job.launch_with_command_line(
+                &cmd,
+                Some(r#"cmd.exe /D /C ping.exe -t 127.0.0.1 >NUL"#),
+            ).unwrap();
+            let deadline = Instant::now() + Duration::from_secs(5);
+            let mut observed_two = false;
+            while Instant::now() < deadline {
+                let mut accounting: JOBOBJECT_BASIC_ACCOUNTING_INFORMATION = unsafe { std::mem::zeroed() };
+                let ok = unsafe {
+                    QueryInformationJobObject(
+                        process.job.raw_handle(),
+                        JobObjectBasicAccountingInformation,
+                        (&mut accounting as *mut JOBOBJECT_BASIC_ACCOUNTING_INFORMATION).cast(),
+                        size_of::<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>() as u32,
+                        null_mut(),
+                    )
+                };
+                assert_ne!(ok, 0, "Cannot query process count");
+                if accounting.ActiveProcesses >= 2 { observed_two = true; break; }
+                std::thread::sleep(Duration::from_millis(25));
+            }
+            // Always terminate even when child creation did not occur.
+            process.terminate().unwrap();
+            assert!(observed_two, "Parent and child were not both observed inside job");
         }
 
         #[test]
