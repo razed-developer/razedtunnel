@@ -98,6 +98,12 @@ mod windows {
         };
 
         #[test]
+        fn relative_executable_is_rejected_before_process_creation() {
+            let job = BrowserJob::create().unwrap();
+            assert!(job.launch_suspended(std::path::Path::new("cmd.exe")).is_err());
+        }
+
+        #[test]
         fn empty_job_has_kill_on_close_enabled() {
             let job = BrowserJob::create().unwrap();
             let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
