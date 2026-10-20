@@ -148,6 +148,18 @@ mod windows {
         /// The process is suspended until Windows confirms job membership.
         /// This is not yet an approved browser launch path: no network or
         /// filesystem boundary has been established.
+        // A normal CreateProcessW child inherits the caller's unrestricted
+        // security token. Job membership is NOT an execution-identity boundary.
+        // Do not expose this launcher in production until CreateProcessAsUserW
+        // (or equivalent) uses a verified restricted token from the outset.
+        #[cfg(not(test))]
+        pub(crate) fn launch_suspended(self, _executable: &Path) -> Result<ContainedProcess, String> {
+            Err("RazedBrowser process launch disabled: restricted Windows execution token not implemented.".into())
+        }
+
+        // The Windows tests exercise Job Object mechanics using trusted local
+        // utilities; this launcher is never compiled into production builds.
+        #[cfg(test)]
         pub(crate) fn launch_suspended(self, executable: &Path) -> Result<ContainedProcess, String> {
             if !executable.is_absolute() || !executable.is_file() {
                 return Err("Executable must be an existing absolute file path.".into());
@@ -157,6 +169,7 @@ mod windows {
 
         // Command lines are deliberately unavailable to production callers.
         // Used only to exercise parent/child containment with Windows utilities.
+        #[cfg(test)]
         fn launch_with_command_line(self, executable: &Path, command_line: Option<&str>) -> Result<ContainedProcess, String> {
             if !executable.is_absolute() || !executable.is_file() {
                 return Err("Executable must be an existing absolute file path.".into());
