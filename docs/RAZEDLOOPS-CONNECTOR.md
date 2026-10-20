@@ -1,22 +1,28 @@
-# RazedLoops diagnostic connector (initial read-only integration)
+# RazedLoops diagnostic connector (read-only)
 
-RepoTunnel exposes an opt-in MCP tool named `razedloops_diagnostic_bundle` with a positive integer `task_id`. It fetches the diagnostic bundle from a **local** RazedLoops coordinator at `127.0.0.1:8765`.
+RazedTunnel exposes the MCP tool `razedloops_diagnostic_bundle`, accepting a positive integer `task_id`. It retrieves task metadata and recent test evidence from the local RazedLoops coordinator at `127.0.0.1:8765`.
 
-## Current limitations
-- Requires RazedLoops coordinator with `GET /tasks/{id}/diagnostic-bundle` (newer than the 9-test milestone).
-- Disabled unless the RepoTunnel desktop **process** is launched with `RAZEDTUNNEL_RAZEDLOOPS_DIAGNOSTIC_TOKEN` set to a dedicated read-only diagnostic token issued through the coordinator's admin-only rotation endpoint. The token is **not** supplied as an MCP tool parameter, returned to the model, or logged by this tool.
-- Do not place the token in the repository, scripts committed to Git, screenshots, or chat. Environment variables are an interim opt-in mechanism, **not** the final credential storage solution. Prefer OS-backed secret storage before enabling this in routine use.
-- The tool requires normal RepoTunnel AI access and returns at most the coordinator's five most recent reports; reports may include sensitive output. Review logs before sharing.
-- Fixed loopback URL, 5-second timeout, no HTTP redirects, no proxy, response size cap, and version/schema check.
-- Read-only: cannot trigger tests, change task state, edit files, or commit. Does not initiate ChatGPT turns.
-- No live runtime verification has yet been performed. Rebuild RepoTunnel and refresh MCP tool definitions after verification.
+## Windows credential flow
 
-## Validation
+RazedLoops desktop now includes a native Tauri command `native_diagnostic_credential_rotate`. Invoking it locally reads the existing DPAPI-protected administrator credential, calls the coordinator's admin-only rotation endpoint, and stores the newly issued diagnostic token as `%LOCALAPPDATA%\RazedLoops\diagnostic-token.dpapi`, encrypted for the current Windows user. Neither secret is returned through Tauri IPC. The command is registered but **not yet wired to a UI button**; provisioning is not automatic.
+
+RazedTunnel decrypts that same file with Windows DPAPI when `razedloops_diagnostic_bundle` is invoked. No diagnostic token environment variable is required. The connector does not expose the token to the model. Both desktop applications must run under the **same Windows user**. This is local-user protection, not isolation from other programs running under that user.
+
+## Limits and security
+
+- Requires a current RazedLoops coordinator with the diagnostic endpoint and the credential rotation endpoint.
+- Requires normal RazedTunnel AI access. Diagnostic reports may contain sensitive logs; treat logs as untrusted content and review before sharing.
+- Fixed loopback URL, five-second timeout, no redirects or proxy, response-size cap, and schema checks.
+- Read-only: does not run tests, change tasks, edit files, approve commits, or initiate AI turns.
+- Rotation invalidates the prior token. The local DPAPI file should be protected by ordinary Windows user permissions; never commit or paste it into chat.
+- Provisioning is not yet validated end-to-end. The next step is a local UI control for explicit rotation and a live connection test.
+- Windows-only DPAPI integration; other platforms currently return a clear unsupported error.
+
+## Compile verification
+
+From the RazedTunnel checkout:
+
 ```powershell
+git pull --ff-only
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
-
-Run only after pulling the changes in the RazedTunnel checkout. A future revision should replace environment configuration with OS-protected credential retrieval, and a user-facing secure configuration flow for the scoped diagnostic credential.
-
-## Provisioning the diagnostic credential
-The coordinator administrator must POST to `http://127.0.0.1:8765/admin/diagnostic-credential/rotate` with the existing admin Bearer token. The JSON response returns a newly issued 64-character diagnostic token **once**; store it securely and pass it only to the RazedTunnel desktop process via `RAZEDTUNNEL_RAZEDLOOPS_DIAGNOSTIC_TOKEN`. Rotating invalidates the previous token. To revoke without replacement, POST `/admin/diagnostic-credential/revoke` using the admin Bearer token. Never paste either token into chat or commit them to source control.
