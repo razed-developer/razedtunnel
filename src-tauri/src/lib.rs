@@ -11,6 +11,7 @@ mod gateway_commands;
 mod ai_access_commands;
 mod browser;
 mod razedbrowser_policy;
+mod razedbrowser_isolation;
 mod razedbrowser_profile;
 #[cfg(windows)]
 mod razedbrowser_job;
