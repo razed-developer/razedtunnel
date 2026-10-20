@@ -10,6 +10,14 @@ mod chat_connection_commands;
 mod gateway_commands;
 mod ai_access_commands;
 mod browser;
+mod razedbrowser_policy;
+mod razedbrowser_isolation;
+#[cfg(windows)]
+mod razedbrowser_token;
+mod razedbrowser_profile;
+#[cfg(windows)]
+mod razedbrowser_job;
+mod razedbrowser_sessions;
 mod changes;
 mod chatgpt_bridge;
 mod connection;
@@ -276,6 +284,7 @@ pub fn run() {
                 ai_access_commands::set_ai_access_paused,
                 activity_commands::get_activity_timeline,
                 gateway_commands::get_gateway_status,
+                gateway_commands::get_mcp_tool_diagnostics,
                 gateway_commands::start_gateway,
                 gateway_commands::stop_gateway,
                 public_tunnel_commands::get_public_tunnel_status,

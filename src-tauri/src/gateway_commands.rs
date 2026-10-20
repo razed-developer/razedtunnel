@@ -57,3 +57,10 @@ pub async fn stop_gateway(app: AppHandle) -> Result<GatewayStatus, String> {
     .map_err(|error| format!("Gateway stop task could not complete: {error}"))?
 }
 
+
+/// Inspect the locally compiled MCP router without credentials or network access.
+/// Accessible only through the app's Tauri IPC, not the public MCP gateway.
+#[tauri::command]
+pub fn get_mcp_tool_diagnostics() -> serde_json::Value {
+    mcp_server::local_tool_diagnostics()
+}
