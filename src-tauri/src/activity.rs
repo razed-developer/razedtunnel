@@ -304,7 +304,29 @@ pub(crate) fn timeline(
         refresh_version_links(app, group);
         let processes =
             terminal::list_processes(app, Some(&group.workspace_id), 100).unwrap_or_default();
+        // File approvals update the change ledger first. Reconcile the timeline
+        // against that ledger so completed approvals cannot remain visually pending.
+        let changes = crate::changes::list_changes(app, Some(&group.workspace_id), 100)
+            .unwrap_or_default();
         for event in &mut group.events {
+            if event.kind == ActivityKind::Files {
+                if let Some(change) = event.source_id.as_deref()
+                    .and_then(|id| changes.iter().find(|change| change.id == id))
+                {
+                    let status = match change.status {
+                        ChangeStatus::Pending => ActivityStatus::Pending,
+                        ChangeStatus::Applied => ActivityStatus::Succeeded,
+                        ChangeStatus::Rejected => ActivityStatus::Rejected,
+                        ChangeStatus::Undone => ActivityStatus::Stopped,
+                        ChangeStatus::Failed => ActivityStatus::Failed,
+                    };
+                    if event.status != status {
+                        event.status = status;
+                        event.updated_at = change.updated_at;
+                        changed = true;
+                    }
+                }
+            }
             if event.kind == ActivityKind::Browser && event.status == ActivityStatus::Pending {
                 if let Some(source_id) = event.source_id.as_deref() {
                     if let Ok(action) = crate::browser::get_action(app, source_id) {
