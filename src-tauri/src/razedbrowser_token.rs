@@ -11,7 +11,7 @@ use windows_sys::Win32::{
         CreateRestrictedToken, GetTokenInformation, IsTokenRestricted, SetTokenInformation,
         GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
         TokenPrivileges, TokenIntegrityLevel, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
-        TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES, SE_GROUP_INTEGRITY,
+        TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES,
         LUID_AND_ATTRIBUTES, TOKEN_PRIVILEGES, SE_PRIVILEGE_ENABLED,
     },
     System::Threading::{GetCurrentProcess, OpenProcessToken},
@@ -106,7 +106,7 @@ fn enforce_low_integrity(token: HANDLE) -> Result<(), String> {
     let mut label = TOKEN_MANDATORY_LABEL {
         Label: SID_AND_ATTRIBUTES {
             Sid: low_sid.as_mut_ptr().cast(),
-            Attributes: SE_GROUP_INTEGRITY,
+            Attributes: 0x0000_0020, // SE_GROUP_INTEGRITY: mandatory integrity SID
         },
     };
     let size = (std::mem::size_of::<TOKEN_MANDATORY_LABEL>() + low_sid.len()) as u32;
