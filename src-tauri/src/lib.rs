@@ -12,6 +12,8 @@ mod ai_access_commands;
 mod browser;
 mod razedbrowser_policy;
 mod razedbrowser_isolation;
+#[cfg(windows)]
+mod razedbrowser_token;
 mod razedbrowser_profile;
 #[cfg(windows)]
 mod razedbrowser_job;
