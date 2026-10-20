@@ -6,10 +6,10 @@
 #![cfg(windows)]
 
 use windows_sys::Win32::{
-    Foundation::{CloseHandle, HANDLE},
+    Foundation::{CloseHandle, HANDLE, LUID},
     Security::{
         CreateRestrictedToken, GetTokenInformation, IsTokenRestricted, SetTokenInformation,
-        LookupPrivilegeValueW, LUID,
+        LookupPrivilegeValueW,
         GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
         TokenPrivileges, TokenIntegrityLevel, TokenRestrictedSids, TokenUser, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
         TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES, TOKEN_USER,
