@@ -641,7 +641,7 @@ pub(crate) fn disconnect() -> Result<GithubConnectionStatus, String> {
 mod tests {
     use super::{
         auth_output_reports_invalid_credential, auth_status_username, connected_status,
-        executable_name, extract_device_code, github_cli_config_dir,
+        background_command, executable_name, extract_device_code, github_cli_config_dir,
     };
 
     #[test]
