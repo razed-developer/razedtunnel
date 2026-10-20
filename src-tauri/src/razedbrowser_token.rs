@@ -8,10 +8,10 @@
 use windows_sys::Win32::{
     Foundation::{CloseHandle, HANDLE},
     Security::{
-        CreateRestrictedToken, IsTokenRestricted, OpenProcessToken,
+        CreateRestrictedToken, IsTokenRestricted,
         DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
     },
-    System::Threading::GetCurrentProcess,
+    System::Threading::{GetCurrentProcess, OpenProcessToken},
 };
 
 /// Owns a Windows restricted token. Not a claim of complete isolation.
