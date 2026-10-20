@@ -10,6 +10,7 @@ mod chat_connection_commands;
 mod gateway_commands;
 mod ai_access_commands;
 mod browser;
+mod razedbrowser_policy;
 mod changes;
 mod chatgpt_bridge;
 mod connection;
