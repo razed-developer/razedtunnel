@@ -8,7 +8,7 @@
 mod windows {
     use std::{mem::size_of, ptr::{null, null_mut}, os::windows::ffi::OsStrExt, path::Path, time::{Duration, Instant}};
     use windows_sys::Win32::{
-        Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE},
+        Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE, WAIT_OBJECT_0, WAIT_TIMEOUT},
         System::JobObjects::{
             CreateJobObjectW, SetInformationJobObject, AssignProcessToJobObject, IsProcessInJob, TerminateJobObject,
             JobObjectExtendedLimitInformation, JobObjectBasicAccountingInformation, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, QueryInformationJobObject,
@@ -62,10 +62,16 @@ mod windows {
             if unsafe { TerminateJobObject(self.job.handle, 1) } == 0 {
                 return Err(format!("Job termination failed: {}", std::io::Error::last_os_error()));
             }
-            if unsafe { WaitForSingleObject(self.process, u32::MAX) } != 0 {
+            // A single deadline bounds both root-process and child-process
+            // verification. Timeout must never be treated as safe cleanup.
+            let deadline = Instant::now() + Duration::from_secs(10);
+            let wait = unsafe { WaitForSingleObject(self.process, 10_000) };
+            if wait == WAIT_TIMEOUT {
+                return Err("Root process did not exit within shutdown deadline.".into());
+            }
+            if wait != WAIT_OBJECT_0 {
                 return Err(format!("Root process wait failed: {}", std::io::Error::last_os_error()));
             }
-            let deadline = Instant::now() + Duration::from_secs(10);
             loop {
                 let mut info: JOBOBJECT_BASIC_ACCOUNTING_INFORMATION = unsafe { std::mem::zeroed() };
                 let ok = unsafe {
