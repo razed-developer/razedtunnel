@@ -9,7 +9,9 @@ use windows_sys::Win32::{
     Foundation::{CloseHandle, HANDLE},
     Security::{
         CreateRestrictedToken, GetTokenInformation, IsTokenRestricted,
-        TokenPrivileges, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
+        GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
+        TokenPrivileges, TokenIntegrityLevel, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
+        TOKEN_MANDATORY_LABEL,
         LUID_AND_ATTRIBUTES, TOKEN_PRIVILEGES, SE_PRIVILEGE_ENABLED,
     },
     System::Threading::{GetCurrentProcess, OpenProcessToken},
@@ -61,6 +63,40 @@ fn verify_privileges_disabled(token: HANDLE) -> Result<(), String> {
     Ok(())
 }
 
+/// Inspect the token's mandatory integrity SID and reject malformed values.
+/// Merely reading an integrity level does not lower it. A future launcher must
+/// establish a suitably low level and verify it again on the launched process.
+fn inspect_integrity_level(token: HANDLE) -> Result<u32, String> {
+    let mut required = 0u32;
+    unsafe { GetTokenInformation(token, TokenIntegrityLevel, std::ptr::null_mut(), 0, &mut required); }
+    if (required as usize) < std::mem::size_of::<TOKEN_MANDATORY_LABEL>() {
+        return Err("Cannot determine token integrity information size.".into());
+    }
+    let mut storage = vec![0usize; (required as usize).div_ceil(std::mem::size_of::<usize>())];
+    let mut returned = 0u32;
+    if unsafe {
+        GetTokenInformation(token, TokenIntegrityLevel, storage.as_mut_ptr().cast(),
+            (storage.len() * std::mem::size_of::<usize>()) as u32, &mut returned)
+    } == 0 {
+        return Err(format!("Token integrity query failed: {}", std::io::Error::last_os_error()));
+    }
+    if (returned as usize) < std::mem::size_of::<TOKEN_MANDATORY_LABEL>() {
+        return Err("Token integrity information truncated.".into());
+    }
+    let label = unsafe { &*storage.as_ptr().cast::<TOKEN_MANDATORY_LABEL>() };
+    let sid = label.Label.Sid;
+    if sid.is_null() || unsafe { IsValidSid(sid) } == 0 {
+        return Err("Token integrity SID is invalid.".into());
+    }
+    let count_ptr = unsafe { GetSidSubAuthorityCount(sid) };
+    if count_ptr.is_null() { return Err("Token integrity SID lacks a subauthority count.".into()); }
+    let count = unsafe { *count_ptr };
+    if count == 0 { return Err("Token integrity SID has no RID.".into()); }
+    let rid_ptr = unsafe { GetSidSubAuthority(sid, u32::from(count - 1)) };
+    if rid_ptr.is_null() { return Err("Token integrity RID is unavailable.".into()); }
+    Ok(unsafe { *rid_ptr })
+}
+
 /// Owns a Windows restricted token. Not a claim of complete isolation.
 pub(crate) struct RestrictedBrowserToken {
     handle: HANDLE,
@@ -99,6 +135,10 @@ impl RestrictedBrowserToken {
             unsafe { CloseHandle(restricted); }
             return Err(error);
         }
+        if let Err(error) = inspect_integrity_level(restricted) {
+            unsafe { CloseHandle(restricted); }
+            return Err(error);
+        }
         Ok(Self { handle: restricted })
     }
 }
@@ -121,6 +161,7 @@ mod tests {
             assert!(!token.handle.is_null());
             assert_ne!(unsafe { IsTokenRestricted(token.handle) }, 0);
             verify_privileges_disabled(token.handle).unwrap();
+            let _integrity_rid = inspect_integrity_level(token.handle).unwrap();
         }
     }
 }
