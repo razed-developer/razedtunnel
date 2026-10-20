@@ -65,13 +65,13 @@ mod windows {
             let mut member = 0i32;
             let verified = assigned != 0 && unsafe { IsProcessInJob(info.hProcess, self.handle, &mut member) } != 0 && member != 0;
             if !verified {
-                unsafe { TerminateProcess(info.hProcess, 1); WaitForSingleObject(info.hProcess, INFINITE); CloseHandle(info.hThread); CloseHandle(info.hProcess); }
+                unsafe { TerminateProcess(info.hProcess, 1); WaitForSingleObject(info.hProcess, u32::MAX); CloseHandle(info.hThread); CloseHandle(info.hProcess); }
                 return Err(format!("Cannot verify suspended process containment: {}", std::io::Error::last_os_error()));
             }
             let resumed = unsafe { ResumeThread(info.hThread) };
             unsafe { CloseHandle(info.hThread); }
             if resumed == u32::MAX {
-                unsafe { TerminateJobObject(self.handle, 1); WaitForSingleObject(info.hProcess, INFINITE); CloseHandle(info.hProcess); }
+                unsafe { TerminateJobObject(self.handle, 1); WaitForSingleObject(info.hProcess, u32::MAX); CloseHandle(info.hProcess); }
                 return Err(format!("Cannot resume contained process: {}", std::io::Error::last_os_error()));
             }
             Ok(ContainedProcess { process: info.hProcess, job: self })
