@@ -9,6 +9,7 @@ use windows_sys::Win32::{
     Foundation::{CloseHandle, HANDLE},
     Security::{
         CreateRestrictedToken, GetTokenInformation, IsTokenRestricted, SetTokenInformation,
+        LookupPrivilegeValueW, LUID,
         GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
         TokenPrivileges, TokenIntegrityLevel, TokenRestrictedSids, TokenUser, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
         TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES, TOKEN_USER,
@@ -17,8 +18,8 @@ use windows_sys::Win32::{
     System::Threading::{GetCurrentProcess, OpenProcessToken},
 };
 
-/// Verify the OS reports no enabled privileges in the candidate token.
-/// This is only one property of an execution identity, not proof of sandboxing.
+/// Verify the OS reports no enabled privileges except SeChangeNotifyPrivilege.
+/// Windows may retain SeChangeNotifyPrivilege when DISABLE_MAX_PRIVILEGE is used.\n/// This is only one property of an execution identity, not proof of sandboxing.
 fn verify_privileges_disabled(token: HANDLE) -> Result<(), String> {
     let mut required = 0u32;
     // First call obtains the required buffer size; failure is expected.
@@ -52,12 +53,28 @@ fn verify_privileges_disabled(token: HANDLE) -> Result<(), String> {
     if bytes_needed > returned as usize || bytes_needed > buffer.len() * 8 {
         return Err("Token privilege entries exceed returned buffer.".into());
     }
+    // Resolve the allowed exception through Windows rather than assuming
+    // the numeric LUID is constant across environments.
+    let privilege_name: Vec<u16> = "SeChangeNotifyPrivilege".encode_utf16()
+        .chain(std::iter::once(0)).collect();
+    let mut change_notify_luid = LUID { LowPart: 0, HighPart: 0 };
+    if unsafe {
+        LookupPrivilegeValueW(std::ptr::null(), privilege_name.as_ptr(), &mut change_notify_luid)
+    } == 0 {
+        return Err(format!("LookupPrivilegeValueW failed: {}", std::io::Error::last_os_error()));
+    }
     for i in 0..count {
         let entry = unsafe {
             std::ptr::read_unaligned(base.add(offset + i * entry_size).cast::<LUID_AND_ATTRIBUTES>())
         };
-        if entry.Attributes & SE_PRIVILEGE_ENABLED != 0 {
-            return Err("Restricted token still has an enabled privilege.".into());
+        if entry.Attributes & SE_PRIVILEGE_ENABLED != 0
+            && (entry.Luid.LowPart != change_notify_luid.LowPart
+                || entry.Luid.HighPart != change_notify_luid.HighPart)
+        {
+            return Err(format!(
+                "Restricted token has an unexpected enabled privilege (LUID {}:{}).",
+                entry.Luid.HighPart, entry.Luid.LowPart
+            ));
         }
     }
     Ok(())
