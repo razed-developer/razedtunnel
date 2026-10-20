@@ -27,8 +27,7 @@ mod windows {
     }
 
     impl ContainedProcess {
-        /// Requests termination of the job and waits for its root process.
-        /// This does not yet prove that all descendants have exited.
+        /// Terminate the entire job and confirm all assigned processes exited.
         pub(crate) fn terminate(self) -> Result<(), String> {
             if unsafe { TerminateJobObject(self.job.handle, 1) } == 0 {
                 return Err(format!("Job termination failed: {}", std::io::Error::last_os_error()));
@@ -36,7 +35,25 @@ mod windows {
             if unsafe { WaitForSingleObject(self.process, u32::MAX) } != 0 {
                 return Err(format!("Root process wait failed: {}", std::io::Error::last_os_error()));
             }
-            Ok(())
+            let deadline = Instant::now() + Duration::from_secs(10);
+            loop {
+                let mut info: JOBOBJECT_BASIC_ACCOUNTING_INFORMATION = unsafe { std::mem::zeroed() };
+                let ok = unsafe {
+                    QueryInformationJobObject(
+                        self.job.handle,
+                        JobObjectBasicAccountingInformation,
+                        (&mut info as *mut JOBOBJECT_BASIC_ACCOUNTING_INFORMATION).cast(),
+                        size_of::<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>() as u32,
+                        null_mut(),
+                    )
+                };
+                if ok == 0 { return Err(format!("Job accounting query failed: {}", std::io::Error::last_os_error())); }
+                if info.ActiveProcesses == 0 { return Ok(()); }
+                if Instant::now() >= deadline {
+                    return Err(format!("{} job processes still active after termination.", info.ActiveProcesses));
+                }
+                std::thread::sleep(Duration::from_millis(20));
+            }
         }
     }
 
