@@ -678,6 +678,7 @@ fn read_razedloops_diagnostic(task_id: i64) -> Result<serde_json::Value, String>
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
         .redirect(reqwest::redirect::Policy::none())
+        .no_proxy()
         .build().map_err(|_| "Cannot initialize RazedLoops client".to_string())?;
     // Fixed loopback destination, not caller-supplied, to prevent proxy/SSRF use.
     let url = format!("http://127.0.0.1:8765/tasks/{task_id}/diagnostic-bundle");
