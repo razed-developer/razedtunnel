@@ -259,16 +259,16 @@ mod tests {
     use super::*;
     #[test]
     fn restricted_token_candidate_is_verified() {
-        // Depending on the caller's existing token, disabling privileges
-        // alone may not yield a token Windows considers restricted. Reject
-        // that case rather than treating it as an isolation success.
-        if let Ok(token) = RestrictedBrowserToken::create_candidate() {
-            assert!(!token.handle.is_null());
-            assert_ne!(unsafe { IsTokenRestricted(token.handle) }, 0);
-            verify_privileges_disabled(token.handle).unwrap();
-            assert_eq!(inspect_integrity_level(token.handle).unwrap(), 0x1000);
-            assert_eq!(inspect_restricting_sid_count(token.handle).unwrap(), 1,
-                "candidate must have exactly one baseline restricting SID");
-        }
+        // Do not silently pass if token construction or OS verification fails.
+        // This test is intentionally strict: it must exercise the actual
+        // Windows token APIs on RazedRunner, not merely compile them.
+        let token = RestrictedBrowserToken::create_candidate()
+            .expect("Windows must create and verify the restricted-token candidate");
+        assert!(!token.handle.is_null());
+        assert_ne!(unsafe { IsTokenRestricted(token.handle) }, 0);
+        verify_privileges_disabled(token.handle).unwrap();
+        assert_eq!(inspect_integrity_level(token.handle).unwrap(), 0x1000);
+        assert_eq!(inspect_restricting_sid_count(token.handle).unwrap(), 1,
+            "candidate must have exactly one baseline restricting SID");
     }
 }
