@@ -669,12 +669,51 @@ struct RazedLoopsDiagnosticParams {
     task_id: i64,
 }
 
+#[cfg(windows)]
+fn razedloops_diagnostic_token() -> Result<String, String> {
+    use windows_sys::Win32::Security::Cryptography::{CryptUnprotectData, CRYPT_INTEGER_BLOB};
+    use windows_sys::Win32::Foundation::LocalFree;
+    let base = std::env::var_os("LOCALAPPDATA").ok_or("LOCALAPPDATA is unavailable")?;
+    let path = std::path::PathBuf::from(base).join("RazedLoops").join("diagnostic-token.dpapi");
+    let encoded = std::fs::read_to_string(path)
+        .map_err(|_| "RazedLoops diagnostic credential has not been provisioned".to_string())?;
+    let encoded = encoded.trim();
+    if encoded.is_empty() || encoded.len() % 2 != 0 || !encoded.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return Err("RazedLoops diagnostic credential has an invalid storage format".into());
+    }
+    let mut ciphertext: Vec<u8> = encoded.as_bytes().chunks_exact(2)
+        .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap_or(""), 16))
+        .collect::<Result<_, _>>().map_err(|_| "Invalid diagnostic credential encoding")?;
+    let input = CRYPT_INTEGER_BLOB { cbData: ciphertext.len() as u32, pbData: ciphertext.as_mut_ptr() };
+    let mut output = CRYPT_INTEGER_BLOB { cbData: 0, pbData: std::ptr::null_mut() };
+    let ok = unsafe { CryptUnprotectData(&input, std::ptr::null_mut(), std::ptr::null(), std::ptr::null(), std::ptr::null(), 0, &mut output) };
+    if ok == 0 { return Err("Cannot decrypt RazedLoops diagnostic credential for this Windows user".into()); }
+    let plain = unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize) };
+    let result = if plain.len() % 2 != 0 {
+        Err("Diagnostic credential plaintext is not UTF-16LE".to_string())
+    } else {
+        let utf16: Vec<u16> = plain.chunks_exact(2).map(|pair| u16::from_le_bytes([pair[0], pair[1]])).collect();
+        String::from_utf16(&utf16).map_err(|_| "Invalid diagnostic credential plaintext".to_string())
+    };
+    unsafe {
+        std::ptr::write_bytes(output.pbData, 0, output.cbData as usize);
+        LocalFree(output.pbData as *mut core::ffi::c_void);
+    }
+    result.and_then(|token| {
+        if token.len() >= 32 && token.bytes().all(|b| b.is_ascii_hexdigit()) { Ok(token) }
+        else { Err("Invalid diagnostic credential".into()) }
+    })
+}
+
+#[cfg(not(windows))]
+fn razedloops_diagnostic_token() -> Result<String, String> {
+    Err("RazedLoops DPAPI connector currently requires Windows".into())
+}
+
 fn read_razedloops_diagnostic(task_id: i64) -> Result<serde_json::Value, String> {
     if task_id <= 0 { return Err("task_id must be positive".into()); }
-    // Opt-in only. The credential stays within the gateway process and is never returned.
-    let token = std::env::var("RAZEDTUNNEL_RAZEDLOOPS_DIAGNOSTIC_TOKEN")
-        .map_err(|_| "RazedLoops diagnostic connector is not configured".to_string())?;
-    if token.len() < 32 { return Err("RazedLoops connector credential is invalid".into()); }
+    // Credential remains within this process and is never returned to the model.
+    let token = razedloops_diagnostic_token()?;
     let client = reqwest::blocking::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
         .redirect(reqwest::redirect::Policy::none())
