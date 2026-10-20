@@ -8,10 +8,10 @@
 use windows_sys::Win32::{
     Foundation::{CloseHandle, HANDLE},
     Security::{
-        CreateRestrictedToken, GetTokenInformation, IsTokenRestricted,
+        CreateRestrictedToken, GetTokenInformation, IsTokenRestricted, SetTokenInformation,
         GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
         TokenPrivileges, TokenIntegrityLevel, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
-        TOKEN_MANDATORY_LABEL,
+        TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES, SE_GROUP_INTEGRITY,
         LUID_AND_ATTRIBUTES, TOKEN_PRIVILEGES, SE_PRIVILEGE_ENABLED,
     },
     System::Threading::{GetCurrentProcess, OpenProcessToken},
@@ -97,6 +97,31 @@ fn inspect_integrity_level(token: HANDLE) -> Result<u32, String> {
     Ok(unsafe { *rid_ptr })
 }
 
+/// Set a low mandatory integrity label (S-1-16-4096) on the candidate.
+/// This restricts write-up access but does NOT confine reads or network access.
+fn enforce_low_integrity(token: HANDLE) -> Result<(), String> {
+    // SID revision 1, one subauthority, mandatory label authority 16,
+    // little-endian low-integrity RID 4096.
+    let mut low_sid: [u8; 12] = [1, 1, 0, 0, 0, 0, 0, 16, 0, 16, 0, 0];
+    let mut label = TOKEN_MANDATORY_LABEL {
+        Label: SID_AND_ATTRIBUTES {
+            Sid: low_sid.as_mut_ptr().cast(),
+            Attributes: SE_GROUP_INTEGRITY,
+        },
+    };
+    let size = (std::mem::size_of::<TOKEN_MANDATORY_LABEL>() + low_sid.len()) as u32;
+    if unsafe {
+        SetTokenInformation(token, TokenIntegrityLevel, (&mut label as *mut TOKEN_MANDATORY_LABEL).cast(), size)
+    } == 0 {
+        return Err(format!("SetTokenInformation(low integrity) failed: {}", std::io::Error::last_os_error()));
+    }
+    let actual = inspect_integrity_level(token)?;
+    if actual != 0x1000 {
+        return Err(format!("Token integrity verification failed: expected low (4096), got {actual}."));
+    }
+    Ok(())
+}
+
 /// Owns a Windows restricted token. Not a claim of complete isolation.
 pub(crate) struct RestrictedBrowserToken {
     handle: HANDLE,
@@ -104,8 +129,8 @@ pub(crate) struct RestrictedBrowserToken {
 
 impl RestrictedBrowserToken {
     /// Create a restricted primary-token candidate from the current process.
-    /// This disables available privileges; it does not remove all filesystem
-    /// access or enforce any network policy. Do not use for production launch
+    /// This disables available privileges and sets low integrity; it does not
+    /// confine filesystem reads or enforce any network policy. Do not use for production launch
     /// until token type, integrity, SID restrictions and ACLs are verified.
     pub(crate) fn create_candidate() -> Result<Self, String> {
         let mut source: HANDLE = std::ptr::null_mut();
@@ -135,7 +160,7 @@ impl RestrictedBrowserToken {
             unsafe { CloseHandle(restricted); }
             return Err(error);
         }
-        if let Err(error) = inspect_integrity_level(restricted) {
+        if let Err(error) = enforce_low_integrity(restricted) {
             unsafe { CloseHandle(restricted); }
             return Err(error);
         }
@@ -161,7 +186,7 @@ mod tests {
             assert!(!token.handle.is_null());
             assert_ne!(unsafe { IsTokenRestricted(token.handle) }, 0);
             verify_privileges_disabled(token.handle).unwrap();
-            let _integrity_rid = inspect_integrity_level(token.handle).unwrap();
+            assert_eq!(inspect_integrity_level(token.handle).unwrap(), 0x1000);
         }
     }
 }
