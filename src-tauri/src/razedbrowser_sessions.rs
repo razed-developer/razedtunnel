@@ -39,8 +39,16 @@ impl SessionRegistry {
         Ok(())
     }
 
-    /// Only call after the isolated process, egress controls, and disposable
-    /// profile have been independently established and verified.
+    /// Activation is deliberately disabled until OS-enforced filesystem and
+    /// network isolation can be verified. Job membership alone is insufficient.
+    /// Do not expose an unchecked "verified" boolean to callers.
+    #[cfg(not(test))]
+    pub(crate) fn activate_after_isolation_verified(&mut self, _id: &str, _now: u64) -> Result<(), String> {
+        Err("RazedBrowser activation disabled: filesystem and network isolation not implemented.".into())
+    }
+
+    /// Test-only state-machine transition. Never compiled into production.
+    #[cfg(test)]
     pub(crate) fn activate_after_isolation_verified(&mut self, id: &str, now: u64) -> Result<(), String> {
         let session = self.get_mut(id)?;
         if session.state != SessionState::AwaitingIsolation || session.policy.revoked
