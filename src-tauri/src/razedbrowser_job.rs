@@ -16,6 +16,36 @@ mod windows {
         },
     };
 
+    use windows_sys::Win32::System::Threading::{
+        CreateProcessW, ResumeThread, TerminateProcess, WaitForSingleObject,
+        PROCESS_INFORMATION, STARTUPINFOW, CREATE_SUSPENDED, CREATE_NO_WINDOW,
+    };
+
+    pub(crate) struct ContainedProcess {
+        process: HANDLE,
+        job: BrowserJob,
+    }
+
+    impl ContainedProcess {
+        /// Requests termination of the job and waits for its root process.
+        /// This does not yet prove that all descendants have exited.
+        pub(crate) fn terminate(self) -> Result<(), String> {
+            if unsafe { TerminateJobObject(self.job.handle, 1) } == 0 {
+                return Err(format!("Job termination failed: {}", std::io::Error::last_os_error()));
+            }
+            if unsafe { WaitForSingleObject(self.process, u32::MAX) } != 0 {
+                return Err(format!("Root process wait failed: {}", std::io::Error::last_os_error()));
+            }
+            Ok(())
+        }
+    }
+
+    impl Drop for ContainedProcess {
+        fn drop(&mut self) {
+            unsafe { CloseHandle(self.process); }
+        }
+    }
+
     pub(crate) struct BrowserJob {
         handle: HANDLE,
     }
