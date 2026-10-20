@@ -1212,7 +1212,7 @@ pub(crate) fn list_changes(
 
 /// Recompute the exact patch against the current file and reject stale previews.
 /// This is read-only and does not approve or modify any workspace file.
-pub(crate) fn review_pending_patch(app: &AppHandle, change_id: &str) -> Result<ChangeRecord, String> {
+pub(crate) fn review_pending_file_change(app: &AppHandle, change_id: &str) -> Result<ChangeRecord, String> {
     let _guard = change_submission_lock()
         .lock()
         .map_err(|_| "RepoTunnel change coordination is temporarily unavailable.".to_string())?;
@@ -1222,34 +1222,47 @@ pub(crate) fn review_pending_patch(app: &AppHandle, change_id: &str) -> Result<C
     if record.status != ChangeStatus::Pending {
         return Err("Only pending file changes can be reviewed.".to_string());
     }
-    if record.operation != ChangeOperation::PatchFile {
-        return Err("Only file patches are supported by this review workflow.".to_string());
+    if !matches!(record.operation, ChangeOperation::PatchFile | ChangeOperation::CreateFile) {
+        return Err("Only file patches and creations are supported by this review workflow.".to_string());
     }
     let workspace = load_workspaces(app)?.into_iter()
         .find(|workspace| workspace.id == record.workspace_id)
         .ok_or_else(|| "The project is no longer approved.".to_string())?;
     let pending = read_pending_change_request(&request_path(app, change_id)?)?;
-    let (relative_path, expected, replacement, expected_fingerprint) = match &pending.payload {
-        ChangePayload::PatchFile { relative_path, expected, replacement, expected_fingerprint } =>
-            (relative_path, expected, replacement, expected_fingerprint),
-        _ => return Err("The stored request does not match the patch record.".to_string()),
+    let exact_diff = match &pending.payload {
+        ChangePayload::PatchFile { relative_path, expected, replacement, expected_fingerprint }
+            if record.operation == ChangeOperation::PatchFile => {
+            if relative_path != &record.primary_path {
+                return Err("The pending patch path differs from its audit record.".to_string());
+            }
+            resolve_workspace_path(&workspace, relative_path, AccessOperation::Write, true)?;
+            let current = filesystem::read_file(&workspace, relative_path)?;
+            if content_fingerprint(&current.content) != *expected_fingerprint {
+                return Err("The file changed since this patch was proposed. Review and submit a new patch.".to_string());
+            }
+            let updated = patch_result(&current.content, expected, replacement)?;
+            diff_preview(&current.content, &updated)
+                .ok_or_else(|| "The patch produces no changes.".to_string())?
+        }
+        ChangePayload::CreateFile { relative_path, content }
+            if record.operation == ChangeOperation::CreateFile => {
+            if relative_path != &record.primary_path {
+                return Err("The pending creation path differs from its audit record.".to_string());
+            }
+            let target = resolve_workspace_path(&workspace, relative_path, AccessOperation::Write, true)?;
+            if target.exists() {
+                return Err("The target already exists. Review and submit a new creation.".to_string());
+            }
+            diff_preview("", content)
+                .ok_or_else(|| "A complete creation preview is unavailable.".to_string())?
+        }
+        _ => return Err("The stored request does not match the file change record.".to_string()),
     };
-    if relative_path != &record.primary_path {
-        return Err("The pending patch path differs from its audit record.".to_string());
-    }
-    resolve_workspace_path(&workspace, relative_path, AccessOperation::Write, true)?;
-    let current = filesystem::read_file(&workspace, relative_path)?;
-    if content_fingerprint(&current.content) != *expected_fingerprint {
-        return Err("The file changed since this patch was proposed. Review and submit a new patch.".to_string());
-    }
-    let updated = patch_result(&current.content, expected, replacement)?;
-    let exact_diff = diff_preview(&current.content, &updated)
-        .ok_or_else(|| "The patch produces no changes.".to_string())?;
     if exact_diff.contains("… diff preview truncated …") || exact_diff.len() > 12_000 {
-        return Err("The patch is too large for complete review in a native dialog.".to_string());
+        return Err("The file change is too large for complete review in a native dialog.".to_string());
     }
     if record.diff.as_deref() != Some(exact_diff.as_str()) {
-        return Err("The current patch no longer matches its recorded preview.".to_string());
+        return Err("The file change no longer matches its recorded preview.".to_string());
     }
     Ok(record)
 }
