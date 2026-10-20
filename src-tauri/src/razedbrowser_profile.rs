@@ -4,6 +4,37 @@
 //! launch or session activation is permitted merely because a profile exists.
 use std::{fs, path::{Path, PathBuf}};
 
+/// Read-only recovery inventory. A listed profile is NOT evidence that its
+/// owning process has exited, and must not be automatically deleted.
+pub(crate) fn discover_leftover_profiles() -> Result<Vec<PathBuf>, String> {
+    discover_profiles_under(&std::env::temp_dir().join("razedtunnel-razedbrowser"))
+}
+
+fn discover_profiles_under(root: &Path) -> Result<Vec<PathBuf>, String> {
+    let entries = match fs::read_dir(root) {
+        Ok(entries) => entries,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(e) => return Err(format!("Cannot inspect RazedBrowser profile root: {e}")),
+    };
+    let mut profiles = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Cannot inspect profile entry: {e}"))?;
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else { continue };
+        let Some(suffix) = name.strip_prefix("profile-") else { continue };
+        if suffix.len() != 48 || !suffix.bytes().all(|b| b.is_ascii_hexdigit()) {
+            continue;
+        }
+        // Do not traverse or accept reparse points / symlinks as profiles.
+        let kind = entry.file_type().map_err(|e| format!("Cannot inspect profile type: {e}"))?;
+        if kind.is_dir() && !kind.is_symlink() {
+            profiles.push(entry.path());
+        }
+    }
+    profiles.sort();
+    Ok(profiles)
+}
+
 pub(crate) struct DisposableProfile {
     path: PathBuf,
     cleaned: bool,
@@ -72,6 +103,37 @@ impl Drop for DisposableProfile {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn discovery_lists_profiles_without_deleting_them() {
+        let mut profile = DisposableProfile::create().unwrap();
+        let path = profile.path().to_owned();
+        fs::write(path.join("session-data"), b"retain").unwrap();
+        let discovered = discover_leftover_profiles().unwrap();
+        assert!(discovered.contains(&path));
+        assert!(path.join("session-data").exists());
+        profile.cleanup().unwrap();
+    }
+
+    #[test]
+    fn discovery_ignores_non_profile_entries() {
+        let profile = DisposableProfile::create().unwrap();
+        let root = profile.path().parent().unwrap();
+        let listed = discover_profiles_under(root).unwrap();
+        assert!(listed.contains(&profile.path().to_owned()));
+        assert!(listed.iter().all(|path| {
+            let name = path.file_name().unwrap().to_string_lossy();
+            name.strip_prefix("profile-").is_some_and(|suffix|
+                suffix.len() == 48 && suffix.bytes().all(|b| b.is_ascii_hexdigit()))
+        }));
+    }
+
+    #[test]
+    fn discovery_of_missing_root_is_empty() {
+        let profile = DisposableProfile::create().unwrap();
+        let nonexistent = profile.path().join("not-created");
+        assert!(discover_profiles_under(&nonexistent).unwrap().is_empty());
+    }
 
     #[test]
     fn profiles_are_distinct_and_cleanup_removes_data() {
