@@ -5460,6 +5460,18 @@ impl RepoTunnelMcp {
     }
 }
 
+// Local-only Tauri diagnostics; never exposed as an unauthenticated HTTP endpoint.
+pub(crate) fn local_tool_diagnostics() -> serde_json::Value {
+    let tools = RepoTunnelMcp::tool_router().list_all();
+    let mut names: Vec<String> = tools.iter().map(|tool| tool.name.to_string()).collect();
+    names.sort();
+    serde_json::json!({
+        "tool_count": names.len(),
+        "razedloops_diagnostic_bundle_present": names.iter().any(|name| name == "razedloops_diagnostic_bundle"),
+        "tool_names": names,
+    })
+}
+
 fn repotunnel_server_capabilities() -> ServerCapabilities {
     let mut extensions = ExtensionCapabilities::new();
     extensions.insert(
