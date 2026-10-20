@@ -6,12 +6,12 @@
 //! Job Objects also do not restrict filesystem access or network egress.
 #[cfg(windows)]
 mod windows {
-    use std::{mem::size_of, ptr::{null, null_mut}, os::windows::ffi::OsStrExt, path::Path};
+    use std::{mem::size_of, ptr::{null, null_mut}, os::windows::ffi::OsStrExt, path::Path, time::{Duration, Instant}};
     use windows_sys::Win32::{
         Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE},
         System::JobObjects::{
             CreateJobObjectW, SetInformationJobObject, AssignProcessToJobObject, IsProcessInJob, TerminateJobObject,
-            JobObjectExtendedLimitInformation, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+            JobObjectExtendedLimitInformation, JobObjectBasicAccountingInformation, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, QueryInformationJobObject,
             JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
         },
     };
@@ -128,7 +128,7 @@ mod windows {
         };
 
         #[test]
-        fn live_process_is_assigned_and_terminated() {
+        fn live_process_is_assigned_and_job_wide_shutdown_verified() {
             // This launches only a local Windows utility, never Chromium or a URL.
             // Use a stable System32 executable rather than searching PATH.
             let system_root = std::env::var_os("SystemRoot").expect("Windows SystemRoot");
@@ -141,7 +141,7 @@ mod windows {
             let status = unsafe { IsProcessInJob(process.process, process.job.raw_handle(), &mut member) };
             assert_ne!(status, 0, "Job membership query failed");
             assert_ne!(member, 0, "Launched process escaped the job");
-            process.terminate().unwrap();
+            process.terminate().unwrap(); // Also verifies zero active processes in the job.
         }
 
         #[test]
