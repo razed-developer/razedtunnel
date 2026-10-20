@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import type { ChatConnectionStatus, GatewayStatus, PublicTunnelStatus } from "../types";
 
 type GatewayPanelProps = {
@@ -12,6 +13,20 @@ type GatewayPanelProps = {
 
 function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, onToggle }: GatewayPanelProps) {
   const [copied, setCopied] = useState(false);
+  const [toolDiagnostics, setToolDiagnostics] = useState<{ tool_count: number; razedloops_diagnostic_bundle_present: boolean; tool_names: string[] } | null>(null);
+  const [toolDiagnosticsError, setToolDiagnosticsError] = useState<string | null>(null);
+  const [toolDiagnosticsLoading, setToolDiagnosticsLoading] = useState(false);
+  async function inspectMcpTools() {
+    setToolDiagnosticsLoading(true);
+    setToolDiagnosticsError(null);
+    try {
+      setToolDiagnostics(await invoke("get_mcp_tool_diagnostics"));
+    } catch (error) {
+      setToolDiagnosticsError(String(error));
+    } finally {
+      setToolDiagnosticsLoading(false);
+    }
+  }
   const actionLabel = status.running ? "Stop gateway" : "Start gateway";
   const mcpEndpoint = status.running && status.port ? `http://127.0.0.1:${status.port}/mcp` : null;
   const remoteReady = publicTunnel.ready || connection.ready;
@@ -67,6 +82,9 @@ function GatewayPanel({ status, connection, publicTunnel, aiAccessPaused, busy, 
       <div className="r-gateway-footer">
         <details className="r-gateway-diagnostics">
           <summary>Diagnostics</summary>
+          <button type="button" onClick={() => void inspectMcpTools()} disabled={toolDiagnosticsLoading}>{toolDiagnosticsLoading ? "Checking MCP tools…" : "Inspect MCP tools"}</button>
+          {toolDiagnosticsError ? <p role="alert">{toolDiagnosticsError}</p> : null}
+          {toolDiagnostics ? <div><div className="r-home-detail-row"><span>Registered MCP tools</span><strong>{toolDiagnostics.tool_count}</strong></div><div className="r-home-detail-row"><span>RazedLoops diagnostic bundle</span><strong>{toolDiagnostics.razedloops_diagnostic_bundle_present ? "Present" : "Missing"}</strong></div><details><summary>Tool names</summary><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{toolDiagnostics.tool_names.join("\n")}</pre></details></div> : null}
           <div className="r-home-detail-row"><span>Local gateway</span><strong>{status.running ? "Running" : "Offline"}</strong></div>
           <div className="r-home-detail-row"><span>Remote connection</span><strong>{publicTunnel.ready ? "Managed public MCP" : connection.running ? "OpenAI Secure Tunnel" : "None"}</strong></div>
           <p className="r-home-muted">{managedClientState}</p>
