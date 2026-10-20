@@ -672,7 +672,7 @@ struct RazedLoopsDiagnosticParams {
 fn read_razedloops_diagnostic(task_id: i64) -> Result<serde_json::Value, String> {
     if task_id <= 0 { return Err("task_id must be positive".into()); }
     // Opt-in only. The credential stays within the gateway process and is never returned.
-    let token = std::env::var("RAZEDTUNNEL_RAZEDLOOPS_ADMIN_TOKEN")
+    let token = std::env::var("RAZEDTUNNEL_RAZEDLOOPS_DIAGNOSTIC_TOKEN")
         .map_err(|_| "RazedLoops diagnostic connector is not configured".to_string())?;
     if token.len() < 32 { return Err("RazedLoops connector credential is invalid".into()); }
     let client = reqwest::blocking::Client::builder()
