@@ -27,13 +27,28 @@ mod windows {
     /// On an unverified shutdown, preserve the directory for investigation.
     pub(crate) fn shutdown_and_cleanup(
         process: ContainedProcess,
+        profile: DisposableProfile,
+    ) -> Result<(), String> {
+        cleanup_after_shutdown(|| process.terminate(), profile)
+    }
+
+    /// Separation permits deterministic failure-path testing without launching
+    /// a process. Production always supplies ContainedProcess::terminate.
+    fn cleanup_after_shutdown(
+        shutdown: impl FnOnce() -> Result<(), String>,
         mut profile: DisposableProfile,
     ) -> Result<(), String> {
-        if let Err(error) = process.terminate() {
+        if let Err(error) = shutdown() {
             profile.preserve_on_drop();
             return Err(format!("Process shutdown unverified; profile preserved at {}: {error}", profile.path().display()));
         }
-        profile.cleanup()
+        if let Err(error) = profile.cleanup() {
+            // Cleanup can fail after a partial deletion. Preserve what remains
+            // rather than allowing Drop to hide the failure with another attempt.
+            profile.preserve_on_drop();
+            return Err(format!("Profile cleanup incomplete at {}: {error}", profile.path().display()));
+        }
+        Ok(())
     }
 
     pub(crate) struct ContainedProcess {
@@ -216,6 +231,27 @@ mod windows {
             // Always terminate even when child creation did not occur.
             process.terminate().unwrap();
             assert!(observed_two, "Parent and child were not both observed inside job");
+        }
+
+        #[test]
+        fn failed_shutdown_preserves_profile_and_reports_location() {
+            let profile = DisposableProfile::create().unwrap();
+            let path = profile.path().to_owned();
+            std::fs::write(path.join("session-data"), b"retain").unwrap();
+            let error = cleanup_after_shutdown(|| Err("simulated termination failure".into()), profile).unwrap_err();
+            assert!(error.contains("simulated termination failure"));
+            assert!(error.contains(&path.display().to_string()));
+            assert!(path.join("session-data").exists());
+            std::fs::remove_dir_all(path).unwrap();
+        }
+
+        #[test]
+        fn missing_profile_after_verified_shutdown_reports_cleanup_failure() {
+            let profile = DisposableProfile::create().unwrap();
+            let path = profile.path().to_owned();
+            std::fs::remove_dir_all(&path).unwrap();
+            let error = cleanup_after_shutdown(|| Ok(()), profile).unwrap_err();
+            assert!(error.contains("Profile cleanup incomplete"));
         }
 
         #[test]
