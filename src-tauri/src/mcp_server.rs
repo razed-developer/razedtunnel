@@ -6014,6 +6014,17 @@ mod tests {
     }
 
     #[test]
+    fn razedloops_diagnostic_bundle_is_advertised_read_only() {
+        let tools = RepoTunnelMcp::tool_router().list_all();
+        let tool = tools
+            .iter()
+            .find(|tool| tool.name.as_ref() == "razedloops_diagnostic_bundle")
+            .expect("RazedLoops diagnostic tool must be advertised");
+        let annotations = tool.annotations.as_ref().expect("diagnostic annotations");
+        assert_eq!(annotations.read_only_hint, Some(true));
+    }
+
+    #[test]
     fn project_memory_update_declares_closed_world_safety_metadata() {
         let tools = RepoTunnelMcp::tool_router().list_all();
         let tool = tools
