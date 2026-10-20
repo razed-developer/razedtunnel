@@ -10,7 +10,7 @@ use windows_sys::Win32::{
     Security::{
         CreateRestrictedToken, GetTokenInformation, IsTokenRestricted, SetTokenInformation,
         GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
-        TokenPrivileges, TokenIntegrityLevel, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
+        TokenPrivileges, TokenIntegrityLevel, TokenRestrictedSids, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
         TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES,
         LUID_AND_ATTRIBUTES, TOKEN_PRIVILEGES, SE_PRIVILEGE_ENABLED,
     },
@@ -122,6 +122,38 @@ fn enforce_low_integrity(token: HANDLE) -> Result<(), String> {
     Ok(())
 }
 
+/// Read the number of restricting SIDs reported by Windows.
+/// A zero count means no restricting-SID allowlist was installed; disabling
+/// privileges and lowering integrity do not substitute for this boundary.
+fn inspect_restricting_sid_count(token: HANDLE) -> Result<u32, String> {
+    let mut required = 0u32;
+    unsafe { GetTokenInformation(token, TokenRestrictedSids, std::ptr::null_mut(), 0, &mut required); }
+    if required < 4 {
+        return Err("Cannot determine restricting-SID information size.".into());
+    }
+    let mut storage = vec![0usize; (required as usize).div_ceil(std::mem::size_of::<usize>())];
+    let mut returned = 0u32;
+    if unsafe {
+        GetTokenInformation(token, TokenRestrictedSids, storage.as_mut_ptr().cast(),
+            (storage.len() * std::mem::size_of::<usize>()) as u32, &mut returned)
+    } == 0 {
+        return Err(format!("Token restricting-SID query failed: {}", std::io::Error::last_os_error()));
+    }
+    if returned < 4 {
+        return Err("Token restricting-SID information truncated.".into());
+    }
+    let count = unsafe { std::ptr::read_unaligned(storage.as_ptr().cast::<u32>()) };
+    let offset = std::mem::offset_of!(windows_sys::Win32::Security::TOKEN_GROUPS, Groups);
+    let needed = (count as usize)
+        .checked_mul(std::mem::size_of::<SID_AND_ATTRIBUTES>())
+        .and_then(|n| offset.checked_add(n))
+        .ok_or("Restricting-SID count overflow.")?;
+    if needed > returned as usize {
+        return Err("Restricting-SID entries exceed returned data.".into());
+    }
+    Ok(count)
+}
+
 /// Owns a Windows restricted token. Not a claim of complete isolation.
 pub(crate) struct RestrictedBrowserToken {
     handle: HANDLE,
@@ -164,6 +196,12 @@ impl RestrictedBrowserToken {
             unsafe { CloseHandle(restricted); }
             return Err(error);
         }
+        // Inspection only: no restricting SID is added by this candidate path.
+        // Do not mistake IsTokenRestricted for a filesystem allowlist.
+        if let Err(error) = inspect_restricting_sid_count(restricted) {
+            unsafe { CloseHandle(restricted); }
+            return Err(error);
+        }
         Ok(Self { handle: restricted })
     }
 }
@@ -187,6 +225,8 @@ mod tests {
             assert_ne!(unsafe { IsTokenRestricted(token.handle) }, 0);
             verify_privileges_disabled(token.handle).unwrap();
             assert_eq!(inspect_integrity_level(token.handle).unwrap(), 0x1000);
+            assert_eq!(inspect_restricting_sid_count(token.handle).unwrap(), 0,
+                "candidate unexpectedly acquired a restricting-SID allowlist");
         }
     }
 }
