@@ -56,6 +56,13 @@ mod windows {
         job: BrowserJob,
     }
 
+    /// Remaining milliseconds until the shared shutdown deadline. Returning
+    /// zero means the caller must fail closed instead of waiting again.
+    fn remaining_wait_ms(deadline: Instant) -> u32 {
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        remaining.as_millis().min(u32::MAX as u128) as u32
+    }
+
     impl ContainedProcess {
         /// Terminate the entire job and confirm all assigned processes exited.
         pub(crate) fn terminate(self) -> Result<(), String> {
@@ -65,7 +72,11 @@ mod windows {
             // A single deadline bounds both root-process and child-process
             // verification. Timeout must never be treated as safe cleanup.
             let deadline = Instant::now() + Duration::from_secs(10);
-            let wait = unsafe { WaitForSingleObject(self.process, 10_000) };
+            let remaining = remaining_wait_ms(deadline);
+            if remaining == 0 {
+                return Err("Shutdown deadline elapsed before root process wait.".into());
+            }
+            let wait = unsafe { WaitForSingleObject(self.process, remaining) };
             if wait == WAIT_TIMEOUT {
                 return Err("Root process did not exit within shutdown deadline.".into());
             }
@@ -88,7 +99,11 @@ mod windows {
                 if Instant::now() >= deadline {
                     return Err(format!("{} job processes still active after termination.", info.ActiveProcesses));
                 }
-                std::thread::sleep(Duration::from_millis(20));
+                let remaining = remaining_wait_ms(deadline);
+                if remaining == 0 {
+                    return Err("Shutdown deadline elapsed while verifying job processes.".into());
+                }
+                std::thread::sleep(Duration::from_millis(20).min(Duration::from_millis(u64::from(remaining))));
             }
         }
     }
@@ -189,6 +204,19 @@ mod windows {
         use windows_sys::Win32::System::JobObjects::{
             QueryInformationJobObject, JobObjectExtendedLimitInformation,
         };
+
+        #[test]
+        fn expired_shutdown_deadline_has_no_remaining_wait() {
+            let deadline = Instant::now() - Duration::from_millis(1);
+            assert_eq!(remaining_wait_ms(deadline), 0);
+        }
+
+        #[test]
+        fn future_shutdown_deadline_is_bounded() {
+            let deadline = Instant::now() + Duration::from_secs(2);
+            let wait = remaining_wait_ms(deadline);
+            assert!(wait > 0 && wait <= 2000);
+        }
 
         #[test]
         fn live_process_is_assigned_and_job_wide_shutdown_verified() {
