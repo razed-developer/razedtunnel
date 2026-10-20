@@ -35,6 +35,31 @@ fn discover_profiles_under(root: &Path) -> Result<Vec<PathBuf>, String> {
     Ok(profiles)
 }
 
+/// Recovery intentionally cannot infer process ownership from a directory name.
+/// No discovered profile is eligible for deletion without separate, durable
+/// proof of process termination and ownership.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RecoveryDisposition {
+    RequiresManualVerification,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RecoveryCandidate {
+    pub(crate) path: PathBuf,
+    pub(crate) disposition: RecoveryDisposition,
+}
+
+/// Inventory only: no filesystem mutation and no attempt to attach to a job.
+pub(crate) fn inventory_recovery_candidates() -> Result<Vec<RecoveryCandidate>, String> {
+    Ok(discover_leftover_profiles()?
+        .into_iter()
+        .map(|path| RecoveryCandidate {
+            path,
+            disposition: RecoveryDisposition::RequiresManualVerification,
+        })
+        .collect())
+}
+
 pub(crate) struct DisposableProfile {
     path: PathBuf,
     cleaned: bool,
@@ -103,6 +128,18 @@ impl Drop for DisposableProfile {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn recovery_inventory_never_marks_profiles_safe_to_delete() {
+        let mut profile = DisposableProfile::create().unwrap();
+        let path = profile.path().to_owned();
+        fs::write(path.join("session-data"), b"retain").unwrap();
+        let candidates = inventory_recovery_candidates().unwrap();
+        let candidate = candidates.iter().find(|item| item.path == path).unwrap();
+        assert_eq!(candidate.disposition, RecoveryDisposition::RequiresManualVerification);
+        assert!(path.join("session-data").exists());
+        profile.cleanup().unwrap();
+    }
 
     #[test]
     fn discovery_lists_profiles_without_deleting_them() {
