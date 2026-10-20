@@ -128,6 +128,23 @@ mod windows {
         };
 
         #[test]
+        fn live_process_is_assigned_and_terminated() {
+            // This launches only a local Windows utility, never Chromium or a URL.
+            // Use a stable System32 executable rather than searching PATH.
+            let system_root = std::env::var_os("SystemRoot").expect("Windows SystemRoot");
+            let executable = std::path::PathBuf::from(system_root)
+                .join("System32").join("notepad.exe");
+            assert!(executable.is_file(), "Windows Notepad executable unavailable");
+            let job = BrowserJob::create().unwrap();
+            let process = job.launch_suspended(&executable).unwrap();
+            let mut member = 0i32;
+            let status = unsafe { IsProcessInJob(process.process, process.job.raw_handle(), &mut member) };
+            assert_ne!(status, 0, "Job membership query failed");
+            assert_ne!(member, 0, "Launched process escaped the job");
+            process.terminate().unwrap();
+        }
+
+        #[test]
         fn relative_executable_is_rejected_before_process_creation() {
             let job = BrowserJob::create().unwrap();
             assert!(job.launch_suspended(std::path::Path::new("cmd.exe")).is_err());
