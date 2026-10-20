@@ -10,8 +10,8 @@ use windows_sys::Win32::{
     Security::{
         CreateRestrictedToken, GetTokenInformation, IsTokenRestricted, SetTokenInformation,
         GetSidSubAuthority, GetSidSubAuthorityCount, IsValidSid,
-        TokenPrivileges, TokenIntegrityLevel, TokenRestrictedSids, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
-        TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES,
+        TokenPrivileges, TokenIntegrityLevel, TokenRestrictedSids, TokenUser, DISABLE_MAX_PRIVILEGE, TOKEN_DUPLICATE, TOKEN_QUERY,
+        TOKEN_MANDATORY_LABEL, SID_AND_ATTRIBUTES, TOKEN_USER,
         LUID_AND_ATTRIBUTES, TOKEN_PRIVILEGES, SE_PRIVILEGE_ENABLED,
     },
     System::Threading::{GetCurrentProcess, OpenProcessToken},
@@ -154,6 +154,33 @@ fn inspect_restricting_sid_count(token: HANDLE) -> Result<u32, String> {
     Ok(count)
 }
 
+/// Obtain the caller's user SID as a baseline restricting SID.
+/// IMPORTANT: the caller's own SID does not isolate the browser from files
+/// accessible to that user. A dedicated sandbox SID and ACL boundary are needed.
+fn source_user_sid(source: HANDLE) -> Result<(Vec<usize>, *mut core::ffi::c_void), String> {
+    let mut required = 0u32;
+    unsafe { GetTokenInformation(source, TokenUser, std::ptr::null_mut(), 0, &mut required); }
+    if (required as usize) < std::mem::size_of::<TOKEN_USER>() {
+        return Err("Cannot determine token user SID size.".into());
+    }
+    let mut storage = vec![0usize; (required as usize).div_ceil(std::mem::size_of::<usize>())];
+    let mut returned = 0u32;
+    if unsafe {
+        GetTokenInformation(source, TokenUser, storage.as_mut_ptr().cast(),
+            (storage.len() * std::mem::size_of::<usize>()) as u32, &mut returned)
+    } == 0 {
+        return Err(format!("TokenUser query failed: {}", std::io::Error::last_os_error()));
+    }
+    if (returned as usize) < std::mem::size_of::<TOKEN_USER>() {
+        return Err("TokenUser information truncated.".into());
+    }
+    let sid = unsafe { (*storage.as_ptr().cast::<TOKEN_USER>()).User.Sid };
+    if sid.is_null() || unsafe { IsValidSid(sid) } == 0 {
+        return Err("TokenUser SID invalid.".into());
+    }
+    Ok((storage, sid))
+}
+
 /// Owns a Windows restricted token. Not a claim of complete isolation.
 pub(crate) struct RestrictedBrowserToken {
     handle: HANDLE,
@@ -172,11 +199,19 @@ impl RestrictedBrowserToken {
         if opened == 0 {
             return Err(format!("OpenProcessToken failed: {}", std::io::Error::last_os_error()));
         }
+        let (_user_buffer, user_sid) = match source_user_sid(source) {
+            Ok(result) => result,
+            Err(error) => {
+                unsafe { CloseHandle(source); }
+                return Err(error);
+            }
+        };
+        let restricting_sid = SID_AND_ATTRIBUTES { Sid: user_sid, Attributes: 0 };
         let mut restricted: HANDLE = std::ptr::null_mut();
         let created = unsafe {
             CreateRestrictedToken(
                 source, DISABLE_MAX_PRIVILEGE, 0, std::ptr::null(),
-                0, std::ptr::null(), 0, std::ptr::null(), &mut restricted,
+                0, std::ptr::null(), 1, &restricting_sid, &mut restricted,
             )
         };
         unsafe { CloseHandle(source); }
@@ -196,11 +231,18 @@ impl RestrictedBrowserToken {
             unsafe { CloseHandle(restricted); }
             return Err(error);
         }
-        // Inspection only: no restricting SID is added by this candidate path.
-        // Do not mistake IsTokenRestricted for a filesystem allowlist.
-        if let Err(error) = inspect_restricting_sid_count(restricted) {
-            unsafe { CloseHandle(restricted); }
-            return Err(error);
+        // A user-SID restriction is a verified baseline, NOT a sandbox-specific
+        // allowlist or filesystem boundary.
+        match inspect_restricting_sid_count(restricted) {
+            Ok(1) => {}
+            Ok(count) => {
+                unsafe { CloseHandle(restricted); }
+                return Err(format!("Expected one restricting SID, found {count}."));
+            }
+            Err(error) => {
+                unsafe { CloseHandle(restricted); }
+                return Err(error);
+            }
         }
         Ok(Self { handle: restricted })
     }
@@ -225,8 +267,8 @@ mod tests {
             assert_ne!(unsafe { IsTokenRestricted(token.handle) }, 0);
             verify_privileges_disabled(token.handle).unwrap();
             assert_eq!(inspect_integrity_level(token.handle).unwrap(), 0x1000);
-            assert_eq!(inspect_restricting_sid_count(token.handle).unwrap(), 0,
-                "candidate unexpectedly acquired a restricting-SID allowlist");
+            assert_eq!(inspect_restricting_sid_count(token.handle).unwrap(), 1,
+                "candidate must have exactly one baseline restricting SID");
         }
     }
 }
