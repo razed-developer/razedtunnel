@@ -1249,7 +1249,7 @@ pub(crate) fn review_pending_file_change(app: &AppHandle, change_id: &str) -> Re
             if relative_path != &record.primary_path {
                 return Err("The pending creation path differs from its audit record.".to_string());
             }
-            let target = resolve_workspace_path(&workspace, relative_path, AccessOperation::Write, true)?;
+            let target = resolve_workspace_path(&workspace, relative_path, AccessOperation::Write, false)?;
             if target.exists() {
                 return Err("The target already exists. Review and submit a new creation.".to_string());
             }
