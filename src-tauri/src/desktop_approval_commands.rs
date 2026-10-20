@@ -100,7 +100,7 @@ pub(crate) fn approve_pending_file_change(
     if window.label() != "main" {
         return Err("File approval requires the main desktop window.".to_string());
     }
-    let record = crate::changes::review_pending_patch(&app, &change_id)?;
+    let record = crate::changes::review_pending_file_change(&app, &change_id)?;
     if record.status != crate::models::ChangeStatus::Pending {
         return Err("Only pending file changes can be approved.".to_string());
     }
@@ -117,10 +117,9 @@ pub(crate) fn approve_pending_file_change(
     {
         return Err("A complete, readable change preview is unavailable. Approval is blocked; do not apply this change from the dashboard.".to_string());
     }
-    // Non-patch operations can have additional filesystem effects not represented
-    // by a text diff. Keep them outside this first approval surface.
-    if !matches!(record.operation, crate::models::ChangeOperation::PatchFile) {
-        return Err("Only file patches with a readable diff can be approved here.".to_string());
+    // Only independently revalidated text patches and new files may be approved.
+    if !matches!(record.operation, crate::models::ChangeOperation::PatchFile | crate::models::ChangeOperation::CreateFile) {
+        return Err("Only reviewed file patches and creations can be approved here.".to_string());
     }
     let message = format!(
         "Apply this queued file change?\n\nProject: {}\nOperation: {:?}\nFile: {}\nSummary: {}\n\nProposed diff:\n{}\n\nYes applies the change; No leaves it pending.",
