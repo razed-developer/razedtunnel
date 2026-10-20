@@ -6,11 +6,11 @@
 //! Job Objects also do not restrict filesystem access or network egress.
 #[cfg(windows)]
 mod windows {
-    use std::{mem::size_of, ptr::null};
+    use std::{mem::size_of, ptr::{null, null_mut}, os::windows::ffi::OsStrExt, path::Path};
     use windows_sys::Win32::{
         Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE},
         System::JobObjects::{
-            CreateJobObjectW, SetInformationJobObject,
+            CreateJobObjectW, SetInformationJobObject, AssignProcessToJobObject, IsProcessInJob, TerminateJobObject,
             JobObjectExtendedLimitInformation, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
             JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
         },
@@ -44,6 +44,37 @@ mod windows {
                 return Err(format!("Cannot configure kill-on-close Job Object: {error}"));
             }
             Ok(Self { handle })
+        }
+
+        /// Launch a fixed executable with no user-supplied command line.
+        /// The process is suspended until Windows confirms job membership.
+        /// This is not yet an approved browser launch path: no network or
+        /// filesystem boundary has been established.
+        pub(crate) fn launch_suspended(self, executable: &Path) -> Result<ContainedProcess, String> {
+            if !executable.is_absolute() || !executable.is_file() {
+                return Err("Executable must be an existing absolute file path.".into());
+            }
+            let application: Vec<u16> = executable.as_os_str().encode_wide().chain(Some(0)).collect();
+            let mut startup: STARTUPINFOW = unsafe { std::mem::zeroed() };
+            startup.cb = size_of::<STARTUPINFOW>() as u32;
+            let mut info: PROCESS_INFORMATION = unsafe { std::mem::zeroed() };
+            let created = unsafe { CreateProcessW(application.as_ptr(), null_mut(), null(), null(), 0, CREATE_SUSPENDED | CREATE_NO_WINDOW, null(), null(), &startup, &mut info) };
+            if created == 0 { return Err(format!("Suspended process creation failed: {}", std::io::Error::last_os_error())); }
+            // Every failure before ResumeThread kills the still-suspended child.
+            let assigned = unsafe { AssignProcessToJobObject(self.handle, info.hProcess) };
+            let mut member = 0i32;
+            let verified = assigned != 0 && unsafe { IsProcessInJob(info.hProcess, self.handle, &mut member) } != 0 && member != 0;
+            if !verified {
+                unsafe { TerminateProcess(info.hProcess, 1); WaitForSingleObject(info.hProcess, INFINITE); CloseHandle(info.hThread); CloseHandle(info.hProcess); }
+                return Err(format!("Cannot verify suspended process containment: {}", std::io::Error::last_os_error()));
+            }
+            let resumed = unsafe { ResumeThread(info.hThread) };
+            unsafe { CloseHandle(info.hThread); }
+            if resumed == u32::MAX {
+                unsafe { TerminateJobObject(self.handle, 1); WaitForSingleObject(info.hProcess, INFINITE); CloseHandle(info.hProcess); }
+                return Err(format!("Cannot resume contained process: {}", std::io::Error::last_os_error()));
+            }
+            Ok(ContainedProcess { process: info.hProcess, job: self })
         }
 
         /// A job handle alone is not proof of process containment.
