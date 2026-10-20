@@ -21,6 +21,21 @@ mod windows {
         PROCESS_INFORMATION, STARTUPINFOW, CREATE_SUSPENDED, CREATE_NO_WINDOW,
     };
 
+    use crate::razedbrowser_profile::DisposableProfile;
+
+    /// Shutdown must be verified before deleting profile data.
+    /// On an unverified shutdown, preserve the directory for investigation.
+    pub(crate) fn shutdown_and_cleanup(
+        process: ContainedProcess,
+        mut profile: DisposableProfile,
+    ) -> Result<(), String> {
+        if let Err(error) = process.terminate() {
+            profile.preserve_on_drop();
+            return Err(format!("Process shutdown unverified; profile preserved at {}: {error}", profile.path().display()));
+        }
+        profile.cleanup()
+    }
+
     pub(crate) struct ContainedProcess {
         process: HANDLE,
         job: BrowserJob,
@@ -201,6 +216,18 @@ mod windows {
             // Always terminate even when child creation did not occur.
             process.terminate().unwrap();
             assert!(observed_two, "Parent and child were not both observed inside job");
+        }
+
+        #[test]
+        fn verified_shutdown_removes_disposable_profile() {
+            let root = std::path::PathBuf::from(std::env::var_os("SystemRoot").unwrap());
+            let executable = root.join("System32").join("notepad.exe");
+            let profile = DisposableProfile::create().unwrap();
+            let path = profile.path().to_owned();
+            std::fs::write(path.join("session-data"), b"ephemeral").unwrap();
+            let process = BrowserJob::create().unwrap().launch_suspended(&executable).unwrap();
+            shutdown_and_cleanup(process, profile).unwrap();
+            assert!(!path.exists(), "Verified shutdown must remove profile data");
         }
 
         #[test]
