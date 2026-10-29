@@ -736,6 +736,12 @@ mod platform {
                 "node-installation"
             } else if path.join("package.json").exists() {
                 "project"
+            } else if path.file_name().is_some_and(|n| n.eq_ignore_ascii_case("bin")) {
+                "tool-bin"
+            } else if path.file_name().is_some_and(|n| n.eq_ignore_ascii_case(".rustup")) {
+                "rustup-toolchain"
+            } else if path.file_name().is_some_and(|n| n.eq_ignore_ascii_case("npm")) {
+                "npm-global"
             } else {
                 "other"
             };
