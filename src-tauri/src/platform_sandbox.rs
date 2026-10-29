@@ -508,6 +508,9 @@ mod platform {
         profile_name: String,
         sid: String,
         grant_paths: Vec<String>,
+        // Compatibility with manifests written by the reverted ancestor-ACL experiment.
+        #[serde(default)]
+        traverse_paths: Vec<String>,
         deny_paths: Vec<String>,
         runtime_root: String,
         #[serde(default)]
@@ -725,6 +728,12 @@ mod platform {
     fn cleanup_manifest(path: &Path, manifest: &CleanupManifest) {
         let cleanup_start = std::time::Instant::now();
         eprintln!("[sandbox-stage] cleanup-start grants={} denies={}", manifest.grant_paths.len(), manifest.deny_paths.len());
+        // These were directory-only grants. Never recurse through ancestors,
+        // especially volume roots, Program Files, or the user's profile.
+        for (index, ancestor) in manifest.traverse_paths.iter().enumerate() {
+            let result = remove_icacls(Path::new(ancestor), &manifest.sid, false, false);
+            eprintln!("[sandbox-stage] cleanup-legacy-traverse index={index} success={}", result.is_ok());
+        }
         for (index, grant) in manifest.grant_paths.iter().enumerate() {
             let start = std::time::Instant::now();
             let path = Path::new(grant);
@@ -1316,6 +1325,7 @@ mod platform {
             profile_name: config.profile_name.clone(),
             sid: sid_text.clone(),
             grant_paths: grant_paths.iter().cloned().collect(),
+            traverse_paths: Vec::new(),
             deny_paths: config.denied_paths.clone(),
             runtime_root: config.runtime_root.clone(),
             helper_pid: std::process::id(),
