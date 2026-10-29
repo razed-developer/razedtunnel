@@ -1360,8 +1360,9 @@ mod platform {
         for root in &config.read_roots {
             apply_icacls(Path::new(root), &sid_text, "(OI)(CI)RX", true)?;
         }
-        // Inspect only the npm entrypoint and its immediate ancestors while
-        // the temporary SID grant is live. Do not recurse or expose other ACEs.
+        // Read the live DACL through PowerShell's object model rather than
+        // searching icacls text for a numeric SID (which may be resolved to a name).
+        // Limit inspection to three npm paths; never recurse or mutate ACLs.
         if let Some(npm_cli) = config.read_roots.iter()
             .map(Path::new)
             .find(|root| root.file_name().is_some_and(|n| n.eq_ignore_ascii_case("bin"))
@@ -1370,17 +1371,23 @@ mod platform {
         {
             eprintln!("[sandbox-acl] sid={sid_text}");
             for target in [npm_cli.parent().and_then(Path::parent), npm_cli.parent(), Some(npm_cli.as_path())].into_iter().flatten() {
-                let output = Command::new("icacls.exe")
+                let script = "$ErrorActionPreference='Stop';$a=Get-Acl -LiteralPath $args[0];$sid=$args[1];foreach($rule in $a.Access){$identity=$rule.IdentityReference.Value;try{$resolved=$rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{$resolved=$identity};if($resolved -eq $sid){Write-Output ('match type='+$rule.AccessControlType+' rights='+$rule.FileSystemRights+' inherited='+$rule.IsInherited)}}";
+                let output = Command::new("powershell.exe")
+                    .args(["-NoProfile", "-NonInteractive", "-Command", script, "--"])
                     .arg(target)
+                    .arg(&sid_text)
                     .stdin(Stdio::null())
                     .output();
                 match output {
                     Ok(result) => {
                         let listing = String::from_utf8_lossy(&result.stdout);
-                        let matches = listing.lines().filter(|line| line.contains(&sid_text)).collect::<Vec<_>>();
+                        let matches = listing.lines().filter(|line| line.starts_with("match ")).collect::<Vec<_>>();
                         eprintln!("[sandbox-acl] target={} status={} sid_aces={}", target.display(), result.status, matches.len());
                         for line in matches.iter().take(3) {
-                            eprintln!("[sandbox-acl] ace={}", line.trim().chars().take(240).collect::<String>());
+                            eprintln!("[sandbox-acl] {}", line.chars().take(240).collect::<String>());
+                        }
+                        if !result.status.success() {
+                            eprintln!("[sandbox-acl] inspect-error={}", String::from_utf8_lossy(&result.stderr).chars().take(240).collect::<String>());
                         }
                     }
                     Err(error) => eprintln!("[sandbox-acl] inspect-failed target={} error={error}", target.display()),
