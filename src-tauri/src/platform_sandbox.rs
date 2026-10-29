@@ -723,18 +723,26 @@ mod platform {
     }
 
     fn cleanup_manifest(path: &Path, manifest: &CleanupManifest) {
-        for grant in &manifest.grant_paths {
-            let _ = remove_icacls(Path::new(grant), &manifest.sid, false, true);
+        let cleanup_start = std::time::Instant::now();
+        eprintln!("[sandbox-stage] cleanup-start grants={} denies={}", manifest.grant_paths.len(), manifest.deny_paths.len());
+        for (index, grant) in manifest.grant_paths.iter().enumerate() {
+            let start = std::time::Instant::now();
+            let result = remove_icacls(Path::new(grant), &manifest.sid, false, true);
+            eprintln!("[sandbox-stage] cleanup-grant index={index} elapsed_ms={} success={}", start.elapsed().as_millis(), result.is_ok());
         }
-        for denied in &manifest.deny_paths {
-            let _ = remove_icacls(Path::new(denied), &manifest.sid, true, true);
+        for (index, denied) in manifest.deny_paths.iter().enumerate() {
+            let start = std::time::Instant::now();
+            let result = remove_icacls(Path::new(denied), &manifest.sid, true, true);
+            eprintln!("[sandbox-stage] cleanup-deny index={index} elapsed_ms={} success={}", start.elapsed().as_millis(), result.is_ok());
         }
+        eprintln!("[sandbox-stage] cleanup-acls-finished elapsed_ms={}", cleanup_start.elapsed().as_millis());
         let wide_name = wide(&manifest.profile_name);
         unsafe {
             let _ = DeleteAppContainerProfile(wide_name.as_ptr());
         }
         let _ = std::fs::remove_dir_all(&manifest.runtime_root);
         let _ = std::fs::remove_file(path);
+        eprintln!("[sandbox-stage] cleanup-complete elapsed_ms={}", cleanup_start.elapsed().as_millis());
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
