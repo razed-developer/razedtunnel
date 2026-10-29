@@ -1130,7 +1130,13 @@ mod platform {
                     // each parent of the script, not merely execute node.exe.
                     let mut npm_read_roots = read_roots.to_vec();
                     npm_read_roots.push(directory.to_path_buf());
+                    // Explicitly grant each npm ancestor. Recursive icacls
+                    // grants on the Node installation root have not produced
+                    // effective ACEs on the npm package in AppContainer.
+                    npm_read_roots.push(directory.join("node_modules"));
+                    npm_read_roots.push(directory.join("node_modules").join("npm"));
                     npm_read_roots.push(npm_cli.parent().unwrap().to_path_buf());
+                    npm_read_roots.push(npm_cli.clone());
                     return configure(
                         &node,
                         &direct_args,
@@ -1358,7 +1364,9 @@ mod platform {
             true,
         )?;
         for root in &config.read_roots {
+            eprintln!("[sandbox-acl] grant-start target={}", root);
             apply_icacls(Path::new(root), &sid_text, "(OI)(CI)RX", true)?;
+            eprintln!("[sandbox-acl] grant-ok target={}", root);
         }
         // Read the live DACL through PowerShell's object model rather than
         // searching icacls text for a numeric SID (which may be resolved to a name).
