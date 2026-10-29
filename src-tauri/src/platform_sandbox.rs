@@ -1092,15 +1092,19 @@ mod platform {
             }
             value.into_owned()
         }
-        // /S rewrites the quoted /C command string and can corrupt mklink
-        // arguments. Invoke cmd with /D /C as in a working local junction test.
+        // Windows Command::args escapes embedded quotes for the child argv,
+        // but cmd.exe parses /C as a command line, not as ordinary argv.
+        // Pass the command text verbatim to preserve mklink's path quotes.
+        use std::os::windows::process::CommandExt;
         let command = format!(
             "mklink /J \"{}\" \"{}\"",
             junction_path(destination),
             junction_path(source)
         );
         let output = Command::new("cmd.exe")
-            .args(["/D", "/C", &command])
+            .raw_arg("/D")
+            .raw_arg("/C")
+            .raw_arg(&command)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
