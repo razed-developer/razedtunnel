@@ -172,7 +172,29 @@ pub(crate) fn approve_pending_command(
     if !app.dialog().message(message).buttons(MessageDialogButtons::YesNo).blocking_show() {
         return Err("Approval cancelled; the command remains pending.".to_string());
     }
-    let outcome = crate::execution::approve_command(&app, &workspace, &command_id)?;
+    let outcome = match crate::execution::approve_command(&app, &workspace, &command_id) {
+        Ok(outcome) => outcome,
+        Err(error) => {
+            // Execution may fail after the command has already transitioned to
+            // Failed. Keep the activity feed synchronized with durable history.
+            if let Ok(records) = crate::execution::list_history(&app, Some(&workspace.id), 100) {
+                if let Some(current) = records.iter().find(|item| item.id == command_id) {
+                    let status = match current.status {
+                        crate::models::CommandStatus::Pending => ActivityStatus::Pending,
+                        crate::models::CommandStatus::Running => ActivityStatus::Running,
+                        crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
+                        crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
+                        crate::models::CommandStatus::Cancelled => ActivityStatus::Stopped,
+                        _ => ActivityStatus::Failed,
+                    };
+                    let _ = crate::activity::update_operation_status(
+                        &app, ActivityKind::Verification, &command_id, status
+                    );
+                }
+            }
+            return Err(error);
+        }
+    };
     let status = match outcome.status {
         crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
         crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
