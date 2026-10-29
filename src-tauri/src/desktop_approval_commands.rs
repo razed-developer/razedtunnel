@@ -172,37 +172,41 @@ pub(crate) fn approve_pending_command(
     if !app.dialog().message(message).buttons(MessageDialogButtons::YesNo).blocking_show() {
         return Err("Approval cancelled; the command remains pending.".to_string());
     }
-    let outcome = match crate::execution::approve_command(&app, &workspace, &command_id) {
-        Ok(outcome) => outcome,
-        Err(error) => {
-            // Execution may fail after the command has already transitioned to
-            // Failed. Keep the activity feed synchronized with durable history.
-            if let Ok(records) = crate::execution::list_history(&app, Some(&workspace.id), 100) {
-                if let Some(current) = records.iter().find(|item| item.id == command_id) {
-                    let status = match current.status {
+    // Never run sandbox validation on the desktop IPC handler thread.
+    // The existing execution layer owns the Pending -> Running transition,
+    // fingerprint revalidation, timeout and durable command history.
+    let app_for_worker = app.clone();
+    let command_for_worker = command_id.clone();
+    std::thread::Builder::new()
+        .name("repotunnel-validation".to_string())
+        .spawn(move || {
+            let result = crate::execution::approve_command(
+                &app_for_worker, &workspace, &command_for_worker
+            );
+            let status = match crate::execution::list_history(
+                &app_for_worker, Some(&workspace.id), 100
+            ) {
+                Ok(records) => records.iter().find(|item| item.id == command_for_worker)
+                    .map(|record| match record.status {
                         crate::models::CommandStatus::Pending => ActivityStatus::Pending,
                         crate::models::CommandStatus::Running => ActivityStatus::Running,
                         crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
                         crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
                         crate::models::CommandStatus::Cancelled => ActivityStatus::Stopped,
                         _ => ActivityStatus::Failed,
-                    };
-                    let _ = crate::activity::update_operation_status(
-                        &app, ActivityKind::Verification, &command_id, status
-                    );
-                }
+                    }),
+                Err(_) => None,
+            };
+            if let Some(status) = status {
+                let _ = crate::activity::update_operation_status(
+                    &app_for_worker, ActivityKind::Verification, &command_for_worker, status
+                );
             }
-            return Err(error);
-        }
-    };
-    let status = match outcome.status {
-        crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
-        crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
-        crate::models::CommandStatus::Pending => ActivityStatus::Pending,
-        crate::models::CommandStatus::Running => ActivityStatus::Running,
-        _ => ActivityStatus::Failed,
-    };
-    crate::activity::update_operation_status(&app, ActivityKind::Verification, &command_id, status)?;
+            if let Err(error) = result {
+                eprintln!("Validation command failed: {error}");
+            }
+        })
+        .map_err(|error| format!("Could not start validation worker: {error}"))?;
     Ok(())
 }
 
