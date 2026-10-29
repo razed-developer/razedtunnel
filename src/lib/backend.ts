@@ -226,3 +226,6 @@ export const approvePendingCommand = (commandId: string) =>
 
 export const rejectPendingCommand = (commandId: string) =>
   invoke<void>("reject_pending_command", { commandId });
+
+export const reconcilePendingVerificationActivity = () =>
+  invoke<number>("reconcile_pending_verification_activity");
