@@ -1,6 +1,6 @@
 import "./PendingApprovalsPanel.css";
 import { useCallback, useEffect, useState } from "react";
-import { approvePendingBrowserAction, approvePendingFileChange, denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingBrowserAction, rejectPendingFileChange, type PendingApprovalRequest } from "../lib/backend";
+import { approvePendingCommand, rejectPendingCommand, approvePendingBrowserAction, approvePendingFileChange, denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingBrowserAction, rejectPendingFileChange, type PendingApprovalRequest } from "../lib/backend";
 import type { ActivityTimeline } from "../types";
 import { NavIcon } from "./AppSidebar";
 
@@ -50,6 +50,16 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
     catch (cause) { setError(String(cause)); }
     finally { setBusyId(null); }
   }
+  async function decideCommand(id: string, approve: boolean) {
+    setBusyId(id);
+    try {
+      if (approve) await approvePendingCommand(id);
+      else await rejectPendingCommand(id);
+      await refresh();
+      onRefreshActivity();
+    } catch (cause) { setError(String(cause)); }
+    finally { setBusyId(null); }
+  }
   const pendingOperations = (activity?.groups ?? [])
     .flatMap(group => group.events
       .filter(event => event.status === "pending")
@@ -72,6 +82,8 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
           </div>
           <div className="r-approval-request-actions">
             <span className="r-activity-status r-activity-status-pending">Pending</span>
+            {event.kind === "verification" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void decideCommand(event.sourceId!, true)}>Review &amp; Run…</button>}
+            {event.kind === "verification" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void decideCommand(event.sourceId!, false)}>Reject</button>}
             {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveBrowser(event.sourceId!)}>Accept…</button>}
             {event.kind === "browser" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void rejectBrowser(event.sourceId!)}>Reject</button>}
             {event.kind === "files" && event.action === "PatchFile" && event.sourceId && <button type="button" disabled={busyId === event.sourceId} onClick={() => void approveFileChange(event.sourceId!)}>Review &amp; Accept…</button>}
