@@ -1034,6 +1034,16 @@ mod platform {
             program.to_path_buf()
         };
         let program = resolved_program.as_path();
+        // The AppContainer must be able to read the command launcher and
+        // its adjacent runtime (for example npm.cmd and node.exe). Grant only
+        // that tool directory, not its parent Program Files tree.
+        let mut tool_read_roots = read_roots.to_vec();
+        if let Some(tool_directory) = program.parent() {
+            if !tool_directory.as_os_str().is_empty() && tool_directory.is_dir() {
+                tool_read_roots.push(tool_directory.to_path_buf());
+            }
+        }
+        let read_roots = tool_read_roots.as_slice();
         let extension = program
             .extension()
             .and_then(|value| value.to_str())
