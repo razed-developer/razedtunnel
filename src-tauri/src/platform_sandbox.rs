@@ -727,7 +727,20 @@ mod platform {
         eprintln!("[sandbox-stage] cleanup-start grants={} denies={}", manifest.grant_paths.len(), manifest.deny_paths.len());
         for (index, grant) in manifest.grant_paths.iter().enumerate() {
             let start = std::time::Instant::now();
-            let result = remove_icacls(Path::new(grant), &manifest.sid, false, true);
+            let path = Path::new(grant);
+            let kind = if grant == &manifest.runtime_root {
+                "runtime"
+            } else if path.join("node_modules").exists() {
+                "workspace-with-dependencies"
+            } else if path.join("npm.cmd").exists() {
+                "node-installation"
+            } else if path.join("package.json").exists() {
+                "project"
+            } else {
+                "other"
+            };
+            eprintln!("[sandbox-stage] cleanup-grant-start index={index} kind={kind}");
+            let result = remove_icacls(path, &manifest.sid, false, true);
             eprintln!("[sandbox-stage] cleanup-grant index={index} elapsed_ms={} success={}", start.elapsed().as_millis(), result.is_ok());
         }
         for (index, denied) in manifest.deny_paths.iter().enumerate() {
