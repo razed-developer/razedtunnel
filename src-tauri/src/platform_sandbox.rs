@@ -1303,6 +1303,7 @@ mod platform {
 
         let mut process_info: PROCESS_INFORMATION = unsafe { zeroed() };
         let mut command_line = wide(helper_command_line(&config));
+        let application_name = wide(&config.program);
         let cwd = wide(&config.cwd);
         std::env::remove_var(HELPER_ENV);
         // Keep diagnostics free of private paths and command arguments.
@@ -1325,10 +1326,15 @@ mod platform {
                 eprintln!("[sandbox-stage] create-process-still-blocked-after-15s");
             }
         });
+        eprintln!(
+            "[sandbox-stage] create-process-program extension={:?} name={:?}",
+            Path::new(&config.program).extension().and_then(|x| x.to_str()),
+            Path::new(&config.program).file_name().and_then(|x| x.to_str())
+        );
         eprintln!("[sandbox-stage] calling-create-process");
         let created = unsafe {
             CreateProcessW(
-                null(),
+                application_name.as_ptr(),
                 command_line.as_mut_ptr(),
                 null(),
                 null(),
