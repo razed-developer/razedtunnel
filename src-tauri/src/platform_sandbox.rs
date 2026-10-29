@@ -1095,7 +1095,7 @@ mod platform {
         // /S rewrites the quoted /C command string and can corrupt mklink
         // arguments. Invoke cmd with /D /C as in a working local junction test.
         let command = format!(
-            "mklink /J \\"{}\\" \\"{}\\"",
+            "mklink /J \"{}\" \"{}\"",
             junction_path(destination),
             junction_path(source)
         );
