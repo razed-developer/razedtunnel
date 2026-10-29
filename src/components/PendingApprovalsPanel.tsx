@@ -1,6 +1,6 @@
 import "./PendingApprovalsPanel.css";
 import { useCallback, useEffect, useState } from "react";
-import { approvePendingCommand, rejectPendingCommand, approvePendingBrowserAction, approvePendingFileChange, denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingBrowserAction, rejectPendingFileChange, type PendingApprovalRequest } from "../lib/backend";
+import { reconcilePendingVerificationActivity, approvePendingCommand, rejectPendingCommand, approvePendingBrowserAction, approvePendingFileChange, denyPendingApprovalRequest, listPendingApprovalRequests, rejectPendingBrowserAction, rejectPendingFileChange, type PendingApprovalRequest } from "../lib/backend";
 import type { ActivityTimeline } from "../types";
 import { NavIcon } from "./AppSidebar";
 
@@ -12,9 +12,9 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const refresh = useCallback(async () => {
-    try { setRequests(await listPendingApprovalRequests()); }
+    try { await reconcilePendingVerificationActivity(); setRequests(await listPendingApprovalRequests()); onRefreshActivity(); }
     catch (cause) { setError(String(cause)); }
-  }, []);
+  }, [onRefreshActivity]);
   useEffect(() => {
     void refresh();
     const timer = window.setInterval(() => { void refresh(); }, 10000);
