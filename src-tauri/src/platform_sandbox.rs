@@ -1178,6 +1178,7 @@ mod platform {
     }
 
     fn run_helper(config: HelperConfig) -> Result<i32, String> {
+        eprintln!("[sandbox-stage] helper-started");
         let sid_text = ensure_profile(&config.profile_name)?;
         let mut grant_paths = BTreeSet::new();
         grant_paths.insert(config.writable_root.clone());
@@ -1213,6 +1214,7 @@ mod platform {
         for root in &config.read_roots {
             apply_icacls(Path::new(root), &sid_text, "(OI)(CI)RX", true)?;
         }
+        eprintln!("[sandbox-stage] read-grants-applied");
         for denied in &config.denied_paths {
             deny_icacls(Path::new(denied), &sid_text)?;
         }
@@ -1327,6 +1329,7 @@ mod platform {
             ));
         }
 
+        eprintln!("[sandbox-stage] appcontainer-process-created");
         let job: HANDLE = unsafe { CreateJobObjectW(null(), null()) };
         if job.is_null() {
             let error = unsafe { GetLastError() };
@@ -1383,6 +1386,7 @@ mod platform {
         unsafe {
             CloseHandle(process_info.hThread);
         }
+        eprintln!("[sandbox-stage] appcontainer-process-resumed");
 
         let wait = unsafe { WaitForSingleObject(process_info.hProcess, u32::MAX) };
         let wait_error = (wait != WAIT_OBJECT_0).then(|| unsafe { GetLastError() });
@@ -1398,6 +1402,7 @@ mod platform {
             // are terminated before this helper returns to RepoTunnel.
             CloseHandle(job);
         }
+        eprintln!("[sandbox-stage] appcontainer-process-exited code={exit_code}");
         let _ = std::fs::remove_dir_all(&config.runtime_root);
         if let Some(error) = wait_error {
             return Err(format!(
