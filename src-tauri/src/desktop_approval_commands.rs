@@ -144,3 +144,56 @@ pub(crate) fn approve_pending_file_change(
     crate::activity::update_operation_status(&app, ActivityKind::Files, &change_id, status)?;
     Ok(())
 }
+
+#[tauri::command]
+pub(crate) fn approve_pending_command(
+    window: tauri::Window,
+    app: tauri::AppHandle,
+    command_id: String,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("Command approval requires the main desktop window.".to_string());
+    }
+    let record = crate::execution::list_history(&app, None, 100)?
+        .into_iter()
+        .find(|record| record.id == command_id)
+        .ok_or_else(|| "The command request no longer exists in recent history.".to_string())?;
+    if record.status != crate::models::CommandStatus::Pending {
+        return Err("Only pending commands can be approved.".to_string());
+    }
+    let workspace = crate::storage::load_workspaces(&app)?
+        .into_iter()
+        .find(|workspace| workspace.id == record.workspace_id)
+        .ok_or_else(|| "The project is no longer approved.".to_string())?;
+    let message = format!(
+        "Run this queued validation command?\n\nProject: {}\nPreset: {}\nCommand: {}\n\nThe command runs in a disposable, network-disabled sandbox. Yes executes it; No leaves it pending.",
+        workspace.name, record.preset_id, record.command
+    );
+    if !app.dialog().message(message).buttons(MessageDialogButtons::YesNo).blocking_show() {
+        return Err("Approval cancelled; the command remains pending.".to_string());
+    }
+    let outcome = crate::execution::approve_command(&app, &workspace, &command_id)?;
+    let status = match outcome.status {
+        crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
+        crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
+        crate::models::CommandStatus::Pending => ActivityStatus::Pending,
+        crate::models::CommandStatus::Running => ActivityStatus::Running,
+        _ => ActivityStatus::Failed,
+    };
+    crate::activity::update_operation_status(&app, ActivityKind::Verification, &command_id, status)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub(crate) fn reject_pending_command(
+    window: tauri::Window,
+    app: tauri::AppHandle,
+    command_id: String,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("Command rejection requires the main desktop window.".to_string());
+    }
+    crate::execution::reject_command(&app, &command_id)?;
+    crate::activity::update_operation_status(&app, ActivityKind::Verification, &command_id, ActivityStatus::Rejected)?;
+    Ok(())
+}
