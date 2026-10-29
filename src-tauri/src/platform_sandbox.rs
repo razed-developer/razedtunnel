@@ -1219,7 +1219,9 @@ mod platform {
             deny_icacls(Path::new(denied), &sid_text)?;
         }
 
+        eprintln!("[sandbox-stage] deriving-profile-sid");
         let profile_sid = unsafe { derive_profile_sid(&config.profile_name)? };
+        eprintln!("[sandbox-stage] profile-sid-derived");
         let mut capability_buffers = Vec::new();
         if config.network {
             capability_buffers.push(capability_sid(WinCapabilityInternetClientSid)?);
@@ -1244,6 +1246,7 @@ mod platform {
             Reserved: 0,
         };
 
+        eprintln!("[sandbox-stage] preparing-process-attributes");
         let mut attribute_size = 0usize;
         unsafe {
             InitializeProcThreadAttributeList(null_mut(), 1, 0, &mut attribute_size);
@@ -1289,6 +1292,7 @@ mod platform {
             ));
         }
 
+        eprintln!("[sandbox-stage] process-attributes-ready");
         let mut startup: STARTUPINFOEXW = unsafe { zeroed() };
         startup.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
         startup.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
@@ -1301,6 +1305,7 @@ mod platform {
         let mut command_line = wide(helper_command_line(&config));
         let cwd = wide(&config.cwd);
         std::env::remove_var(HELPER_ENV);
+        eprintln!("[sandbox-stage] calling-create-process");
         let created = unsafe {
             CreateProcessW(
                 null(),
