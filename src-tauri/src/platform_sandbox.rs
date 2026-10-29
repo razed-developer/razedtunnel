@@ -1168,6 +1168,26 @@ mod platform {
     }
 
     fn helper_command_line(config: &HelperConfig) -> String {
+        // cmd.exe /S /C consumes the remaining command as shell syntax, not
+        // as a conventional argv string. Escaping its embedded quotes with
+        // backslashes causes paths like "C:\\Program Files\\nodejs\\npm.cmd"
+        // to be interpreted literally and fail to launch.
+        let is_cmd = Path::new(&config.program)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.eq_ignore_ascii_case("cmd.exe"));
+        if is_cmd && config.args.len() >= 2 {
+            if let Some(c_index) = config.args.iter().position(|arg| arg.eq_ignore_ascii_case("/C")) {
+                if c_index + 1 == config.args.len() - 1 {
+                    let prefix = std::iter::once(config.program.as_str())
+                        .chain(config.args[..=c_index].iter().map(String::as_str))
+                        .map(quote_windows_arg)
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    return format!("{prefix} \"{}\"", config.args[c_index + 1]);
+                }
+            }
+        }
         std::iter::once(config.program.as_str())
             .chain(config.args.iter().map(String::as_str))
             .map(quote_windows_arg)
