@@ -1075,10 +1075,27 @@ mod platform {
             "source={source_kind} root={source_root}; destination={destination_kind} root={destination_root}; source_exists={}; destination_exists={}",
             source.is_dir(), destination.exists()
         );
+        // Canonical Windows paths may carry the extended-length \\?\ prefix.
+        // cmd.exe's mklink /J expects a conventional drive path for local
+        // junction targets; keep the canonical path for sandbox authorization.
+        fn junction_path(path: &Path) -> String {
+            let value = path.to_string_lossy();
+            if let Some(stripped) = value.strip_prefix(r"\\?\") {
+                // Only strip the prefix for drive-letter paths, never UNC or
+                // device paths. Other path types retain their original form.
+                if stripped.as_bytes().get(1) == Some(&b':')
+                    && stripped.as_bytes().get(2) == Some(&b'\\')
+                    && stripped.as_bytes().first().is_some_and(u8::is_ascii_alphabetic)
+                {
+                    return stripped.to_string();
+                }
+            }
+            value.into_owned()
+        }
         let command = format!(
             "mklink /J \"{}\" \"{}\"",
-            destination.display(),
-            source.display()
+            junction_path(destination),
+            junction_path(source)
         );
         let output = Command::new("cmd.exe")
             .args(["/D", "/S", "/C", &command])
