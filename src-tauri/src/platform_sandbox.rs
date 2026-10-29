@@ -1086,6 +1086,36 @@ mod platform {
             .and_then(|value| value.to_str())
             .unwrap_or_default()
             .to_ascii_lowercase();
+
+        // npm.cmd is a batch wrapper. Launch its trusted Node.js CLI directly
+        // to avoid cmd.exe batch execution restrictions inside AppContainer.
+        // Do not generalize this to arbitrary .cmd scripts: only the known
+        // npm launcher and its sibling installation are eligible.
+        if extension == "cmd"
+            && program.file_name().is_some_and(|name| name.eq_ignore_ascii_case("npm.cmd"))
+        {
+            if let Some(directory) = program.parent() {
+                let node = directory.join("node.exe");
+                let npm_cli = directory.join("node_modules").join("npm").join("bin").join("npm-cli.js");
+                if node.is_file() && npm_cli.is_file() {
+                    let direct_args = std::iter::once(npm_cli.to_string_lossy().into_owned())
+                        .chain(args.iter().cloned())
+                        .collect::<Vec<_>>();
+                    return configure(
+                        &node,
+                        &direct_args,
+                        cwd,
+                        writable_root,
+                        identity_root,
+                        env_overrides,
+                        network,
+                        read_roots,
+                        denied_paths,
+                    );
+                }
+                return Err("Windows npm launcher requires a readable sibling node.exe and node_modules/npm/bin/npm-cli.js; refusing an unverified fallback.".to_string());
+            }
+        }
         if matches!(extension.as_str(), "cmd" | "bat") {
             let shell = std::env::var_os("COMSPEC")
                 .map(PathBuf::from)
