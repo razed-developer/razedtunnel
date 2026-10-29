@@ -220,3 +220,9 @@ export const approvePendingFileChange = (changeId: string) =>
 
 export const rejectPendingFileChange = (changeId: string) =>
   invoke<void>("reject_pending_file_change", { changeId });
+
+export const approvePendingCommand = (commandId: string) =>
+  invoke<void>("approve_pending_command", { commandId });
+
+export const rejectPendingCommand = (commandId: string) =>
+  invoke<void>("reject_pending_command", { commandId });
