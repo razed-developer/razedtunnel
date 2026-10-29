@@ -1343,16 +1343,25 @@ mod platform {
                 &mut process_info,
             )
         };
+        // Capture GetLastError before cleanup calls overwrite the thread-local
+        // Win32 error. Emit the failure before CleanupGuard performs ACL rollback.
+        let create_error = if created == 0 {
+            Some(unsafe { GetLastError() })
+        } else {
+            None
+        };
         create_process_finished.store(true, std::sync::atomic::Ordering::Release);
-        eprintln!("[sandbox-stage] create-process-returned success={}", created != 0);
+        eprintln!(
+            "[sandbox-stage] create-process-returned success={} win32_error={:?}",
+            created != 0, create_error
+        );
         unsafe {
             DeleteProcThreadAttributeList(attribute_list);
             FreeSid(profile_sid);
         }
-        if created == 0 {
+        if let Some(error) = create_error {
             return Err(format!(
-                "Could not create the Windows AppContainer process (error {}).",
-                unsafe { GetLastError() }
+                "Could not create the Windows AppContainer process (error {error})."
             ));
         }
 
