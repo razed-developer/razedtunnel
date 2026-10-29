@@ -1119,7 +1119,7 @@ mod platform {
                     // process before loading npm. Node's MODULE_NOT_FOUND
                     // otherwise hides whether the actual OS error is EACCES.
                     // Report only path roles and error codes, not user paths.
-                    let probe = r#"const fs=require('node:fs');const path=require('node:path');const cp=require('node:child_process');const cli=process.argv[1];const checks=[['drive-root',path.parse(cli).root,'dir'],['node-root',path.dirname(path.dirname(path.dirname(path.dirname(cli)))),'dir'],['npm-package',path.dirname(path.dirname(cli)),'dir'],['npm-bin',path.dirname(cli),'dir'],['npm-cli',cli,'file']];for(const [role,p,kind] of checks){try{const info=fs.statSync(p);if(kind==='file'){fs.readFileSync(p);console.error('[sandbox-probe] '+role+' read-ok');}else{console.error('[sandbox-probe] '+role+' stat-ok directory='+info.isDirectory());}}catch(e){console.error('[sandbox-probe] '+role+' '+(e.code||'UNKNOWN')+' errno='+(e.errno??'unknown')+' syscall='+(e.syscall||'unknown'));}}try{const r=cp.spawnSync('whoami.exe',['/all'],{encoding:'utf8',timeout:3000,maxBuffer:65536});console.error('[sandbox-probe] token-inspect exit='+r.status+' error='+(r.error?.code||'none'));for(const line of (r.stdout||'').split(/\\r?\\n/)){if(/S-1-15-2-|S-1-15-3-|S-1-15-2-1|Mandatory Label/i.test(line))console.error('[sandbox-probe] token '+line.trim().slice(0,180));}}catch(e){console.error('[sandbox-probe] token-inspect '+e.message);}process.argv=[process.execPath,cli,...process.argv.slice(2)];require(cli);"#;
+                    let probe = r#"const fs=require('node:fs');const path=require('node:path');const cli=process.argv[1];for(const [role,p] of [['drive-root',path.parse(cli).root],['node-root',path.dirname(path.dirname(path.dirname(path.dirname(cli))))],['npm-package',path.dirname(path.dirname(cli))],['npm-bin',path.dirname(cli)],['npm-cli',cli]]){try{const info=fs.statSync(p);if(info.isFile())fs.readFileSync(p);console.error('[sandbox-probe] '+role+' accessible type='+(info.isFile()?'file':'directory'));}catch(e){console.error('[sandbox-probe] '+role+' '+(e.code||'UNKNOWN')+' syscall='+(e.syscall||'unknown'));}}process.argv=[process.execPath,cli,...process.argv.slice(2)];require(cli);"#;
                     let direct_args = std::iter::once("-e".to_string())
                         .chain(std::iter::once(probe.to_string()))
                         .chain(std::iter::once(npm_cli.to_string_lossy().into_owned()))
@@ -1359,6 +1359,33 @@ mod platform {
         )?;
         for root in &config.read_roots {
             apply_icacls(Path::new(root), &sid_text, "(OI)(CI)RX", true)?;
+        }
+        // Inspect only the npm entrypoint and its immediate ancestors while
+        // the temporary SID grant is live. Do not recurse or expose other ACEs.
+        if let Some(npm_cli) = config.read_roots.iter()
+            .map(Path::new)
+            .find(|root| root.file_name().is_some_and(|n| n.eq_ignore_ascii_case("bin"))
+                && root.join("npm-cli.js").exists())
+            .map(|root| root.join("npm-cli.js"))
+        {
+            eprintln!("[sandbox-acl] sid={sid_text}");
+            for target in [npm_cli.parent().and_then(Path::parent), npm_cli.parent(), Some(npm_cli.as_path())].into_iter().flatten() {
+                let output = Command::new("icacls.exe")
+                    .arg(target)
+                    .stdin(Stdio::null())
+                    .output();
+                match output {
+                    Ok(result) => {
+                        let listing = String::from_utf8_lossy(&result.stdout);
+                        let matches = listing.lines().filter(|line| line.contains(&sid_text)).collect::<Vec<_>>();
+                        eprintln!("[sandbox-acl] target={} status={} sid_aces={}", target.display(), result.status, matches.len());
+                        for line in matches.iter().take(3) {
+                            eprintln!("[sandbox-acl] ace={}", line.trim().chars().take(240).collect::<String>());
+                        }
+                    }
+                    Err(error) => eprintln!("[sandbox-acl] inspect-failed target={} error={error}", target.display()),
+                }
+            }
         }
         eprintln!("[sandbox-stage] read-grants-applied");
         for denied in &config.denied_paths {
