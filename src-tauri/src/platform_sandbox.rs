@@ -1305,6 +1305,26 @@ mod platform {
         let mut command_line = wide(helper_command_line(&config));
         let cwd = wide(&config.cwd);
         std::env::remove_var(HELPER_ENV);
+        // Keep diagnostics free of private paths and command arguments.
+        // A separate watchdog thread reports a blocked Win32 API call without
+        // attempting to kill a thread inside CreateProcessW.
+        eprintln!(
+            "[sandbox-stage] create-process-input program_absolute={} program_exists={} cwd_exists={} stdin_valid={} stdout_valid={} stderr_valid={}",
+            Path::new(&config.program).is_absolute(),
+            Path::new(&config.program).is_file(),
+            Path::new(&config.cwd).is_dir(),
+            !startup.StartupInfo.hStdInput.is_null(),
+            !startup.StartupInfo.hStdOutput.is_null(),
+            !startup.StartupInfo.hStdError.is_null(),
+        );
+        let create_process_finished = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let watchdog_done = create_process_finished.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_secs(15));
+            if !watchdog_done.load(std::sync::atomic::Ordering::Acquire) {
+                eprintln!("[sandbox-stage] create-process-still-blocked-after-15s");
+            }
+        });
         eprintln!("[sandbox-stage] calling-create-process");
         let created = unsafe {
             CreateProcessW(
@@ -1323,6 +1343,8 @@ mod platform {
                 &mut process_info,
             )
         };
+        create_process_finished.store(true, std::sync::atomic::Ordering::Release);
+        eprintln!("[sandbox-stage] create-process-returned success={}", created != 0);
         unsafe {
             DeleteProcThreadAttributeList(attribute_list);
             FreeSid(profile_sid);
