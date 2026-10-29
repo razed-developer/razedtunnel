@@ -1064,6 +1064,17 @@ mod platform {
                 format!("Could not prepare a Windows validation dependency junction: {error}")
             })?;
         }
+        // Windows junctions require local filesystem paths. Preserve the
+        // original OS error, but report useful path diagnostics without
+        // exposing full user directories in the approval UI.
+        let source_kind = if source.is_absolute() { "absolute" } else { "relative" };
+        let destination_kind = if destination.is_absolute() { "absolute" } else { "relative" };
+        let source_root = source.components().next().map(|part| format!("{part:?}")).unwrap_or_default();
+        let destination_root = destination.components().next().map(|part| format!("{part:?}")).unwrap_or_default();
+        let diagnostics = format!(
+            "source={source_kind} root={source_root}; destination={destination_kind} root={destination_root}; source_exists={}; destination_exists={}",
+            source.is_dir(), destination.exists()
+        );
         let command = format!(
             "mklink /J \"{}\" \"{}\"",
             destination.display(),
@@ -1076,13 +1087,14 @@ mod platform {
             .stderr(Stdio::piped())
             .output()
             .map_err(|error| {
-                format!("Could not create a Windows validation dependency junction: {error}")
+                format!("Could not create a Windows validation dependency junction ({diagnostics}): {error}")
             })?;
         if output.status.success() {
             Ok(())
         } else {
             Err(format!(
-                "Could not create a Windows validation dependency junction: {}",
+                "Could not create a Windows validation dependency junction ({diagnostics}; exit={:?}): {}",
+                output.status.code(),
                 String::from_utf8_lossy(&output.stderr).trim()
             ))
         }
