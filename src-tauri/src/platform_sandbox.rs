@@ -508,8 +508,6 @@ mod platform {
         profile_name: String,
         sid: String,
         grant_paths: Vec<String>,
-        #[serde(default)]
-        traverse_paths: Vec<String>,
         deny_paths: Vec<String>,
         runtime_root: String,
         #[serde(default)]
@@ -727,10 +725,6 @@ mod platform {
     fn cleanup_manifest(path: &Path, manifest: &CleanupManifest) {
         let cleanup_start = std::time::Instant::now();
         eprintln!("[sandbox-stage] cleanup-start grants={} denies={}", manifest.grant_paths.len(), manifest.deny_paths.len());
-        for (index, grant) in manifest.traverse_paths.iter().enumerate() {
-            let result = remove_icacls(Path::new(grant), &manifest.sid, false, false);
-            eprintln!("[sandbox-stage] cleanup-traverse index={index} success={}", result.is_ok());
-        }
         for (index, grant) in manifest.grant_paths.iter().enumerate() {
             let start = std::time::Instant::now();
             let path = Path::new(grant);
@@ -1318,25 +1312,10 @@ mod platform {
         grant_paths.insert(config.writable_root.clone());
         grant_paths.insert(config.runtime_root.clone());
         grant_paths.extend(config.read_roots.iter().cloned());
-        // AppContainer needs traversal access on every ancestor of an
-        // allowed root. Grant these directories themselves only: never
-        // recurse through Program Files, a user profile, or a drive root.
-        let mut traverse_paths = BTreeSet::new();
-        for root in &grant_paths {
-            let mut ancestor = Path::new(root).parent();
-            while let Some(parent) = ancestor {
-                if parent.as_os_str().is_empty() { break; }
-                if !grant_paths.contains(&parent.to_string_lossy().into_owned()) {
-                    traverse_paths.insert(parent.to_string_lossy().into_owned());
-                }
-                ancestor = parent.parent();
-            }
-        }
         let manifest = CleanupManifest {
             profile_name: config.profile_name.clone(),
             sid: sid_text.clone(),
             grant_paths: grant_paths.iter().cloned().collect(),
-            traverse_paths: traverse_paths.iter().cloned().collect(),
             deny_paths: config.denied_paths.clone(),
             runtime_root: config.runtime_root.clone(),
             helper_pid: std::process::id(),
@@ -1362,9 +1341,6 @@ mod platform {
         )?;
         for root in &config.read_roots {
             apply_icacls(Path::new(root), &sid_text, "(OI)(CI)RX", true)?;
-        }
-        for parent in &traverse_paths {
-            apply_icacls(Path::new(parent), &sid_text, "RX", false)?;
         }
         eprintln!("[sandbox-stage] read-grants-applied");
         for denied in &config.denied_paths {
