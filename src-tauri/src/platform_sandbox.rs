@@ -1371,11 +1371,11 @@ mod platform {
         {
             eprintln!("[sandbox-acl] sid={sid_text}");
             for target in [npm_cli.parent().and_then(Path::parent), npm_cli.parent(), Some(npm_cli.as_path())].into_iter().flatten() {
-                let script = "$ErrorActionPreference='Stop';$a=Get-Acl -LiteralPath $args[0];$sid=$args[1];foreach($rule in $a.Access){$identity=$rule.IdentityReference.Value;try{$resolved=$rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{$resolved=$identity};if($resolved -eq $sid){Write-Output ('match type='+$rule.AccessControlType+' rights='+$rule.FileSystemRights+' inherited='+$rule.IsInherited)}}";
+                let script = "$ErrorActionPreference='Stop';$a=Get-Acl -LiteralPath $env:RAZED_ACL_TARGET;$sid=$env:RAZED_ACL_SID;foreach($rule in $a.Access){$identity=$rule.IdentityReference.Value;try{$resolved=$rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{$resolved=$identity};if($resolved -eq $sid){Write-Output ('match type='+$rule.AccessControlType+' rights='+$rule.FileSystemRights+' inherited='+$rule.IsInherited)}}";
                 let output = Command::new("powershell.exe")
-                    .args(["-NoProfile", "-NonInteractive", "-Command", script, "--"])
-                    .arg(target)
-                    .arg(&sid_text)
+                    .args(["-NoProfile", "-NonInteractive", "-Command", script])
+                    .env("RAZED_ACL_TARGET", target)
+                    .env("RAZED_ACL_SID", &sid_text)
                     .stdin(Stdio::null())
                     .output();
                 match output {
