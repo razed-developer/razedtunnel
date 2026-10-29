@@ -219,3 +219,33 @@ pub(crate) fn reject_pending_command(
     crate::activity::update_operation_status(&app, ActivityKind::Verification, &command_id, ActivityStatus::Rejected)?;
     Ok(())
 }
+
+#[tauri::command]
+pub(crate) fn reconcile_pending_verification_activity(app: tauri::AppHandle) -> Result<usize, String> {
+    let timeline = crate::activity::timeline(&app, None)?;
+    let history = crate::execution::list_history(&app, None, 100)?;
+    let mut corrected = 0usize;
+    for group in timeline.groups {
+        for event in group.events {
+            if event.kind != ActivityKind::Verification || event.status != ActivityStatus::Pending {
+                continue;
+            }
+            let Some(id) = event.source_id.as_deref() else { continue };
+            let status = match history.iter().find(|record| record.id == id) {
+                Some(record) => match record.status {
+                    crate::models::CommandStatus::Pending => continue,
+                    crate::models::CommandStatus::Running => ActivityStatus::Running,
+                    crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
+                    crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
+                    crate::models::CommandStatus::Cancelled => ActivityStatus::Stopped,
+                    _ => ActivityStatus::Failed,
+                },
+                // History is capped; never infer a terminal status from absence.
+                None => continue,
+            };
+            crate::activity::update_operation_status(&app, ActivityKind::Verification, id, status)?;
+            corrected += 1;
+        }
+    }
+    Ok(corrected)
+}
