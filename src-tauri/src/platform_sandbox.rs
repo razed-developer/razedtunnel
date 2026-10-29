@@ -1101,6 +1101,12 @@ mod platform {
                     let direct_args = std::iter::once(npm_cli.to_string_lossy().into_owned())
                         .chain(args.iter().cloned())
                         .collect::<Vec<_>>();
+                    // Explicitly grant the CLI entrypoint as well as its
+                    // installation directory. AppContainer must traverse
+                    // each parent of the script, not merely execute node.exe.
+                    let mut npm_read_roots = read_roots.to_vec();
+                    npm_read_roots.push(directory.to_path_buf());
+                    npm_read_roots.push(npm_cli.parent().unwrap().to_path_buf());
                     return configure(
                         &node,
                         &direct_args,
@@ -1109,7 +1115,7 @@ mod platform {
                         identity_root,
                         env_overrides,
                         network,
-                        read_roots,
+                        &npm_read_roots,
                         denied_paths,
                     );
                 }
