@@ -1092,13 +1092,15 @@ mod platform {
             }
             value.into_owned()
         }
+        // /S rewrites the quoted /C command string and can corrupt mklink
+        // arguments. Invoke cmd with /D /C as in a working local junction test.
         let command = format!(
-            "mklink /J \"{}\" \"{}\"",
+            "mklink /J \\"{}\\" \\"{}\\"",
             junction_path(destination),
             junction_path(source)
         );
         let output = Command::new("cmd.exe")
-            .args(["/D", "/S", "/C", &command])
+            .args(["/D", "/C", &command])
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
