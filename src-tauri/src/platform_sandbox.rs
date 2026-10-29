@@ -1098,7 +1098,14 @@ mod platform {
                 let node = directory.join("node.exe");
                 let npm_cli = directory.join("node_modules").join("npm").join("bin").join("npm-cli.js");
                 if node.is_file() && npm_cli.is_file() {
-                    let direct_args = std::iter::once(npm_cli.to_string_lossy().into_owned())
+                    // Probe file accessibility *inside* the low-privilege
+                    // process before loading npm. Node's MODULE_NOT_FOUND
+                    // otherwise hides whether the actual OS error is EACCES.
+                    // Report only path roles and error codes, not user paths.
+                    let probe = r#"const fs=require('node:fs');const path=require('node:path');const cli=process.argv[1];const checks=[['node-root',path.dirname(path.dirname(path.dirname(path.dirname(cli))))],['npm-package',path.dirname(path.dirname(cli))],['npm-bin',path.dirname(cli)],['npm-cli',cli]];for(const [role,p] of checks){try{const fd=fs.openSync(p,'r');fs.closeSync(fd);console.error('[sandbox-probe] '+role+' readable');}catch(e){console.error('[sandbox-probe] '+role+' '+(e.code||'UNKNOWN')+' win32='+(e.errno??'unknown'));}}process.argv=[process.execPath,cli,...process.argv.slice(2)];require(cli);"#;
+                    let direct_args = std::iter::once("-e".to_string())
+                        .chain(std::iter::once(probe.to_string()))
+                        .chain(std::iter::once(npm_cli.to_string_lossy().into_owned()))
                         .chain(args.iter().cloned())
                         .collect::<Vec<_>>();
                     // Explicitly grant the CLI entrypoint as well as its
