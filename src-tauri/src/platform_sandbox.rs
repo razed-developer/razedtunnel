@@ -915,7 +915,17 @@ mod platform {
 
         let mut extra_roots = BTreeSet::new();
         extra_roots.extend(read_roots.iter().cloned());
-        extra_roots.extend(user_owned_tool_roots());
+        // Only include tool roots explicitly needed by this invocation.
+        // Recursively granting and revoking ~/.rustup for every npm check
+        // can take longer than the entire command timeout.
+        let program_name = program.file_name().and_then(|name| name.to_str()).unwrap_or_default().to_ascii_lowercase();
+        let is_rust_tool = matches!(program_name.as_str(), "cargo" | "cargo.exe" | "rustc" | "rustc.exe" | "rustup" | "rustup.exe");
+        for tool_root in user_owned_tool_roots() {
+            let is_rustup = tool_root.file_name().is_some_and(|name| name.eq_ignore_ascii_case(".rustup"));
+            if !is_rustup || is_rust_tool {
+                extra_roots.insert(tool_root);
+            }
+        }
         if let Some(parent) = program.parent() {
             extra_roots.insert(parent.to_path_buf());
         }
