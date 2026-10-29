@@ -1016,6 +1016,24 @@ mod platform {
         read_roots: &[PathBuf],
         denied_paths: &[PathBuf],
     ) -> Result<Command, String> {
+        // Windows installations commonly expose both an extensionless POSIX
+        // shim (npm) and a native cmd launcher (npm.cmd). The former is not a
+        // PE executable and CreateProcessW rejects it with ERROR_BAD_EXE_FORMAT.
+        // Prefer the sibling .cmd launcher when given an extensionless shim.
+        let resolved_program = if program.extension().is_none() {
+            let cmd = program.with_extension("cmd");
+            let bat = program.with_extension("bat");
+            if cmd.is_file() {
+                cmd
+            } else if bat.is_file() {
+                bat
+            } else {
+                program.to_path_buf()
+            }
+        } else {
+            program.to_path_buf()
+        };
+        let program = resolved_program.as_path();
         let extension = program
             .extension()
             .and_then(|value| value.to_str())
