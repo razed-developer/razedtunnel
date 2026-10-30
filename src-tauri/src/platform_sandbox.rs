@@ -508,6 +508,9 @@ mod platform {
         profile_name: String,
         sid: String,
         grant_paths: Vec<String>,
+        // Compatibility with manifests written by the reverted ancestor-ACL experiment.
+        #[serde(default)]
+        traverse_paths: Vec<String>,
         deny_paths: Vec<String>,
         runtime_root: String,
         #[serde(default)]
@@ -723,18 +726,59 @@ mod platform {
     }
 
     fn cleanup_manifest(path: &Path, manifest: &CleanupManifest) {
-        for grant in &manifest.grant_paths {
-            let _ = remove_icacls(Path::new(grant), &manifest.sid, false, true);
+        let cleanup_start = std::time::Instant::now();
+        let mut acl_cleanup_ok = true;
+        eprintln!("[sandbox-stage] cleanup-start grants={} denies={}", manifest.grant_paths.len(), manifest.deny_paths.len());
+        // These were directory-only grants. Never recurse through ancestors,
+        // especially volume roots, Program Files, or the user's profile.
+        for (index, ancestor) in manifest.traverse_paths.iter().enumerate() {
+            let result = remove_icacls(Path::new(ancestor), &manifest.sid, false, false);
+            eprintln!("[sandbox-stage] cleanup-legacy-traverse index={index} success={}", result.is_ok());
+            acl_cleanup_ok &= result.is_ok();
         }
-        for denied in &manifest.deny_paths {
-            let _ = remove_icacls(Path::new(denied), &manifest.sid, true, true);
+        for (index, grant) in manifest.grant_paths.iter().enumerate() {
+            let start = std::time::Instant::now();
+            let path = Path::new(grant);
+            let kind = if grant == &manifest.runtime_root {
+                "runtime"
+            } else if path.join("node_modules").exists() {
+                "workspace-with-dependencies"
+            } else if path.join("npm.cmd").exists() {
+                "node-installation"
+            } else if path.join("package.json").exists() {
+                "project"
+            } else if path.file_name().is_some_and(|n| n.eq_ignore_ascii_case("bin")) {
+                "tool-bin"
+            } else if path.file_name().is_some_and(|n| n.eq_ignore_ascii_case(".rustup")) {
+                "rustup-toolchain"
+            } else if path.file_name().is_some_and(|n| n.eq_ignore_ascii_case("npm")) {
+                "npm-global"
+            } else {
+                "other"
+            };
+            eprintln!("[sandbox-stage] cleanup-grant-start index={index} kind={kind}");
+            let result = remove_icacls(path, &manifest.sid, false, true);
+            eprintln!("[sandbox-stage] cleanup-grant index={index} elapsed_ms={} success={}", start.elapsed().as_millis(), result.is_ok());
+            acl_cleanup_ok &= result.is_ok();
         }
+        for (index, denied) in manifest.deny_paths.iter().enumerate() {
+            let start = std::time::Instant::now();
+            let result = remove_icacls(Path::new(denied), &manifest.sid, true, true);
+            eprintln!("[sandbox-stage] cleanup-deny index={index} elapsed_ms={} success={}", start.elapsed().as_millis(), result.is_ok());
+            acl_cleanup_ok &= result.is_ok();
+        }
+        eprintln!("[sandbox-stage] cleanup-acls-finished elapsed_ms={}", cleanup_start.elapsed().as_millis());
         let wide_name = wide(&manifest.profile_name);
         unsafe {
             let _ = DeleteAppContainerProfile(wide_name.as_ptr());
         }
         let _ = std::fs::remove_dir_all(&manifest.runtime_root);
-        let _ = std::fs::remove_file(path);
+        if acl_cleanup_ok {
+            let _ = std::fs::remove_file(path);
+        } else {
+            eprintln!("[sandbox-stage] cleanup-incomplete retaining-manifest={}", path.display());
+        }
+        eprintln!("[sandbox-stage] cleanup-complete elapsed_ms={}", cleanup_start.elapsed().as_millis());
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -888,7 +932,17 @@ mod platform {
 
         let mut extra_roots = BTreeSet::new();
         extra_roots.extend(read_roots.iter().cloned());
-        extra_roots.extend(user_owned_tool_roots());
+        // Only include tool roots explicitly needed by this invocation.
+        // Recursively granting and revoking ~/.rustup for every npm check
+        // can take longer than the entire command timeout.
+        let program_name = program.file_name().and_then(|name| name.to_str()).unwrap_or_default().to_ascii_lowercase();
+        let is_rust_tool = matches!(program_name.as_str(), "cargo" | "cargo.exe" | "rustc" | "rustc.exe" | "rustup" | "rustup.exe");
+        for tool_root in user_owned_tool_roots() {
+            let is_rustup = tool_root.file_name().is_some_and(|name| name.eq_ignore_ascii_case(".rustup"));
+            if !is_rustup || is_rust_tool {
+                extra_roots.insert(tool_root);
+            }
+        }
         if let Some(parent) = program.parent() {
             extra_roots.insert(parent.to_path_buf());
         }
@@ -1016,11 +1070,88 @@ mod platform {
         read_roots: &[PathBuf],
         denied_paths: &[PathBuf],
     ) -> Result<Command, String> {
+        // Windows installations commonly expose both an extensionless POSIX
+        // shim (npm) and a native cmd launcher (npm.cmd). The former is not a
+        // PE executable and CreateProcessW rejects it with ERROR_BAD_EXE_FORMAT.
+        // Prefer the sibling .cmd launcher when given an extensionless shim.
+        let resolved_program = if program.extension().is_none() {
+            let cmd = program.with_extension("cmd");
+            let bat = program.with_extension("bat");
+            if cmd.is_file() {
+                cmd
+            } else if bat.is_file() {
+                bat
+            } else {
+                program.to_path_buf()
+            }
+        } else {
+            program.to_path_buf()
+        };
+        let program = resolved_program.as_path();
+        // The AppContainer must be able to read the command launcher and
+        // its adjacent runtime (for example npm.cmd and node.exe). Grant only
+        // that tool directory, not its parent Program Files tree.
+        let mut tool_read_roots = read_roots.to_vec();
+        if let Some(tool_directory) = program.parent() {
+            if !tool_directory.as_os_str().is_empty() && tool_directory.is_dir() {
+                tool_read_roots.push(tool_directory.to_path_buf());
+            }
+        }
+        let read_roots = tool_read_roots.as_slice();
         let extension = program
             .extension()
             .and_then(|value| value.to_str())
             .unwrap_or_default()
             .to_ascii_lowercase();
+
+        // npm.cmd is a batch wrapper. Launch its trusted Node.js CLI directly
+        // to avoid cmd.exe batch execution restrictions inside AppContainer.
+        // Do not generalize this to arbitrary .cmd scripts: only the known
+        // npm launcher and its sibling installation are eligible.
+        if extension == "cmd"
+            && program.file_name().is_some_and(|name| name.eq_ignore_ascii_case("npm.cmd"))
+        {
+            if let Some(directory) = program.parent() {
+                let node = directory.join("node.exe");
+                let npm_cli = directory.join("node_modules").join("npm").join("bin").join("npm-cli.js");
+                if node.is_file() && npm_cli.is_file() {
+                    // Probe file accessibility *inside* the low-privilege
+                    // process before loading npm. Node's MODULE_NOT_FOUND
+                    // otherwise hides whether the actual OS error is EACCES.
+                    // Report only path roles and error codes, not user paths.
+                    let probe = r#"const fs=require('node:fs');const path=require('node:path');const cli=process.argv[1];for(const [role,p] of [['drive-root',path.parse(cli).root],['node-root',path.dirname(path.dirname(path.dirname(path.dirname(cli))))],['npm-package',path.dirname(path.dirname(cli))],['npm-bin',path.dirname(cli)],['npm-cli',cli]]){try{const info=fs.statSync(p);if(info.isFile())fs.readFileSync(p);console.error('[sandbox-probe] '+role+' accessible type='+(info.isFile()?'file':'directory'));}catch(e){console.error('[sandbox-probe] '+role+' '+(e.code||'UNKNOWN')+' syscall='+(e.syscall||'unknown'));}}process.argv=[process.execPath,cli,...process.argv.slice(2)];require(cli);"#;
+                    let direct_args = std::iter::once("-e".to_string())
+                        .chain(std::iter::once(probe.to_string()))
+                        .chain(std::iter::once(npm_cli.to_string_lossy().into_owned()))
+                        .chain(args.iter().cloned())
+                        .collect::<Vec<_>>();
+                    // Explicitly grant the CLI entrypoint as well as its
+                    // installation directory. AppContainer must traverse
+                    // each parent of the script, not merely execute node.exe.
+                    let mut npm_read_roots = read_roots.to_vec();
+                    npm_read_roots.push(directory.to_path_buf());
+                    // Explicitly grant each npm ancestor. Recursive icacls
+                    // grants on the Node installation root have not produced
+                    // effective ACEs on the npm package in AppContainer.
+                    npm_read_roots.push(directory.join("node_modules"));
+                    npm_read_roots.push(directory.join("node_modules").join("npm"));
+                    npm_read_roots.push(npm_cli.parent().unwrap().to_path_buf());
+                    npm_read_roots.push(npm_cli.clone());
+                    return configure(
+                        &node,
+                        &direct_args,
+                        cwd,
+                        writable_root,
+                        identity_root,
+                        env_overrides,
+                        network,
+                        &npm_read_roots,
+                        denied_paths,
+                    );
+                }
+                return Err("Windows npm launcher requires a readable sibling node.exe and node_modules/npm/bin/npm-cli.js; refusing an unverified fallback.".to_string());
+            }
+        }
         if matches!(extension.as_str(), "cmd" | "bat") {
             let shell = std::env::var_os("COMSPEC")
                 .map(PathBuf::from)
@@ -1064,25 +1195,60 @@ mod platform {
                 format!("Could not prepare a Windows validation dependency junction: {error}")
             })?;
         }
+        // Windows junctions require local filesystem paths. Preserve the
+        // original OS error, but report useful path diagnostics without
+        // exposing full user directories in the approval UI.
+        let source_kind = if source.is_absolute() { "absolute" } else { "relative" };
+        let destination_kind = if destination.is_absolute() { "absolute" } else { "relative" };
+        let source_root = source.components().next().map(|part| format!("{part:?}")).unwrap_or_default();
+        let destination_root = destination.components().next().map(|part| format!("{part:?}")).unwrap_or_default();
+        let diagnostics = format!(
+            "source={source_kind} root={source_root}; destination={destination_kind} root={destination_root}; source_exists={}; destination_exists={}",
+            source.is_dir(), destination.exists()
+        );
+        // Canonical Windows paths may carry the extended-length \\?\ prefix.
+        // cmd.exe's mklink /J expects a conventional drive path for local
+        // junction targets; keep the canonical path for sandbox authorization.
+        fn junction_path(path: &Path) -> String {
+            let value = path.to_string_lossy();
+            if let Some(stripped) = value.strip_prefix(r"\\?\") {
+                // Only strip the prefix for drive-letter paths, never UNC or
+                // device paths. Other path types retain their original form.
+                if stripped.as_bytes().get(1) == Some(&b':')
+                    && stripped.as_bytes().get(2) == Some(&b'\\')
+                    && stripped.as_bytes().first().is_some_and(u8::is_ascii_alphabetic)
+                {
+                    return stripped.to_string();
+                }
+            }
+            value.into_owned()
+        }
+        // Windows Command::args escapes embedded quotes for the child argv,
+        // but cmd.exe parses /C as a command line, not as ordinary argv.
+        // Pass the command text verbatim to preserve mklink's path quotes.
+        use std::os::windows::process::CommandExt;
         let command = format!(
             "mklink /J \"{}\" \"{}\"",
-            destination.display(),
-            source.display()
+            junction_path(destination),
+            junction_path(source)
         );
         let output = Command::new("cmd.exe")
-            .args(["/D", "/S", "/C", &command])
+            .raw_arg("/D")
+            .raw_arg("/C")
+            .raw_arg(&command)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
             .output()
             .map_err(|error| {
-                format!("Could not create a Windows validation dependency junction: {error}")
+                format!("Could not create a Windows validation dependency junction ({diagnostics}): {error}")
             })?;
         if output.status.success() {
             Ok(())
         } else {
             Err(format!(
-                "Could not create a Windows validation dependency junction: {}",
+                "Could not create a Windows validation dependency junction ({diagnostics}; exit={:?}): {}",
+                output.status.code(),
                 String::from_utf8_lossy(&output.stderr).trim()
             ))
         }
@@ -1115,6 +1281,26 @@ mod platform {
     }
 
     fn helper_command_line(config: &HelperConfig) -> String {
+        // cmd.exe /S /C consumes the remaining command as shell syntax, not
+        // as a conventional argv string. Escaping its embedded quotes with
+        // backslashes causes paths like "C:\\Program Files\\nodejs\\npm.cmd"
+        // to be interpreted literally and fail to launch.
+        let is_cmd = Path::new(&config.program)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.eq_ignore_ascii_case("cmd.exe"));
+        if is_cmd && config.args.len() >= 2 {
+            if let Some(c_index) = config.args.iter().position(|arg| arg.eq_ignore_ascii_case("/C")) {
+                if c_index + 1 == config.args.len() - 1 {
+                    let prefix = std::iter::once(config.program.as_str())
+                        .chain(config.args[..=c_index].iter().map(String::as_str))
+                        .map(quote_windows_arg)
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    return format!("{prefix} \"{}\"", config.args[c_index + 1]);
+                }
+            }
+        }
         std::iter::once(config.program.as_str())
             .chain(config.args.iter().map(String::as_str))
             .map(quote_windows_arg)
@@ -1143,6 +1329,7 @@ mod platform {
     }
 
     fn run_helper(config: HelperConfig) -> Result<i32, String> {
+        eprintln!("[sandbox-stage] helper-started");
         let sid_text = ensure_profile(&config.profile_name)?;
         let mut grant_paths = BTreeSet::new();
         grant_paths.insert(config.writable_root.clone());
@@ -1152,6 +1339,7 @@ mod platform {
             profile_name: config.profile_name.clone(),
             sid: sid_text.clone(),
             grant_paths: grant_paths.iter().cloned().collect(),
+            traverse_paths: Vec::new(),
             deny_paths: config.denied_paths.clone(),
             runtime_root: config.runtime_root.clone(),
             helper_pid: std::process::id(),
@@ -1176,13 +1364,52 @@ mod platform {
             true,
         )?;
         for root in &config.read_roots {
+            eprintln!("[sandbox-acl] grant-start target={}", root);
             apply_icacls(Path::new(root), &sid_text, "(OI)(CI)RX", true)?;
+            eprintln!("[sandbox-acl] grant-ok target={}", root);
         }
+        // Read the live DACL through PowerShell's object model rather than
+        // searching icacls text for a numeric SID (which may be resolved to a name).
+        // Limit inspection to three npm paths; never recurse or mutate ACLs.
+        if let Some(npm_cli) = config.read_roots.iter()
+            .map(Path::new)
+            .find(|root| root.file_name().is_some_and(|n| n.eq_ignore_ascii_case("bin"))
+                && root.join("npm-cli.js").exists())
+            .map(|root| root.join("npm-cli.js"))
+        {
+            eprintln!("[sandbox-acl] sid={sid_text}");
+            for target in [npm_cli.parent().and_then(Path::parent), npm_cli.parent(), Some(npm_cli.as_path())].into_iter().flatten() {
+                let script = "$ErrorActionPreference='Stop';$a=Get-Acl -LiteralPath $env:RAZED_ACL_TARGET;$sid=$env:RAZED_ACL_SID;foreach($rule in $a.Access){$identity=$rule.IdentityReference.Value;try{$resolved=$rule.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value}catch{$resolved=$identity};if($resolved -eq $sid){Write-Output ('match type='+$rule.AccessControlType+' rights='+$rule.FileSystemRights+' inherited='+$rule.IsInherited)}}";
+                let output = Command::new("powershell.exe")
+                    .args(["-NoProfile", "-NonInteractive", "-Command", script])
+                    .env("RAZED_ACL_TARGET", target)
+                    .env("RAZED_ACL_SID", &sid_text)
+                    .stdin(Stdio::null())
+                    .output();
+                match output {
+                    Ok(result) => {
+                        let listing = String::from_utf8_lossy(&result.stdout);
+                        let matches = listing.lines().filter(|line| line.starts_with("match ")).collect::<Vec<_>>();
+                        eprintln!("[sandbox-acl] target={} status={} sid_aces={}", target.display(), result.status, matches.len());
+                        for line in matches.iter().take(3) {
+                            eprintln!("[sandbox-acl] {}", line.chars().take(240).collect::<String>());
+                        }
+                        if !result.status.success() {
+                            eprintln!("[sandbox-acl] inspect-error={}", String::from_utf8_lossy(&result.stderr).chars().take(240).collect::<String>());
+                        }
+                    }
+                    Err(error) => eprintln!("[sandbox-acl] inspect-failed target={} error={error}", target.display()),
+                }
+            }
+        }
+        eprintln!("[sandbox-stage] read-grants-applied");
         for denied in &config.denied_paths {
             deny_icacls(Path::new(denied), &sid_text)?;
         }
 
+        eprintln!("[sandbox-stage] deriving-profile-sid");
         let profile_sid = unsafe { derive_profile_sid(&config.profile_name)? };
+        eprintln!("[sandbox-stage] profile-sid-derived");
         let mut capability_buffers = Vec::new();
         if config.network {
             capability_buffers.push(capability_sid(WinCapabilityInternetClientSid)?);
@@ -1207,6 +1434,7 @@ mod platform {
             Reserved: 0,
         };
 
+        eprintln!("[sandbox-stage] preparing-process-attributes");
         let mut attribute_size = 0usize;
         unsafe {
             InitializeProcThreadAttributeList(null_mut(), 1, 0, &mut attribute_size);
@@ -1252,6 +1480,7 @@ mod platform {
             ));
         }
 
+        eprintln!("[sandbox-stage] process-attributes-ready");
         let mut startup: STARTUPINFOEXW = unsafe { zeroed() };
         startup.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
         startup.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
@@ -1262,11 +1491,38 @@ mod platform {
 
         let mut process_info: PROCESS_INFORMATION = unsafe { zeroed() };
         let mut command_line = wide(helper_command_line(&config));
+        let application_name = wide(&config.program);
         let cwd = wide(&config.cwd);
         std::env::remove_var(HELPER_ENV);
+        // Keep diagnostics free of private paths and command arguments.
+        // A separate watchdog thread reports a blocked Win32 API call without
+        // attempting to kill a thread inside CreateProcessW.
+        eprintln!(
+            "[sandbox-stage] create-process-input program_absolute={} program_exists={} cwd_exists={} stdin_valid={} stdout_valid={} stderr_valid={}",
+            Path::new(&config.program).is_absolute(),
+            Path::new(&config.program).is_file(),
+            Path::new(&config.cwd).is_dir(),
+            !startup.StartupInfo.hStdInput.is_null(),
+            !startup.StartupInfo.hStdOutput.is_null(),
+            !startup.StartupInfo.hStdError.is_null(),
+        );
+        let create_process_finished = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let watchdog_done = create_process_finished.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_secs(15));
+            if !watchdog_done.load(std::sync::atomic::Ordering::Acquire) {
+                eprintln!("[sandbox-stage] create-process-still-blocked-after-15s");
+            }
+        });
+        eprintln!(
+            "[sandbox-stage] create-process-program extension={:?} name={:?}",
+            Path::new(&config.program).extension().and_then(|x| x.to_str()),
+            Path::new(&config.program).file_name().and_then(|x| x.to_str())
+        );
+        eprintln!("[sandbox-stage] calling-create-process");
         let created = unsafe {
             CreateProcessW(
-                null(),
+                application_name.as_ptr(),
                 command_line.as_mut_ptr(),
                 null(),
                 null(),
@@ -1281,17 +1537,29 @@ mod platform {
                 &mut process_info,
             )
         };
+        // Capture GetLastError before cleanup calls overwrite the thread-local
+        // Win32 error. Emit the failure before CleanupGuard performs ACL rollback.
+        let create_error = if created == 0 {
+            Some(unsafe { GetLastError() })
+        } else {
+            None
+        };
+        create_process_finished.store(true, std::sync::atomic::Ordering::Release);
+        eprintln!(
+            "[sandbox-stage] create-process-returned success={} win32_error={:?}",
+            created != 0, create_error
+        );
         unsafe {
             DeleteProcThreadAttributeList(attribute_list);
             FreeSid(profile_sid);
         }
-        if created == 0 {
+        if let Some(error) = create_error {
             return Err(format!(
-                "Could not create the Windows AppContainer process (error {}).",
-                unsafe { GetLastError() }
+                "Could not create the Windows AppContainer process (error {error})."
             ));
         }
 
+        eprintln!("[sandbox-stage] appcontainer-process-created");
         let job: HANDLE = unsafe { CreateJobObjectW(null(), null()) };
         if job.is_null() {
             let error = unsafe { GetLastError() };
@@ -1348,6 +1616,7 @@ mod platform {
         unsafe {
             CloseHandle(process_info.hThread);
         }
+        eprintln!("[sandbox-stage] appcontainer-process-resumed");
 
         let wait = unsafe { WaitForSingleObject(process_info.hProcess, u32::MAX) };
         let wait_error = (wait != WAIT_OBJECT_0).then(|| unsafe { GetLastError() });
@@ -1363,6 +1632,7 @@ mod platform {
             // are terminated before this helper returns to RepoTunnel.
             CloseHandle(job);
         }
+        eprintln!("[sandbox-stage] appcontainer-process-exited code={exit_code}");
         let _ = std::fs::remove_dir_all(&config.runtime_root);
         if let Some(error) = wait_error {
             return Err(format!(

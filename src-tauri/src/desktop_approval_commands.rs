@@ -144,3 +144,112 @@ pub(crate) fn approve_pending_file_change(
     crate::activity::update_operation_status(&app, ActivityKind::Files, &change_id, status)?;
     Ok(())
 }
+
+#[tauri::command]
+pub(crate) fn approve_pending_command(
+    window: tauri::Window,
+    app: tauri::AppHandle,
+    command_id: String,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("Command approval requires the main desktop window.".to_string());
+    }
+    let record = crate::execution::list_history(&app, None, 100)?
+        .into_iter()
+        .find(|record| record.id == command_id)
+        .ok_or_else(|| "The command request no longer exists in recent history.".to_string())?;
+    if record.status != crate::models::CommandStatus::Pending {
+        return Err("Only pending commands can be approved.".to_string());
+    }
+    let workspace = crate::storage::load_workspaces(&app)?
+        .into_iter()
+        .find(|workspace| workspace.id == record.workspace_id)
+        .ok_or_else(|| "The project is no longer approved.".to_string())?;
+    let message = format!(
+        "Run this queued validation command?\n\nProject: {}\nPreset: {}\nCommand: {}\n\nThe command runs in a disposable, network-disabled sandbox. Yes executes it; No leaves it pending.",
+        workspace.name, record.preset_id, record.command
+    );
+    if !app.dialog().message(message).buttons(MessageDialogButtons::YesNo).blocking_show() {
+        return Err("Approval cancelled; the command remains pending.".to_string());
+    }
+    // Never run sandbox validation on the desktop IPC handler thread.
+    // The existing execution layer owns the Pending -> Running transition,
+    // fingerprint revalidation, timeout and durable command history.
+    let app_for_worker = app.clone();
+    let command_for_worker = command_id.clone();
+    std::thread::Builder::new()
+        .name("repotunnel-validation".to_string())
+        .spawn(move || {
+            let result = crate::execution::approve_command(
+                &app_for_worker, &workspace, &command_for_worker
+            );
+            let status = match crate::execution::list_history(
+                &app_for_worker, Some(&workspace.id), 100
+            ) {
+                Ok(records) => records.iter().find(|item| item.id == command_for_worker)
+                    .map(|record| match record.status {
+                        crate::models::CommandStatus::Pending => ActivityStatus::Pending,
+                        crate::models::CommandStatus::Running => ActivityStatus::Running,
+                        crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
+                        crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
+                        crate::models::CommandStatus::Cancelled => ActivityStatus::Stopped,
+                        _ => ActivityStatus::Failed,
+                    }),
+                Err(_) => None,
+            };
+            if let Some(status) = status {
+                let _ = crate::activity::update_operation_status(
+                    &app_for_worker, ActivityKind::Verification, &command_for_worker, status
+                );
+            }
+            if let Err(error) = result {
+                eprintln!("Validation command failed: {error}");
+            }
+        })
+        .map_err(|error| format!("Could not start validation worker: {error}"))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub(crate) fn reject_pending_command(
+    window: tauri::Window,
+    app: tauri::AppHandle,
+    command_id: String,
+) -> Result<(), String> {
+    if window.label() != "main" {
+        return Err("Command rejection requires the main desktop window.".to_string());
+    }
+    crate::execution::reject_command(&app, &command_id)?;
+    crate::activity::update_operation_status(&app, ActivityKind::Verification, &command_id, ActivityStatus::Rejected)?;
+    Ok(())
+}
+
+#[tauri::command]
+pub(crate) fn reconcile_pending_verification_activity(app: tauri::AppHandle) -> Result<usize, String> {
+    let timeline = crate::activity::timeline(&app, None)?;
+    let history = crate::execution::list_history(&app, None, 100)?;
+    let mut corrected = 0usize;
+    for group in timeline.groups {
+        for event in group.events {
+            if event.kind != ActivityKind::Verification || event.status != ActivityStatus::Pending {
+                continue;
+            }
+            let Some(id) = event.source_id.as_deref() else { continue };
+            let status = match history.iter().find(|record| record.id == id) {
+                Some(record) => match record.status {
+                    crate::models::CommandStatus::Pending => continue,
+                    crate::models::CommandStatus::Running => ActivityStatus::Running,
+                    crate::models::CommandStatus::Completed => ActivityStatus::Succeeded,
+                    crate::models::CommandStatus::Rejected => ActivityStatus::Rejected,
+                    crate::models::CommandStatus::Cancelled => ActivityStatus::Stopped,
+                    _ => ActivityStatus::Failed,
+                },
+                // History is capped; never infer a terminal status from absence.
+                None => continue,
+            };
+            crate::activity::update_operation_status(&app, ActivityKind::Verification, id, status)?;
+            corrected += 1;
+        }
+    }
+    Ok(corrected)
+}
