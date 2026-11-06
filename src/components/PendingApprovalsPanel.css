@@ -13,3 +13,23 @@
 .r-approval-request-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
 .r-approval-unavailable { font-size: .85rem; opacity: .75; }
 @media (max-width: 620px) { .r-approval-request-actions { justify-content: flex-start; } }
+
+/* Keep long proposed changes reviewable without pushing approval controls off-screen. */
+.r-approval-request-info { flex: 1 1 auto; }
+.r-approval-file-diff {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(42vh, 380px);
+  margin: 6px 0 0;
+  padding: 12px;
+  overflow: auto;
+  white-space: pre;
+  overflow-wrap: normal;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  border: 1px solid var(--border-color, rgba(110,130,160,.2));
+  border-radius: 8px;
+  background: rgba(115,150,190,.055);
+  user-select: text;
+}
+.r-approval-file-diff:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
