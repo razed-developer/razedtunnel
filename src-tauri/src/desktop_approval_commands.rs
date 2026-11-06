@@ -117,10 +117,13 @@ pub(crate) fn approve_pending_file_change(
     {
         return Err("A complete, readable change preview is unavailable. Approval is blocked; do not apply this change from the dashboard.".to_string());
     }
-    // Non-patch operations can have additional filesystem effects not represented
-    // by a text diff. Keep them outside this first approval surface.
-    if !matches!(record.operation, crate::models::ChangeOperation::PatchFile) {
-        return Err("Only file patches with a readable diff can be approved here.".to_string());
+    // Only text patches and new files have complete reviewable diffs here.
+    // Other filesystem operations remain blocked from this approval surface.
+    if !matches!(
+        record.operation,
+        crate::models::ChangeOperation::PatchFile | crate::models::ChangeOperation::CreateFile
+    ) {
+        return Err("Only file patches and file creation with a readable diff can be approved here.".to_string());
     }
     let message = format!(
         "Apply this queued file change?\n\nProject: {}\nOperation: {:?}\nFile: {}\nSummary: {}\n\nProposed diff:\n{}\n\nYes applies the change; No leaves it pending.",
