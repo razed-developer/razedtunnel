@@ -92,7 +92,7 @@ pub(crate) fn approve_pending_browser_action(
 }
 
 #[tauri::command]
-pub(crate) fn approve_pending_file_change(
+pub(crate) async fn approve_pending_file_change(
     window: tauri::Window,
     app: tauri::AppHandle,
     change_id: String,
@@ -133,7 +133,18 @@ pub(crate) fn approve_pending_file_change(
         record.summary,
         preview
     );
-    if !app.dialog().message(message).buttons(MessageDialogButtons::YesNo).blocking_show() {
+    // Never block the desktop IPC thread waiting for a native dialog.
+    // The callback must explicitly return Yes; closing the dialog is not approval.
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .message(message)
+        .buttons(MessageDialogButtons::YesNo)
+        .show(move |confirmed| {
+            let _ = sender.send(confirmed);
+        });
+    let confirmed = receiver.await
+        .map_err(|_| "The native confirmation dialog closed without a result; the change remains pending.".to_string())?;
+    if !confirmed {
         return Err("Approval cancelled; the file change remains pending.".to_string());
     }
     let outcome = crate::changes::approve_change(&app, &change_id)?;
