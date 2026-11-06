@@ -125,13 +125,14 @@ pub(crate) async fn approve_pending_file_change(
     ) {
         return Err("Only file patches and file creation with a readable diff can be approved here.".to_string());
     }
+    // The full, validated diff is displayed in the scrollable Operation requests
+    // review surface. Native message dialogs do not reliably scroll on KDE/Wayland,
+    // so keep this final explicit confirmation compact and readable.
     let message = format!(
-        "Apply this queued file change?\n\nProject: {}\nOperation: {:?}\nFile: {}\nSummary: {}\n\nProposed diff:\n{}\n\nYes applies the change; No leaves it pending.",
+        "Apply this queued file change?\n\nProject: {}\nOperation: {:?}\nFile: {}\n\nReview the complete proposed diff in Operation requests before choosing Yes.\n\nYes applies this change; No leaves it pending.",
         workspace.name,
         record.operation,
-        record.primary_path,
-        record.summary,
-        preview
+        record.primary_path
     );
     // Never block the desktop IPC thread waiting for a native dialog.
     // The callback must explicitly return Yes; closing the dialog is not approval.
