@@ -78,7 +78,9 @@ export default function PendingApprovalsPanel({ activity, onRefreshActivity }: P
           <div className="r-approval-request-info">
             <strong>{event.summary}</strong>
             <span>{event.workspaceName} · {event.kind} · {new Date(event.createdAt).toLocaleString()}</span>
-            {event.detail && <span style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{event.detail}</span>}
+            {event.detail && (event.kind === "files"
+              ? <pre className="r-approval-file-diff" tabIndex={0} aria-label={`Proposed file change for ${event.summary}`}>{event.detail}</pre>
+              : <span style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{event.detail}</span>)}
           </div>
           <div className="r-approval-request-actions">
             <span className="r-activity-status r-activity-status-pending">Pending</span>
